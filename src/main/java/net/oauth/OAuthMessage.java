@@ -134,7 +134,7 @@ public class OAuthMessage {
      * @throws OAuthProblemException
      *             the signature is invalid
      */
-    public void verifySignature(OAuthConsumer consumer, String tokenSecret)
+    public void validateSignature(OAuthConsumer consumer, String tokenSecret)
             throws Exception {
         getSigner(consumer, tokenSecret).validate(this);
     }
