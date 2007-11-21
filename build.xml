@@ -1,0 +1,79 @@
+<project name="OAuth Libraries - Alpha 2" default="compile" basedir=".">
+  <property file="build-local.properties"/>
+  <property file="build.properties"/>
+
+  <property name="app.name"      value="oauth"/>
+  <property name="app.version"   value="0.2-alpha"/>
+  <property name="build.home"    value="${basedir}/target/classes"/>
+  <property name="dist.home"     value="${basedir}/dist"/>
+  <property name="docs.home"     value="${basedir}/target/docs"/>
+  <property name="src.home"      value="${basedir}/src/main/java"/>
+
+  <property name="compile.debug"       value="true"/>
+  <property name="compile.deprecation" value="false"/>
+  <property name="compile.optimize"    value="true"/>
+  <property name="compile.verbose"     value="false"/>
+
+  <path id="compile.classpath">
+    <fileset dir="../lib">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="all"
+          depends="clean,compile"
+          description="Clean build and dist directories, then compile"/>
+
+  <target name="clean"
+          description="Delete old build and dist directories">
+    <delete dir="${basedir}/build"/>
+    <delete dir="${basedir}/target"/>
+    <delete dir="${dist.home}"/>
+  </target>
+
+  <target name="compile"
+          description="Compile Java sources">
+    <!-- Compile Java classes as necessary -->
+    <mkdir dir="${build.home}"/>
+    <javac destdir="${build.home}"
+           debug="${compile.debug}"
+           deprecation="${compile.deprecation}"
+           optimize="${compile.optimize}"
+           verbose="${compile.verbose}">
+        <classpath refid="compile.classpath"/>
+        <src path="${src.home}"/>
+        <src path="${basedir}/src/test/java"/>
+    </javac>
+
+    <!-- Copy application resources -->
+    <copy todir="${build.home}">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+  </target>
+
+  <target name="dist"
+          depends="compile,javadoc"
+          description="Create binary distribution">
+    <!-- Copy documentation subdirectories -->
+    <mkdir dir="${dist.home}/docs"/>
+    <copy todir="${dist.home}/docs">
+      <fileset dir="${docs.home}"/>
+    </copy>
+
+    <!-- Create library JAR file -->
+    <mkdir dir="${dist.home}"/>
+    <jar jarfile="${dist.home}/${app.name}-${app.version}.jar"
+         basedir="${build.home}"/>
+  </target>
+
+  <target name="javadoc"
+          depends="compile"
+          description="Create Javadoc API documentation">
+    <mkdir dir="${docs.home}"/>
+    <javadoc sourcepath="${src.home}"
+             destdir="${docs.home}"
+             packagenames="*">
+      <classpath refid="compile.classpath"/>
+    </javadoc>
+  </target>
+</project>
