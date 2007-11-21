@@ -52,15 +52,14 @@ public class OAuthSignatureMethodTest extends TestCase {
     }
 
     private static final String OAUTH_A_BASE_STRING = "GET&http%3A%2F%2Fphotos.example.net%2Fphotos&"
-            + "file%3Dvacation.jpg%26oauth_consumer_key%3Ddpf43f3p2l4k3l03%26oauth_nonce%3Dkllo9940pd9333jh%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1191242096%26oauth_token%3Dnnch734d00sl2jdk%26oauth_version%3D1.0%26size%3Doriginal"
-            + "&kd94hf93k423kf44&pfkkdhi9sl3r4s00";
+            + "file%3Dvacation.jpg%26oauth_consumer_key%3Ddpf43f3p2l4k3l03%26oauth_nonce%3Dkllo9940pd9333jh%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1191242096%26oauth_token%3Dnnch734d00sl2jdk%26oauth_version%3D1.0%26size%3Doriginal";
 
     private static final String[][] BASES = //
     // label, signature method, HTTP method, URL, parameters,
     // consumer secret, token secret, expected
     {
             { "simple", "HMAC-SHA1", "GET", "http://example.com", "n=v", "cs",
-                    "ts", "GET&http%3A%2F%2Fexample.com&n%3Dv&cs&ts" },
+                    "ts", "GET&http%3A%2F%2Fexample.com&n%3Dv" },
             {
                     "OAuth A request",
                     "HMAC-SHA1",
@@ -70,8 +69,7 @@ public class OAuthSignatureMethodTest extends TestCase {
                     "kd94hf93k423kf44",
                     null,
                     "POST&https%3A%2F%2Fphotos.example.net%2Frequest_token&"
-                            + "oauth_consumer_key%3Ddpf43f3p2l4k3l03%26oauth_nonce%3Dhsu94j3884jdopsl%26oauth_signature_method%3DPLAINTEXT%26oauth_timestamp%3D1191242090%26oauth_version%3D1.0"
-                            + "&kd94hf93k423kf44&" },
+                            + "oauth_consumer_key%3Ddpf43f3p2l4k3l03%26oauth_nonce%3Dhsu94j3884jdopsl%26oauth_signature_method%3DPLAINTEXT%26oauth_timestamp%3D1191242090%26oauth_version%3D1.0" },
             {
                     "OAuth A access",
                     "HMAC-SHA1",
@@ -115,7 +113,7 @@ public class OAuthSignatureMethodTest extends TestCase {
                     "kd94hf93k423kf44&" },
             { "OAuth A access", "HMAC-SHA1", "kd94hf93k423kf44",
                     "pfkkdhi9sl3r4s00", OAUTH_A_BASE_STRING,
-                    "Gcg/323lvAsQ707p+y41y14qWfY=" } };
+                    "tR3+Ty81lMeYAr/Fid0kMTYa/WM=" } };
 
     public void testSign() throws Exception {
         StringBuffer errors = new StringBuffer();
