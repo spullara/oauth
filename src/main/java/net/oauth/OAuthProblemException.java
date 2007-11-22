@@ -22,7 +22,9 @@ import java.util.Map;
 /**
  * Describes an OAuth-related problem, using a set of named parameters. One
  * parameter identifies the basic problem, and the others provide supplementary
- * diagnostic information.
+ * diagnostic information. This can be used to capture information from a
+ * response that conforms to the OAuth <a
+ * href="http://wiki.oauth.net/ProblemReporting">Problem Reporting extension</a>.
  * 
  * @author John Kristian
  */

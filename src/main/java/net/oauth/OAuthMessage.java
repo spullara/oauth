@@ -123,9 +123,8 @@ public class OAuthMessage {
     }
 
     /** Add a signature to the message. */
-    public void sign(OAuthConsumer consumer, String tokenSecret)
-            throws Exception {
-        getSigner(consumer, tokenSecret).sign(this);
+    public void sign(OAuthAccessor accessor) throws Exception {
+        getSigner(accessor).sign(this);
     }
 
     /**
@@ -134,17 +133,16 @@ public class OAuthMessage {
      * @throws OAuthProblemException
      *             the signature is invalid
      */
-    public void validateSignature(OAuthConsumer consumer, String tokenSecret)
-            throws Exception {
-        getSigner(consumer, tokenSecret).validate(this);
+    public void validateSignature(OAuthAccessor accessor) throws Exception {
+        getSigner(accessor).validate(this);
     }
 
-    private OAuthSignatureMethod getSigner(OAuthConsumer consumer,
-            String tokenSecret) throws Exception {
+    private OAuthSignatureMethod getSigner(OAuthAccessor accessor)
+            throws Exception {
         requireParameters("oauth_signature_method");
         OAuthSignatureMethod signer = OAuthSignatureMethod.newMethod(
-                getSignatureMethod(), consumer);
-        signer.setTokenSecret(tokenSecret);
+                getSignatureMethod(), accessor.consumer);
+        signer.setTokenSecret(accessor.tokenSecret);
         return signer;
     }
 
