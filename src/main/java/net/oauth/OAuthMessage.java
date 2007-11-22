@@ -16,9 +16,11 @@
 
 package net.oauth;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,11 +93,31 @@ public class OAuthMessage {
         return getParameter("oauth_signature");
     }
 
-    private Map<String, String> getParameterMap() {
+    protected Map<String, String> getParameterMap() {
         if (parameterMap == null) {
             parameterMap = OAuth.newMap(parameters);
         }
         return parameterMap;
+    }
+
+    /** Get the body of the HTTP request or response. */
+    public String getBodyAsString() throws IOException {
+        return null; // stub
+    }
+
+    /** Construct a verbose description of this message and its origins. */
+    public Map<String, Object> getDump() throws IOException {
+        Map<String, Object> into = new HashMap<String, Object>();
+        dump(into);
+        return into;
+    }
+
+    protected void dump(Map<String, Object> into) throws IOException {
+        into.put("URL", URL);
+        try {
+            into.putAll(getParameterMap());
+        } catch (Exception ignored) {
+        }
     }
 
     /**
