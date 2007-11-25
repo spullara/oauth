@@ -30,9 +30,32 @@ public class OAuthAccessor {
     public String accessToken;
 
     public String tokenSecret;
+    
+    public boolean authorized = false;
+    
+    public Object user;
 
     public OAuthAccessor(OAuthConsumer consumer) {
         this.consumer = consumer;
+        this.requestToken = null;
+        this.accessToken = null;
+        this.tokenSecret = null;
+        user = null;
     }
-
+    
+    public Object getUser(){
+        return user;
+    }
+    
+    public void setUser(Object user){
+        this.user = user;
+    }
+    
+    public boolean isAuthorized(){
+        return authorized;
+    }
+    
+    public void setAuthorized(){
+        this.authorized = true;
+    }
 }
