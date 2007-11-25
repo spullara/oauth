@@ -128,6 +128,7 @@ public class OAuthServlet {
         Integer SC_BAD_REQUEST = new Integer(HttpServletResponse.SC_BAD_REQUEST);
         Integer SC_SERVICE_UNAVAILABLE = new Integer(
                 HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        Integer SC_UNAUTHORIZED = new Integer(HttpServletResponse.SC_UNAUTHORIZED);
         PROBLEM_TO_HTTP_CODE.put("version_rejected", SC_BAD_REQUEST);
         PROBLEM_TO_HTTP_CODE.put("parameter_absent", SC_BAD_REQUEST);
         PROBLEM_TO_HTTP_CODE.put("parameter_rejected", SC_BAD_REQUEST);
@@ -135,6 +136,12 @@ public class OAuthServlet {
         PROBLEM_TO_HTTP_CODE.put("signature_method_rejected", SC_BAD_REQUEST);
         PROBLEM_TO_HTTP_CODE
                 .put("consumer_key_refused", SC_SERVICE_UNAVAILABLE);
+        
+        PROBLEM_TO_HTTP_CODE.put("invalid_consumer_key", SC_UNAUTHORIZED);
+        PROBLEM_TO_HTTP_CODE.put("invalid_expired_token", SC_UNAUTHORIZED);
+        PROBLEM_TO_HTTP_CODE.put("signature_invalid", SC_UNAUTHORIZED);
+        PROBLEM_TO_HTTP_CODE.put("invalid_used_nonce", SC_UNAUTHORIZED);
+        PROBLEM_TO_HTTP_CODE.put("token_not_authorized", SC_UNAUTHORIZED);
     }
 
     /** Send the given parameters as a form-encoded response body. */
