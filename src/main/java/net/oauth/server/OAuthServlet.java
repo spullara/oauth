@@ -153,4 +153,39 @@ public class OAuthServlet {
         OAuth.formEncode(parameters, response.getOutputStream());
     }
 
+    /**
+     * Return the HTML representation of the given plain text. Characters that
+     * would have special significance in HTML are replaced by <a
+     * href="http://www.w3.org/TR/html401/sgml/entities.html">character entity
+     * references</a>. Whitespace is not converted.
+     */
+    public static String htmlEncode(String s) {
+        if (s == null) {
+            return null;
+        }
+        StringBuilder html = new StringBuilder(s.length());
+        for (char c : s.toCharArray()) {
+            switch (c) {
+            case '<':
+                html.append("&lt;");
+                break;
+            case '>':
+                html.append("&gt;");
+                break;
+            case '&':
+                html.append("&amp;");
+                // This also takes care of numeric character references;
+                // for example &#169 becomes &amp;#169.
+                break;
+            case '"':
+                html.append("&quot;");
+                break;
+            default:
+                html.append(c);
+                break;
+            }
+        }
+        return html.toString();
+    }
+
 }
