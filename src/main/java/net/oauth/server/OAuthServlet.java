@@ -60,8 +60,8 @@ public class OAuthServlet {
     private static List<Map.Entry<String, String>> getParameters(
             HttpServletRequest request) {
         List<Map.Entry<String, String>> list = new ArrayList<Map.Entry<String, String>>();
-        for (Enumeration headers = request.getHeaders("Authorization"); headers
-                .hasMoreElements();) {
+        for (Enumeration headers = request.getHeaders("Authorization"); 
+                headers != null && headers.hasMoreElements();) {
             String header = headers.nextElement().toString();
             for (OAuth.Parameter parameter : OAuthMessage
                     .decodeAuthorization(header)) {
