@@ -62,6 +62,10 @@ public class OAuthMessage {
         return Collections.unmodifiableList(parameters);
     }
 
+    public void addParameter(String key, String value) {
+        addParameter(new OAuth.Parameter(key, value));
+    }
+
     public void addParameter(Map.Entry<String, String> parameter) {
         parameters.add(parameter);
         parameterMap = null;
