@@ -31,7 +31,7 @@ import net.oauth.OAuthConsumer;
  * 
  * OAuthConsumer c = new OAuthConsumer(callback_url, consumer_key, 
  *                                     null, provider);
- * c.setProperty(JceRSA_SHA1.PRIVATE_KEY, consumer_privateRSAKey);
+ * c.setProperty(RSA_SHA1.PRIVATE_KEY, consumer_privateRSAKey);
  * 
  * (consumer_privateRSAKey must be an RSA signing key and 
  * of type java.security.PrivateKey )
@@ -43,7 +43,7 @@ import net.oauth.OAuthConsumer;
  * 
  * OAuthConsumer c = new OAuthConsumer(callback_url, consumer_key, 
  *                                     null, provider);
- * c.setProperty(JceRSA_SHA1.PUBLIC_KEY, consumer_publicRSAKey);
+ * c.setProperty(RSA_SHA1.PUBLIC_KEY, consumer_publicRSAKey);
  * 
  * (consumer_publicRSAKey must be the consumer's public RSAkey and 
  * of type java.security.PublicKey)
