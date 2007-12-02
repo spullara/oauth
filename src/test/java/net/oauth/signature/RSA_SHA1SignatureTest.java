@@ -9,7 +9,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -39,27 +39,27 @@ import net.oauth.OAuthServiceProvider;
  */
 public class RSA_SHA1SignatureTest extends TestCase {
 
-    private static final String PRIVATE_KEY = 
+    private static final String PRIVATE_KEY =
             "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALRiMLAh9iimur8V"
-                    + "A7qVvdqxevEuUkW4K+2KdMXmnQbG9Aa7k7eBjK1S+0LYmVjPKlJGNXHDGuy5Fw/d"
-                    + "7rjVJ0BLB+ubPK8iA/Tw3hLQgXMRRGRXXCn8ikfuQfjUS1uZSatdLB81mydBETlJ" 
-                    + "hI6GH4twrbDJCR2Bwy/XWXgqgGRzAgMBAAECgYBYWVtleUzavkbrPjy0T5FMou8H"
-                    + "X9u2AC2ry8vD/l7cqedtwMPp9k7TubgNFo+NGvKsl2ynyprOZR1xjQ7WgrgVB+mm"
-                    + "uScOM/5HVceFuGRDhYTCObE+y1kxRloNYXnx3ei1zbeYLPCHdhxRYW7T0qcynNmw" 
-                    + "rn05/KO2RLjgQNalsQJBANeA3Q4Nugqy4QBUCEC09SqylT2K9FrrItqL2QKc9v0Z"
-                    + "zO2uwllCbg0dwpVuYPYXYvikNHHg+aCWF+VXsb9rpPsCQQDWR9TT4ORdzoj+Nccn"
-                    + "qkMsDmzt0EfNaAOwHOmVJ2RVBspPcxt5iN4HI7HNeG6U5YsFBb+/GZbgfBT3kpNG" 
-                    + "WPTpAkBI+gFhjfJvRw38n3g/+UeAkwMI2TJQS4n8+hid0uus3/zOjDySH3XHCUno"
-                    + "cn1xOJAyZODBo47E+67R4jV1/gzbAkEAklJaspRPXP877NssM5nAZMU0/O/NGCZ+"
-                    + "3jPgDUno6WbJn5cqm8MqWhW1xGkImgRk+fkDBquiq4gPiT898jusgQJAd5Zrr6Q8" 
-                    + "AO/0isr/3aa6O6NLQxISLKcPDk2NOccAfS/xOtfOz4sJYM3+Bs4Io9+dZGSDCA54"
-                    + "Lw03eHTNQghS0A==";
+          + "A7qVvdqxevEuUkW4K+2KdMXmnQbG9Aa7k7eBjK1S+0LYmVjPKlJGNXHDGuy5Fw/d"
+          + "7rjVJ0BLB+ubPK8iA/Tw3hLQgXMRRGRXXCn8ikfuQfjUS1uZSatdLB81mydBETlJ"
+          + "hI6GH4twrbDJCR2Bwy/XWXgqgGRzAgMBAAECgYBYWVtleUzavkbrPjy0T5FMou8H"
+          + "X9u2AC2ry8vD/l7cqedtwMPp9k7TubgNFo+NGvKsl2ynyprOZR1xjQ7WgrgVB+mm"
+          + "uScOM/5HVceFuGRDhYTCObE+y1kxRloNYXnx3ei1zbeYLPCHdhxRYW7T0qcynNmw"
+          + "rn05/KO2RLjgQNalsQJBANeA3Q4Nugqy4QBUCEC09SqylT2K9FrrItqL2QKc9v0Z"
+          + "zO2uwllCbg0dwpVuYPYXYvikNHHg+aCWF+VXsb9rpPsCQQDWR9TT4ORdzoj+Nccn"
+          + "qkMsDmzt0EfNaAOwHOmVJ2RVBspPcxt5iN4HI7HNeG6U5YsFBb+/GZbgfBT3kpNG"
+          + "WPTpAkBI+gFhjfJvRw38n3g/+UeAkwMI2TJQS4n8+hid0uus3/zOjDySH3XHCUno"
+          + "cn1xOJAyZODBo47E+67R4jV1/gzbAkEAklJaspRPXP877NssM5nAZMU0/O/NGCZ+"
+          + "3jPgDUno6WbJn5cqm8MqWhW1xGkImgRk+fkDBquiq4gPiT898jusgQJAd5Zrr6Q8"
+          + "AO/0isr/3aa6O6NLQxISLKcPDk2NOccAfS/xOtfOz4sJYM3+Bs4Io9+dZGSDCA54"
+          + "Lw03eHTNQghS0A==";
 
     private static final String PUBLIC_KEY =
-            "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0YjCwIfYoprq/FQO6lb3asXrx" 
-                    + "LlJFuCvtinTF5p0GxvQGu5O3gYytUvtC2JlYzypSRjVxwxrsuRcP3e641SdASwfr"
-                    + "mzyvIgP08N4S0IFzEURkV1wp/IpH7kH41EtbmUmrXSwfNZsnQRE5SYSOhh+LcK2w"
-                    + "yQkdgcMv11l4KoBkcwIDAQAB"; 
+            "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0YjCwIfYoprq/FQO6lb3asXrx"
+          + "LlJFuCvtinTF5p0GxvQGu5O3gYytUvtC2JlYzypSRjVxwxrsuRcP3e641SdASwfr"
+          + "mzyvIgP08N4S0IFzEURkV1wp/IpH7kH41EtbmUmrXSwfNZsnQRE5SYSOhh+LcK2w"
+          + "yQkdgcMv11l4KoBkcwIDAQAB";
 
     protected OAuthConsumer client;
     protected OAuthConsumer server;
@@ -67,95 +67,95 @@ public class RSA_SHA1SignatureTest extends TestCase {
     protected PrivateKey privateKey;
 
     @Override
-    protected void setUp() throws Exception { 
+    protected void setUp() throws Exception {
         EncodedKeySpec pubKeySpec =
                 new X509EncodedKeySpec(OAuthSignatureMethod
                         .decodeBase64(PUBLIC_KEY));
-        KeyFactory fac = KeyFactory.getInstance("RSA"); 
+        KeyFactory fac = KeyFactory.getInstance("RSA");
         publicKey = fac.generatePublic(pubKeySpec);
 
         EncodedKeySpec privKeySpec =
                 new PKCS8EncodedKeySpec(OAuthSignatureMethod
-                        .decodeBase64(PRIVATE_KEY)); 
+                        .decodeBase64(PRIVATE_KEY));
         fac = KeyFactory.getInstance("RSA");
         privateKey = fac.generatePrivate(privKeySpec);
 
         String url1 = "http://www.google.com/url1 ";
         String url2 = "http://www.google.com/url2";
-        String url3 = "http://www.google.com/url3"; 
+        String url3 = "http://www.google.com/url3";
         OAuthServiceProvider provider =
                 new OAuthServiceProvider(url1, url2, url3);
-        
+
         client = new OAuthConsumer(url1, "google", null, provider);
         client.setProperty (RSA_SHA1.PRIVATE_KEY, privateKey);
-        
+
         server = new OAuthConsumer(url1, "google", null, provider);
         server.setProperty(RSA_SHA1.PUBLIC_KEY, publicKey);
-        
-    } 
+
+    }
 
     // we don't need unpredictability, just uniqueness
     private static final Random random = new Random();
-    
+
     public static OAuthMessage prepareRequestMessage(OAuthConsumer consumer,
-                                                     String httpMethod, 
+                                                     String httpMethod,
                                                      URL url,
-                                                     String signatureMethod) { 
+                                                     String signatureMethod) {
         OAuthMessage message = new OAuthMessage(httpMethod,
                                                 url.toString(),
-                                                new ArrayList<OAuth.Parameter>()); 
+                                                new ArrayList<OAuth.Parameter>());
         message.addParameter(OAuth.OAUTH_SIGNATURE_METHOD, signatureMethod);
         message.addParameter(OAuth.OAUTH_VERSION, OAuth.VERSION_1_0);
         message.addParameter(OAuth.OAUTH_CONSUMER_KEY, consumer.consumerKey );
         long currentTime = System.currentTimeMillis() / 1000l;
-        message.addParameter(OAuth.OAUTH_TIMESTAMP, 
+        message.addParameter(OAuth.OAUTH_TIMESTAMP,
                              Long.toString(currentTime, 10));
-        byte[] nonce = new byte[8]; 
+        byte[] nonce = new byte[8];
         random.nextBytes(nonce);
         BigInteger nonceInt = new BigInteger(1, nonce);
         message.addParameter(OAuth.OAUTH_NONCE,
                              nonceInt.toString(10));
-        return message; 
+        return message;
     }
-    
+
     public void testSignVerify() throws Exception {
         String urlStr = "http://www.google.com/foo?param1=value1&param2=value2 ";
         URL url = new URL(urlStr);
-        
-        OAuthMessage message = prepareRequestMessage(client, 
-                                                     "GET", 
-                                                     url, 
+
+        OAuthMessage message = prepareRequestMessage(client,
+                                                     "GET",
+                                                     url,
                                                      OAuth.RSA_SHA1);
-        
+
         System.out.println("url before: " + url.toString());
-        OAuthAccessor accessor1 = new OAuthAccessor(client); 
+        OAuthAccessor accessor1 = new OAuthAccessor(client);
         message.sign(accessor1);
-        
+
         String form = OAuth.formEncode(message.getParameters());
         System.out.println("url after: " + url.toString() + "&" + form);
 
         OAuthAccessor accessor2 = new OAuthAccessor(server);
-        
+
         try {
             message.validateSignature(accessor2);
         } catch(Exception e) {
-            fail("message should have verified, but didn't"); 
+            fail("message should have verified, but didn't");
         }
-                
+
         try {
             message.sign(accessor2);
             fail("shouldn't be able to sign message without private key, but did");
-        } catch(IllegalStateException e) { 
-            // expected
-        }   
-
-        try {
-            message.validateSignature(accessor1);
-            fail("shouldn't be able to verify message without public key, but did"); 
         } catch(IllegalStateException e) {
             // expected
         }
-        
+
+        try {
+            message.validateSignature(accessor1);
+            fail("shouldn't be able to verify message without public key, but did");
+        } catch(IllegalStateException e) {
+            // expected
+        }
+
         message.addParameter("foo", "bar");
         try {
             message.validateSignature (accessor2);
