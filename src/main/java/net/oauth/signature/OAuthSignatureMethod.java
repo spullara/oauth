@@ -70,8 +70,13 @@ public abstract class OAuthSignatureMethod {
             throws Exception {
         String secret = accessor.consumer.consumerSecret;
         if (name.endsWith(_ACCESSOR)) {
-            Object accessorSecret = accessor.consumer
-                    .getProperty(OAuthConsumer.ACCESSOR_SECRET);
+            // This code supports the 'Accessor Secret' extensions
+            // described in http://oauth.pbwiki.com/AccessorSecret
+            final String key = OAuthConsumer.ACCESSOR_SECRET;
+            Object accessorSecret = accessor.getProperty(key);
+            if (accessorSecret == null) {
+                accessorSecret = accessor.consumer.getProperty(key);
+            }
             if (accessorSecret != null) {
                 secret = accessorSecret.toString();
             }

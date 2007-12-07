@@ -37,8 +37,20 @@ public abstract class OAuthClient {
     public void getRequestToken(OAuthAccessor accessor) throws Exception {
         accessor.accessToken = null;
         accessor.tokenSecret = null;
+        Collection<OAuth.Parameter> parameters = null;
+        {
+            // This code supports the 'Variable Accessor Secret' extension
+            // described in http://oauth.pbwiki.com/AccessorSecret
+            Object accessorSecret = accessor
+                    .getProperty(OAuthConsumer.ACCESSOR_SECRET);
+            if (accessorSecret != null) {
+                parameters = new ArrayList<OAuth.Parameter>(1);
+                parameters.add(new OAuth.Parameter("oauth_accessor_secret",
+                        accessorSecret.toString()));
+            }
+        }
         OAuthMessage response = invoke(accessor,
-                accessor.consumer.serviceProvider.requestTokenURL, null);
+                accessor.consumer.serviceProvider.requestTokenURL, parameters);
         accessor.requestToken = response.getParameter("oauth_token");
         accessor.tokenSecret = response.getParameter("oauth_token_secret");
         if (accessor.requestToken == null) {
@@ -104,6 +116,7 @@ public abstract class OAuthClient {
     }
 
     /** Send a message to the service provider and get the response. */
-    protected abstract OAuthMessage invoke(OAuthMessage message) throws Exception;
+    protected abstract OAuthMessage invoke(OAuthMessage message)
+            throws Exception;
 
 }
