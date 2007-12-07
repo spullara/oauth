@@ -16,46 +16,37 @@
 
 package net.oauth;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Properties of one User of an OAuthConsumer.
+ * Properties of one User of an OAuthConsumer. Properties may be added freely,
+ * e.g. to support extensions.
  * 
  * @author John Kristian
  */
 public class OAuthAccessor {
 
     public final OAuthConsumer consumer;
-
     public String requestToken;
-
     public String accessToken;
-
     public String tokenSecret;
-    
-    public boolean authorized = false;
-    
-    public Object user;
 
     public OAuthAccessor(OAuthConsumer consumer) {
         this.consumer = consumer;
         this.requestToken = null;
         this.accessToken = null;
         this.tokenSecret = null;
-        user = null;
     }
-    
-    public Object getUser(){
-        return user;
+
+    private final Map<String, Object> properties = new HashMap<String, Object>();
+
+    public Object getProperty(String name) {
+        return properties.get(name);
     }
-    
-    public void setUser(Object user){
-        this.user = user;
+
+    public void setProperty(String name, Object value) {
+        properties.put(name, value);
     }
-    
-    public boolean isAuthorized(){
-        return authorized;
-    }
-    
-    public void setAuthorized(){
-        this.authorized = true;
-    }
+
 }
