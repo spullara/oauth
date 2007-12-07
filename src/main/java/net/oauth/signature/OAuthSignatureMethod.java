@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
@@ -65,11 +66,11 @@ public abstract class OAuthSignatureMethod {
         return getSignature(getBaseString(message));
     }
 
-    protected void initialize(String name, OAuthConsumer consumer)
+    protected void initialize(String name, OAuthAccessor accessor)
             throws Exception {
-        String secret = consumer.consumerSecret;
+        String secret = accessor.consumer.consumerSecret;
         if (name.endsWith(_ACCESSOR)) {
-            Object accessorSecret = consumer
+            Object accessorSecret = accessor.consumer
                     .getProperty(OAuthConsumer.ACCESSOR_SECRET);
             if (accessorSecret != null) {
                 secret = accessorSecret.toString();
@@ -147,7 +148,7 @@ public abstract class OAuthSignatureMethod {
 
     /** The factory for signature methods. */
     public static OAuthSignatureMethod newMethod(String name,
-            OAuthConsumer consumer) throws Exception {
+            OAuthAccessor accessor) throws Exception {
         Class methodClass = NAME_TO_CLASS.get(name);
         if (methodClass == null) {
             OAuthProblemException problem = new OAuthProblemException(
@@ -161,7 +162,7 @@ public abstract class OAuthSignatureMethod {
         }
         OAuthSignatureMethod method = (OAuthSignatureMethod) methodClass
                 .newInstance();
-        method.initialize(name, consumer);
+        method.initialize(name, accessor);
         return method;
     }
 

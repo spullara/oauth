@@ -19,6 +19,7 @@ package net.oauth.signature;
 import java.util.List;
 import junit.framework.TestCase;
 import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthMessage;
 
@@ -45,7 +46,8 @@ public class OAuthSignatureMethodTest extends TestCase {
             List<OAuth.Parameter> parameters = OAuth.decodeForm(normal[n++]);
             String expected = normal[n++];
             OAuthSignatureMethod method = OAuthSignatureMethod.newMethod(
-                    "HMAC-SHA1", new OAuthConsumer(null, null, null, null));
+                    "HMAC-SHA1", new OAuthAccessor(new OAuthConsumer(null,
+                            null, null, null)));
             String actual = method.normalizeParameters(parameters);
             assertEquals(label, expected, actual);
         }
@@ -91,8 +93,8 @@ public class OAuthSignatureMethodTest extends TestCase {
             String tokenSecret = base[b++];
             String expected = base[b++];
             OAuthSignatureMethod method = OAuthSignatureMethod.newMethod(
-                    methodName, new OAuthConsumer(null, null, consumerSecret,
-                            null));
+                    methodName, new OAuthAccessor(new OAuthConsumer(null, null,
+                            consumerSecret, null)));
             method.setTokenSecret(tokenSecret);
             List<OAuth.Parameter> parameters = OAuth.decodeForm(form);
             String actual = method.getBaseString(new OAuthMessage(httpMethod,
@@ -131,7 +133,7 @@ public class OAuthSignatureMethodTest extends TestCase {
                     consumerSecret, null);
             consumer.setProperty(OAuthConsumer.ACCESSOR_SECRET, accessorSecret);
             OAuthSignatureMethod method = OAuthSignatureMethod.newMethod(
-                    methodName, consumer);
+                    methodName, new OAuthAccessor(consumer));
             method.setTokenSecret(tokenSecret);
             String actual = method.getSignature(baseString);
             if (!expected.equals(actual)) {
@@ -143,7 +145,8 @@ public class OAuthSignatureMethodTest extends TestCase {
             methodName += OAuthSignatureMethod._ACCESSOR;
             consumer = new OAuthConsumer(null, null, accessorSecret, null);
             consumer.setProperty(OAuthConsumer.ACCESSOR_SECRET, consumerSecret);
-            method = OAuthSignatureMethod.newMethod(methodName, consumer);
+            method = OAuthSignatureMethod.newMethod(methodName,
+                    new OAuthAccessor(consumer));
             method.setTokenSecret(tokenSecret);
             actual = method.getSignature(baseString);
             if (!expected.equals(actual)) {

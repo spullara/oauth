@@ -167,7 +167,7 @@ public class OAuthMessage {
             throws Exception {
         requireParameters("oauth_signature_method");
         OAuthSignatureMethod signer = OAuthSignatureMethod.newMethod(
-                getSignatureMethod(), accessor.consumer);
+                getSignatureMethod(), accessor);
         signer.setTokenSecret(accessor.tokenSecret);
         return signer;
     }

@@ -27,8 +27,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-
-import net.oauth.OAuthConsumer;
+import net.oauth.OAuthAccessor;
 
 /**
  * Class to handle RSA-SHA1 signatures on OAuth requests. A consumer
@@ -86,11 +85,11 @@ public class RSA_SHA1 extends OAuthSignatureMethod {
     private PublicKey publicKey = null;
 
     @Override
-    protected void initialize(String name, OAuthConsumer consumer)
+    protected void initialize(String name, OAuthAccessor accessor)
             throws Exception {
-        super.initialize(name, consumer);
+        super.initialize(name, accessor);
 
-        Object privateKeyObject = consumer.getProperty(PRIVATE_KEY);
+        Object privateKeyObject = accessor.consumer.getProperty(PRIVATE_KEY);
         if (privateKeyObject != null) {
             if (privateKeyObject instanceof PrivateKey) {
                 privateKey = (PrivateKey)privateKeyObject;
@@ -106,7 +105,7 @@ public class RSA_SHA1 extends OAuthSignatureMethod {
             }
         }
 
-        Object publicKeyObject = consumer.getProperty(PUBLIC_KEY);
+        Object publicKeyObject = accessor.consumer.getProperty(PUBLIC_KEY);
         if (publicKeyObject != null) {
             if (publicKeyObject instanceof PublicKey) {
                 publicKey = (PublicKey)publicKeyObject;
@@ -121,7 +120,7 @@ public class RSA_SHA1 extends OAuthSignatureMethod {
                     publicKeyObject.getClass().getName());
             }
         } else {  // public key was null. perhaps they gave us a X509 cert.
-            Object certObject = consumer.getProperty(X509_CERTIFICATE);
+            Object certObject = accessor.consumer.getProperty(X509_CERTIFICATE);
             if (certObject != null) {
                 if (certObject instanceof X509Certificate) {
                     publicKey = ((X509Certificate) certObject).getPublicKey();
