@@ -1,18 +1,7 @@
 <project name="OAuth Libraries - Alpha 2" default="compile" basedir=".">
-  <property file="build-local.properties"/>
-  <property file="build.properties"/>
-
+  <property file="../build.properties"/>
   <property name="app.name"      value="oauth"/>
-  <property name="app.version"   value="0.2-alpha"/>
   <property name="build.home"    value="${basedir}/target/classes"/>
-  <property name="dist.home"     value="${basedir}/dist"/>
-  <property name="docs.home"     value="${basedir}/target/docs"/>
-  <property name="src.home"      value="${basedir}/src/main/java"/>
-
-  <property name="compile.debug"       value="true"/>
-  <property name="compile.deprecation" value="false"/>
-  <property name="compile.optimize"    value="true"/>
-  <property name="compile.verbose"     value="false"/>
 
   <path id="compile.classpath">
     <fileset dir="../lib">
