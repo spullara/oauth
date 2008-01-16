@@ -18,6 +18,7 @@ package net.oauth;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class ConsumerProperties {
     private final Map<String, OAuthConsumer> pool = new HashMap<String, OAuthConsumer>();
 
     /** Get the consumer with the given name. */
-    public OAuthConsumer getConsumer(String name) {
+    public OAuthConsumer getConsumer(String name) throws MalformedURLException {
         OAuthConsumer consumer;
         synchronized (pool) {
             consumer = pool.get(name);
@@ -91,19 +92,23 @@ public class ConsumerProperties {
         return consumer;
     }
 
-    protected OAuthConsumer newConsumer(String name) {
-        OAuthServiceProvider serviceProvider = new OAuthServiceProvider(
-                consumerProperties.getProperty(name
-                        + ".serviceProvider.requestTokenURL"),
-                consumerProperties.getProperty(name
-                        + ".serviceProvider.userAuthorizationURL"),
-                consumerProperties.getProperty(name
-                        + ".serviceProvider.accessTokenURL"));
+    protected OAuthConsumer newConsumer(String name)
+            throws MalformedURLException {
+        String base = consumerProperties.getProperty(name
+                + ".serviceProvider.baseURL");
+        URL baseURL = (base == null) ? null : new URL(base);
+        OAuthServiceProvider serviceProvider = new OAuthServiceProvider(getURL(
+                baseURL, name + ".serviceProvider.requestTokenURL"), getURL(
+                baseURL, name + ".serviceProvider.userAuthorizationURL"),
+                getURL(baseURL, name + ".serviceProvider.accessTokenURL"));
         OAuthConsumer consumer = new OAuthConsumer(consumerProperties
                 .getProperty(name + ".callbackURL"), consumerProperties
                 .getProperty(name + ".consumerKey"), consumerProperties
                 .getProperty(name + ".consumerSecret"), serviceProvider);
         consumer.setProperty("name", name);
+        if (baseURL != null) {
+            consumer.setProperty("serviceProvider.baseURL", baseURL);
+        }
         for (Map.Entry prop : consumerProperties.entrySet()) {
             String propName = (String) prop.getKey();
             if (propName.startsWith(name + ".consumer.")) {
@@ -113,4 +118,13 @@ public class ConsumerProperties {
         }
         return consumer;
     }
+
+    private String getURL(URL base, String name) throws MalformedURLException {
+        String url = consumerProperties.getProperty(name);
+        if (base != null) {
+            url = (new URL(base, url)).toExternalForm();
+        }
+        return url;
+    }
+
 }
