@@ -26,6 +26,7 @@ public class OAuthTest extends TestCase {
             , "DIGIT", "123", "123" //
             , "unreserved", "-._~", "-._~" //
             , "percent", "%", "%25" //
+            , "plus", "+", "%2B" //
             , "not unreserved", "&=*", "%26%3D%2A" //
             , "LF", "\n", "%0A" //
             , "SP", " ", "%20" //
