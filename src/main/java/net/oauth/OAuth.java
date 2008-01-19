@@ -227,8 +227,14 @@ public class OAuth {
      */
     public static String addParameters(String url, String... parameters)
             throws IOException {
-        String form = formEncode(newList(parameters));
-        if (form.length() <= 0) {
+        return addParameters(url, newList(parameters));
+    }
+
+    public static String addParameters(String url,
+            Iterable<? extends Map.Entry<String, String>> parameters)
+            throws IOException {
+        String form = formEncode(parameters);
+        if (form == null || form.length() <= 0) {
             return url;
         } else {
             return url + ((url.indexOf("?") < 0) ? '?' : '&') + form;

@@ -58,6 +58,8 @@ public abstract class OAuthSignatureMethod {
                     "signature_invalid");
             problem.setParameter("oauth_signature", signature);
             problem.setParameter("oauth_signature_base_string", baseString);
+            problem.setParameter("oauth_signature_method", message
+                    .getSignatureMethod());
             throw problem;
         }
     }
@@ -117,12 +119,19 @@ public abstract class OAuthSignatureMethod {
     }
 
     protected String getBaseString(OAuthMessage message) throws IOException {
-        return OAuth.percentEncode(message.httpMethod.toUpperCase())
-                + '&'
-                + OAuth.percentEncode(message.URL)
-                + '&'
-                + OAuth.percentEncode(normalizeParameters(message
-                        .getParameters()));
+        List<Map.Entry<String, String>> parameters;
+        int q = message.URL.indexOf('?');
+        if (q < 0) {
+            parameters = message.getParameters();
+        } else {
+            // Combine the URL query string with the other parameters:
+            parameters = new ArrayList<Map.Entry<String, String>>();
+            parameters.addAll(OAuth.decodeForm(message.URL.substring(q + 1)));
+            parameters.addAll(message.getParameters());
+        }
+        return OAuth.percentEncode(message.httpMethod.toUpperCase()) + '&'
+                + OAuth.percentEncode(message.URL) + '&'
+                + OAuth.percentEncode(normalizeParameters(parameters));
     }
 
     protected String normalizeParameters(

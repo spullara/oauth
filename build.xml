@@ -51,8 +51,10 @@
 
     <!-- Create library JAR file -->
     <mkdir dir="${dist.home}"/>
-    <jar jarfile="${dist.home}/${app.name}-${app.version}.jar"
-         basedir="${build.home}"/>
+    <jar jarfile="${dist.home}/${app.name}-${app.version}.jar">
+      <fileset dir="${build.home}"/>
+      <fileset dir="${src.home}" />
+    </jar>
   </target>
 
   <target name="javadoc"

@@ -37,11 +37,15 @@ public class OAuthMessage {
             Collection<? extends Map.Entry> parameters) {
         this.httpMethod = httpMethod;
         this.URL = URL;
-        this.parameters = new ArrayList<Map.Entry<String, String>>(parameters
-                .size());
-        for (Map.Entry entry : parameters) {
-            this.parameters.add(new OAuth.Parameter(toString(entry.getKey()),
-                    toString(entry.getValue())));
+        if (parameters == null) {
+            this.parameters = new ArrayList<Map.Entry<String, String>>();
+        } else {
+            this.parameters = new ArrayList<Map.Entry<String, String>>(
+                    parameters.size());
+            for (Map.Entry entry : parameters) {
+                this.parameters.add(new OAuth.Parameter(
+                        toString(entry.getKey()), toString(entry.getValue())));
+            }
         }
     }
 
