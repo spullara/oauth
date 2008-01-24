@@ -120,7 +120,8 @@ public abstract class OAuthSignatureMethod {
 
     protected String getBaseString(OAuthMessage message) throws IOException {
         List<Map.Entry<String, String>> parameters;
-        int q = message.URL.indexOf('?');
+        String url = message.URL;
+        int q = url.indexOf('?');
         if (q < 0) {
             parameters = message.getParameters();
         } else {
@@ -128,9 +129,10 @@ public abstract class OAuthSignatureMethod {
             parameters = new ArrayList<Map.Entry<String, String>>();
             parameters.addAll(OAuth.decodeForm(message.URL.substring(q + 1)));
             parameters.addAll(message.getParameters());
+            url = url.substring(0, q);
         }
         return OAuth.percentEncode(message.httpMethod.toUpperCase()) + '&'
-                + OAuth.percentEncode(message.URL) + '&'
+                + OAuth.percentEncode(url) + '&'
                 + OAuth.percentEncode(normalizeParameters(parameters));
     }
 
