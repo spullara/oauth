@@ -18,7 +18,6 @@ package net.oauth.client;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
@@ -46,9 +45,6 @@ class HttpMethodResponse extends OAuthMessage {
         } catch (Exception ignored) {
         }
     }
-
-    private static final List<Map.Entry> NO_PARAMETERS = Collections
-            .emptyList();
 
     private final HttpMethod method;
 

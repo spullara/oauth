@@ -229,6 +229,9 @@ public class OAuthMessage {
 
     static final Pattern NVP = Pattern.compile("(\\S*)\\s*\\=\\s*\"([^\"]*)\"");
 
+    protected static final List<Map.Entry> NO_PARAMETERS = Collections
+            .emptyList();
+
     private static final String toString(Object from) {
         return (from == null) ? null : from.toString();
     }
