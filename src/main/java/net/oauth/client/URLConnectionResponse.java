@@ -43,7 +43,7 @@ class URLConnectionResponse extends OAuthMessage {
      */
     public URLConnectionResponse(OAuthMessage request, URLConnection connection)
             throws IOException {
-        super(request.httpMethod, request.URL, NO_PARAMETERS);
+        super(request.method, request.URL, NO_PARAMETERS);
         this.connection = connection;
         try {
             addParameters(getResponseParameters());
@@ -86,7 +86,7 @@ class URLConnectionResponse extends OAuthMessage {
     protected void dump(Map<String, Object> into) throws IOException {
         super.dump(into);
         {
-            StringBuilder request = new StringBuilder(httpMethod);
+            StringBuilder request = new StringBuilder(method);
             URL url = new URL(this.URL);
             request.append(" ").append(url.getPath());
             String query = url.getQuery();

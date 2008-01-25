@@ -33,9 +33,9 @@ import net.oauth.signature.OAuthSignatureMethod;
  */
 public class OAuthMessage {
 
-    public OAuthMessage(String httpMethod, String URL,
+    public OAuthMessage(String method, String URL,
             Collection<? extends Map.Entry> parameters) {
-        this.httpMethod = httpMethod;
+        this.method = method;
         this.URL = URL;
         if (parameters == null) {
             this.parameters = new ArrayList<Map.Entry<String, String>>();
@@ -49,7 +49,7 @@ public class OAuthMessage {
         }
     }
 
-    public final String httpMethod;
+    public final String method;
 
     public final String URL;
 
@@ -58,7 +58,7 @@ public class OAuthMessage {
     private Map<String, String> parameterMap;
 
     public String toString() {
-        return "OAuthMessage(" + httpMethod + ", " + URL + ", " + parameters
+        return "OAuthMessage(" + method + ", " + URL + ", " + parameters
                 + ")";
     }
 

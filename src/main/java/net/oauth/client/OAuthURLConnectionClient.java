@@ -41,13 +41,13 @@ public class OAuthURLConnectionClient extends OAuthClient {
     @Override
     public OAuthMessage invoke(OAuthMessage request) throws Exception {
         URLConnection connection;
-        if ("GET".equals(request.httpMethod)) {
+        if ("GET".equals(request.method)) {
             URL url = new URL(OAuth.addParameters(request.URL, request
                     .getParameters()));
             connection = url.openConnection();
             if (connection instanceof HttpURLConnection) {
                 ((HttpURLConnection) connection)
-                        .setRequestMethod(request.httpMethod);
+                        .setRequestMethod(request.method);
             }
             connection.setDoInput(true);
         } else {
@@ -55,7 +55,7 @@ public class OAuthURLConnectionClient extends OAuthClient {
             connection = url.openConnection();
             if (connection instanceof HttpURLConnection) {
                 ((HttpURLConnection) connection)
-                        .setRequestMethod(request.httpMethod);
+                        .setRequestMethod(request.method);
             }
             connection.setDoInput(true);
             String form = OAuth.formEncode(request.getParameters());

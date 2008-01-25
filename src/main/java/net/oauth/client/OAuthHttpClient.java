@@ -42,17 +42,17 @@ public class OAuthHttpClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    public OAuthMessage invoke(OAuthMessage message) throws Exception {
+    public OAuthMessage invoke(OAuthMessage request) throws Exception {
         HttpMethod method;
-        if ("GET".equals(message.httpMethod)) {
-            String url = OAuth.addParameters(message.URL, message.getParameters());
+        if ("GET".equals(request.method)) {
+            String url = OAuth.addParameters(request.URL, request.getParameters());
             method = new GetMethod(url);
             // method.addRequestHeader("Authorization", message
             // .getAuthorizationHeader(serviceProvider.userAuthorizationURL));
             method.setFollowRedirects(false);
         } else {
-            String form = OAuth.formEncode(message.getParameters());
-            PostMethod post = new PostMethod(message.URL);
+            String form = OAuth.formEncode(request.getParameters());
+            PostMethod post = new PostMethod(request.URL);
             post.setRequestEntity(new StringRequestEntity(form,
                     OAuth.FORM_ENCODED, null));
             method = post;

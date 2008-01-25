@@ -138,7 +138,7 @@ public abstract class OAuthSignatureMethod {
             parameters.addAll(message.getParameters());
             url = url.substring(0, q);
         }
-        return OAuth.percentEncode(message.httpMethod.toUpperCase()) + '&'
+        return OAuth.percentEncode(message.method.toUpperCase()) + '&'
                 + OAuth.percentEncode(url) + '&'
                 + OAuth.percentEncode(normalizeParameters(parameters));
     }
