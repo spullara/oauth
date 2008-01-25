@@ -124,7 +124,8 @@ public abstract class OAuthSignatureMethod {
         this.tokenSecret = tokenSecret;
     }
 
-    protected String getBaseString(OAuthMessage message) throws IOException {
+    protected static String getBaseString(OAuthMessage message)
+            throws IOException {
         List<Map.Entry<String, String>> parameters;
         String url = message.URL;
         int q = url.indexOf('?');
@@ -142,7 +143,7 @@ public abstract class OAuthSignatureMethod {
                 + OAuth.percentEncode(normalizeParameters(parameters));
     }
 
-    protected String normalizeParameters(
+    protected static String normalizeParameters(
             Collection<? extends Map.Entry> parameters) throws IOException {
         if (parameters == null) {
             return "";
@@ -172,20 +173,20 @@ public abstract class OAuthSignatureMethod {
     public static OAuthSignatureMethod newMethod(String name,
             OAuthAccessor accessor) throws Exception {
         Class methodClass = NAME_TO_CLASS.get(name);
-        if (methodClass == null) {
-            OAuthProblemException problem = new OAuthProblemException(
-                    "signature_method_rejected");
-            String acceptable = OAuth.percentEncode(NAME_TO_CLASS.keySet());
-            if (acceptable.length() > 0) {
-                problem.setParameter("oauth_acceptable_signature_methods",
-                        acceptable.toString());
-            }
-            throw problem;
+        if (methodClass != null) {
+            OAuthSignatureMethod method = (OAuthSignatureMethod) methodClass
+                    .newInstance();
+            method.initialize(name, accessor);
+            return method;
         }
-        OAuthSignatureMethod method = (OAuthSignatureMethod) methodClass
-                .newInstance();
-        method.initialize(name, accessor);
-        return method;
+        OAuthProblemException problem = new OAuthProblemException(
+                "signature_method_rejected");
+        String acceptable = OAuth.percentEncode(NAME_TO_CLASS.keySet());
+        if (acceptable.length() > 0) {
+            problem.setParameter("oauth_acceptable_signature_methods",
+                    acceptable.toString());
+        }
+        throw problem;
     }
 
     /**

@@ -45,10 +45,8 @@ public class OAuthSignatureMethodTest extends TestCase {
             String label = normal[n++];
             List<OAuth.Parameter> parameters = OAuth.decodeForm(normal[n++]);
             String expected = normal[n++];
-            OAuthSignatureMethod method = OAuthSignatureMethod.newMethod(
-                    "HMAC-SHA1", new OAuthAccessor(new OAuthConsumer(null,
-                            null, null, null)));
-            String actual = method.normalizeParameters(parameters);
+            String actual = OAuthSignatureMethod
+                    .normalizeParameters(parameters);
             assertEquals(label, expected, actual);
         }
     }
@@ -97,8 +95,8 @@ public class OAuthSignatureMethodTest extends TestCase {
                             consumerSecret, null)));
             method.setTokenSecret(tokenSecret);
             List<OAuth.Parameter> parameters = OAuth.decodeForm(form);
-            String actual = method.getBaseString(new OAuthMessage(httpMethod,
-                    URL, parameters));
+            String actual = OAuthSignatureMethod
+                    .getBaseString(new OAuthMessage(httpMethod, URL, parameters));
             assertEquals(label, expected, actual);
         }
     }
