@@ -62,32 +62,23 @@ public abstract class OAuthClient {
     }
 
     /**
-     * Send a request to the service provider and get the response. This may be
-     * a request for a token, or for access to a protected resource.
+     * Construct a request message, send it to the service provider and get the
+     * response. This may be a request for a token, or for access to a protected
+     * resource.
      * 
      * @return the response
      */
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
             Collection<? extends Map.Entry> parameters) throws Exception {
-        return invoke(newRequestMessage(accessor, url, parameters));
+        return invoke(accessor.newRequestMessage(url, parameters));
     }
 
-    // TODO: move this method to OAuthAccessor?
-    private static OAuthMessage newRequestMessage(OAuthAccessor accessor,
-            String url, Collection<? extends Map.Entry> parameters)
-            throws Exception {
-        String httpMethod = (String) accessor.consumer
-                .getProperty("httpMethod");
-        if (httpMethod == null) {
-            httpMethod = "GET";
-        }
-        OAuthMessage message = new OAuthMessage(httpMethod, url, parameters);
-        message.addRequiredParameters(accessor);
-        message.sign(accessor);
-        return message;
-    }
-
-    /** Send a message to the service provider and get the response. */
-    public abstract OAuthMessage invoke(OAuthMessage message) throws Exception;
+    /**
+     * Send a request message to the service provider and get the response. This
+     * may be a request for a token, or for access to a protected resource.
+     * 
+     * @return the response
+     */
+    public abstract OAuthMessage invoke(OAuthMessage request) throws Exception;
 
 }

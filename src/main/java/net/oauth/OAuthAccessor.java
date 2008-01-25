@@ -16,6 +16,7 @@
 
 package net.oauth;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +48,20 @@ public class OAuthAccessor {
 
     public void setProperty(String name, Object value) {
         properties.put(name, value);
+    }
+
+    public OAuthMessage newRequestMessage(String url,
+            Collection<? extends Map.Entry> parameters) throws Exception {
+        String method = (String) this.getProperty("httpMethod");
+        if (method == null) {
+            method = (String) this.consumer.getProperty("httpMethod");
+        }
+        if (method == null) {
+            method = "GET";
+        }
+        OAuthMessage message = new OAuthMessage(method, url, parameters);
+        message.addRequiredParameters(this);
+        return message;
     }
 
 }
