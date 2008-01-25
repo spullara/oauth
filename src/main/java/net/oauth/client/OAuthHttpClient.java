@@ -42,7 +42,7 @@ public class OAuthHttpClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    protected OAuthMessage invoke(OAuthMessage message) throws Exception {
+    public OAuthMessage invoke(OAuthMessage message) throws Exception {
         HttpMethod method;
         if ("GET".equals(message.httpMethod)) {
             String url = OAuth.addParameters(message.URL, message.getParameters());

@@ -39,7 +39,7 @@ public class OAuthURLConnectionClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    protected OAuthMessage invoke(OAuthMessage request) throws Exception {
+    public OAuthMessage invoke(OAuthMessage request) throws Exception {
         URLConnection connection;
         if ("GET".equals(request.httpMethod)) {
             URL url = new URL(OAuth.addParameters(request.URL, request
@@ -49,14 +49,17 @@ public class OAuthURLConnectionClient extends OAuthClient {
                 ((HttpURLConnection) connection)
                         .setRequestMethod(request.httpMethod);
             }
+            connection.setDoInput(true);
         } else {
             URL url = new URL(request.URL);
-            String form = OAuth.formEncode(request.getParameters());
             connection = url.openConnection();
             if (connection instanceof HttpURLConnection) {
                 ((HttpURLConnection) connection)
                         .setRequestMethod(request.httpMethod);
             }
+            connection.setDoInput(true);
+            String form = OAuth.formEncode(request.getParameters());
+            connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", OAuth.FORM_ENCODED);
             OutputStream output = connection.getOutputStream();
             try {

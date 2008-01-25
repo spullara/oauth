@@ -57,9 +57,9 @@ public class OAuthServlet {
                 getParameters(request));
     }
 
-    private static List<Map.Entry<String, String>> getParameters(
+    public static List<OAuth.Parameter> getParameters(
             HttpServletRequest request) {
-        List<Map.Entry<String, String>> list = new ArrayList<Map.Entry<String, String>>();
+        List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
         for (Enumeration headers = request.getHeaders("Authorization"); 
                 headers != null && headers.hasMoreElements();) {
             String header = headers.nextElement().toString();

@@ -65,7 +65,13 @@ public abstract class OAuthSignatureMethod {
     }
 
     protected String getSignature(OAuthMessage message) throws Exception {
-        return getSignature(getBaseString(message));
+        String baseString = getBaseString(message);
+        String signature = getSignature(baseString);
+        // Logger log = Logger.getLogger(getClass().getName());
+        // if (log.isLoggable(Level.FINE)) {
+        // log.fine(signature + "=getSignature(" + baseString + ")");
+        // }
+        return signature;
     }
 
     protected void initialize(String name, OAuthAccessor accessor)

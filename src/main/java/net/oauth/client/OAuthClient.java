@@ -18,7 +18,6 @@ package net.oauth.client;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
@@ -73,50 +72,22 @@ public abstract class OAuthClient {
         return invoke(newRequestMessage(accessor, url, parameters));
     }
 
-    // TODO: move this method to OAuthMessage?
+    // TODO: move this method to OAuthAccessor?
     private static OAuthMessage newRequestMessage(OAuthAccessor accessor,
             String url, Collection<? extends Map.Entry> parameters)
             throws Exception {
-        final OAuthConsumer consumer = accessor.consumer;
-        List<Map.Entry> parms;
-        if (parameters == null) {
-            parms = new ArrayList<Map.Entry>(6);
-        } else {
-            parms = new ArrayList<Map.Entry>(parameters);
-        }
-        Map<String, String> pMap = OAuth.newMap(parms);
-        if (pMap.get("oauth_token") == null && accessor.accessToken != null) {
-            parms.add(new OAuth.Parameter("oauth_token", accessor.accessToken));
-        }
-        if (pMap.get("oauth_consumer_key") == null) {
-            parms.add(new OAuth.Parameter("oauth_consumer_key",
-                    consumer.consumerKey));
-        }
-        String httpMethod = (String) consumer.getProperty("httpMethod");
+        String httpMethod = (String) accessor.consumer
+                .getProperty("httpMethod");
         if (httpMethod == null) {
             httpMethod = "GET";
         }
-        String signatureMethod = pMap.get("oauth_signature_method");
-        if (signatureMethod == null) {
-            signatureMethod = (String) consumer
-                    .getProperty("oauth_signature_method");
-            if (signatureMethod == null) {
-                signatureMethod = "HMAC-SHA1";
-            }
-            parms.add(new OAuth.Parameter("oauth_signature_method",
-                    signatureMethod));
-        }
-        parms.add(new OAuth.Parameter("oauth_timestamp", (System
-                .currentTimeMillis() / 1000)
-                + ""));
-        parms.add(new OAuth.Parameter("oauth_nonce", System.nanoTime() + ""));
-        OAuthMessage message = new OAuthMessage(httpMethod, url, parms);
+        OAuthMessage message = new OAuthMessage(httpMethod, url, parameters);
+        message.addRequiredParameters(accessor);
         message.sign(accessor);
         return message;
     }
 
     /** Send a message to the service provider and get the response. */
-    protected abstract OAuthMessage invoke(OAuthMessage message)
-            throws Exception;
+    public abstract OAuthMessage invoke(OAuthMessage message) throws Exception;
 
 }

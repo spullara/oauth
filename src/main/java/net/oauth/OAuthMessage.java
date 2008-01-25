@@ -152,6 +152,38 @@ public class OAuthMessage {
         }
     }
 
+    /**
+     * Add some of the parameters needed to request access to a protected
+     * resource, if they aren't already in the message.
+     */
+    public void addRequiredParameters(OAuthAccessor accessor) throws Exception {
+        final Map<String, String> pMap = OAuth.newMap(parameters);
+        if (pMap.get("oauth_token") == null && accessor.accessToken != null) {
+            addParameter("oauth_token", accessor.accessToken);
+        }
+        final OAuthConsumer consumer = accessor.consumer;
+        if (pMap.get("oauth_consumer_key") == null) {
+            addParameter("oauth_consumer_key", consumer.consumerKey);
+        }
+        String signatureMethod = pMap.get("oauth_signature_method");
+        if (signatureMethod == null) {
+            signatureMethod = (String) consumer
+                    .getProperty("oauth_signature_method");
+            if (signatureMethod == null) {
+                signatureMethod = "HMAC-SHA1";
+            }
+            addParameter("oauth_signature_method", signatureMethod);
+        }
+        if (pMap.get("oauth_timestamp") == null) {
+            addParameter("oauth_timestamp", (System.currentTimeMillis() / 1000)
+                    + "");
+        }
+        if (pMap.get("oauth_nonce") == null) {
+            addParameter("oauth_nonce", System.nanoTime() + "");
+        }
+        this.sign(accessor);
+    }
+
     /** Add a signature to the message. */
     public void sign(OAuthAccessor accessor) throws Exception {
         getSigner(accessor).sign(this);

@@ -60,8 +60,11 @@ class URLConnectionResponse extends OAuthMessage {
         if (bodyAsString == null) {
             InputStream input = connection.getInputStream();
             try {
-                Reader reader = new InputStreamReader(input, connection
-                        .getContentEncoding());
+                String encoding = connection.getContentEncoding();
+                if (encoding == null) {
+                    encoding = "ISO-8859-1";
+                }
+                Reader reader = new InputStreamReader(input, encoding);
                 StringBuilder b = new StringBuilder();
                 char[] c = new char[1024];
                 int len;
