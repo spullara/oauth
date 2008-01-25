@@ -50,14 +50,16 @@ public class OAuthAccessor {
         properties.put(name, value);
     }
 
-    public OAuthMessage newRequestMessage(String url,
+    public OAuthMessage newRequestMessage(String method, String url,
             Collection<? extends Map.Entry> parameters) throws Exception {
-        String method = (String) this.getProperty("httpMethod");
         if (method == null) {
-            method = (String) this.consumer.getProperty("httpMethod");
-        }
-        if (method == null) {
-            method = "GET";
+            method = (String) this.getProperty("httpMethod");
+            if (method == null) {
+                method = (String) this.consumer.getProperty("httpMethod");
+                if (method == null) {
+                    method = "GET";
+                }
+            }
         }
         OAuthMessage message = new OAuthMessage(method, url, parameters);
         message.addRequiredParameters(this);

@@ -70,7 +70,7 @@ public abstract class OAuthClient {
      */
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
             Collection<? extends Map.Entry> parameters) throws Exception {
-        return invoke(accessor.newRequestMessage(url, parameters));
+        return invoke(accessor.newRequestMessage(null, url, parameters));
     }
 
     /**
