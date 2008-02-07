@@ -59,14 +59,17 @@ class URLConnectionResponse extends OAuthMessage {
     private String bodyAsString = null;
 
     @Override
-    protected void completeParameters() throws IOException {
-        addParameters(OAuth.decodeForm(getBodyAsString()));
+    public InputStream getBodyAsStream() throws IOException {
+        if (bodyAsString == null) {
+            return connection.getInputStream();
+        }
+        return super.getBodyAsStream();
     }
 
     @Override
     public String getBodyAsString() throws IOException {
         if (bodyAsString == null) {
-            InputStream input = connection.getInputStream();
+            InputStream input = getBodyAsStream();
             try {
                 String encoding = connection.getContentEncoding();
                 if (encoding == null) {
@@ -84,6 +87,11 @@ class URLConnectionResponse extends OAuthMessage {
             }
         }
         return bodyAsString;
+    }
+
+    @Override
+    protected void completeParameters() throws IOException {
+        addParameters(OAuth.decodeForm(getBodyAsString()));
     }
 
     /**

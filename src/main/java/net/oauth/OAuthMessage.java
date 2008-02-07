@@ -16,7 +16,9 @@
 
 package net.oauth;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -131,6 +133,17 @@ public class OAuthMessage {
     /** Get the body of the HTTP request or response. */
     public String getBodyAsString() throws IOException {
         return null; // stub
+    }
+
+    /**
+     * Get a stream from which to read the body of the HTTP request or response.
+     * This is designed to support efficient streaming of a large response. If
+     * you call this method before calling getBodyAsString, then subsequent
+     * calls to either method will propagate an exception.
+     */
+    public InputStream getBodyAsStream() throws IOException {
+        return new ByteArrayInputStream(getBodyAsString()
+                .getBytes("ISO-8859-1"));
     }
 
     /** Construct a verbose description of this message and its origins. */

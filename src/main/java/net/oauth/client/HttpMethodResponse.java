@@ -17,6 +17,7 @@
 package net.oauth.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
@@ -55,6 +56,14 @@ class HttpMethodResponse extends OAuthMessage {
     @Override
     protected void completeParameters() throws IOException {
         addParameters(OAuth.decodeForm(getBodyAsString()));
+    }
+
+    @Override
+    public InputStream getBodyAsStream() throws IOException {
+        if (bodyAsString == null) {
+            return method.getResponseBodyAsStream();
+        }
+        return super.getBodyAsStream();
     }
 
     @Override
