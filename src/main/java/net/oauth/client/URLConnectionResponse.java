@@ -25,7 +25,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
-import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 
 /**
@@ -33,7 +32,7 @@ import net.oauth.OAuthMessage;
  * 
  * @author John Kristian
  */
-class URLConnectionResponse extends OAuthMessage {
+class URLConnectionResponse extends OAuthResponseMessage {
 
     /**
      * Construct an OAuthMessage from the HTTP response, including parameters
@@ -42,15 +41,11 @@ class URLConnectionResponse extends OAuthMessage {
      */
     public URLConnectionResponse(OAuthMessage request, URLConnection connection)
             throws IOException {
-        super(request.method, request.URL, NO_PARAMETERS);
+        super(request.method, request.URL);
         this.connection = connection;
         for (String header : connection.getHeaderFields().get(
                 "WWW-Authenticate")) {
-            for (OAuth.Parameter parameter : decodeAuthorization(header)) {
-                if (!"realm".equalsIgnoreCase(parameter.getKey())) {
-                    addParameter(parameter);
-                }
-            }
+            this.decodeWWWAuthenticate(header);
         }
     }
 
@@ -87,21 +82,6 @@ class URLConnectionResponse extends OAuthMessage {
             }
         }
         return bodyAsString;
-    }
-
-    @Override
-    protected void completeParameters() throws IOException {
-        String contentType = connection.getContentType();
-        if (contentType != null) {
-            int semi = contentType.indexOf(';');
-            if (semi >= 0)
-                contentType = contentType.substring(0, semi);
-            if (!("text/plain".equalsIgnoreCase(contentType) || OAuth.FORM_ENCODED
-                    .equalsIgnoreCase(contentType))) {
-                return;
-            }
-        }
-        addParameters(OAuth.decodeForm(getBodyAsString()));
     }
 
     /**

@@ -19,8 +19,6 @@ package net.oauth.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import net.oauth.OAuth;
-import net.oauth.OAuthMessage;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 
@@ -29,7 +27,7 @@ import org.apache.commons.httpclient.HttpMethod;
  * 
  * @author John Kristian
  */
-class HttpMethodResponse extends OAuthMessage {
+class HttpMethodResponse extends OAuthResponseMessage {
 
     /**
      * Construct an OAuthMessage from the HTTP response, including parameters
@@ -37,37 +35,16 @@ class HttpMethodResponse extends OAuthMessage {
      * come first, followed by the ones from the response body.
      */
     public HttpMethodResponse(HttpMethod method) throws IOException {
-        super(method.getName(), method.getURI().toString(), NO_PARAMETERS);
+        super(method.getName(), method.getURI().toString());
         this.method = method;
         for (Header header : method.getResponseHeaders("WWW-Authenticate")) {
-            for (OAuth.Parameter parameter : decodeAuthorization(header
-                    .getValue())) {
-                if (!"realm".equalsIgnoreCase(parameter.getKey())) {
-                    addParameter(parameter);
-                }
-            }
+            decodeWWWAuthenticate(header.getValue());
         }
     }
 
     private final HttpMethod method;
 
     private String bodyAsString = null;
-
-    @Override
-    protected void completeParameters() throws IOException {
-        Header contentTypeHeader = method.getResponseHeader("content-type");
-        if (contentTypeHeader != null) {
-            String contentType = contentTypeHeader.getValue();
-            int semi = contentType.indexOf(';');
-            if (semi >= 0)
-                contentType = contentType.substring(0, semi);
-            if (!("text/plain".equalsIgnoreCase(contentType) || OAuth.FORM_ENCODED
-                    .equalsIgnoreCase(contentType))) {
-                return;
-            }
-        }
-        addParameters(OAuth.decodeForm(getBodyAsString()));
-    }
 
     @Override
     public InputStream getBodyAsStream() throws IOException {
