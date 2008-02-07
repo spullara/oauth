@@ -23,7 +23,6 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
@@ -45,15 +44,24 @@ class URLConnectionResponse extends OAuthMessage {
             throws IOException {
         super(request.method, request.URL, NO_PARAMETERS);
         this.connection = connection;
-        try {
-            addParameters(getResponseParameters());
-        } catch (Exception ignored) {
+        for (String header : connection.getHeaderFields().get(
+                "WWW-Authenticate")) {
+            for (OAuth.Parameter parameter : decodeAuthorization(header)) {
+                if (!"realm".equalsIgnoreCase(parameter.getKey())) {
+                    addParameter(parameter);
+                }
+            }
         }
     }
 
     private final URLConnection connection;
 
     private String bodyAsString = null;
+
+    @Override
+    protected void completeParameters() throws IOException {
+        addParameters(OAuth.decodeForm(getBodyAsString()));
+    }
 
     @Override
     public String getBodyAsString() throws IOException {
@@ -129,20 +137,6 @@ class URLConnectionResponse extends OAuthMessage {
             }
             into.put("HTTP response", response.toString());
         }
-    }
-
-    private List<OAuth.Parameter> getResponseParameters() throws IOException {
-        List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
-        for (String header : connection.getHeaderFields().get(
-                "WWW-Authenticate")) {
-            for (OAuth.Parameter parameter : decodeAuthorization(header)) {
-                if (!"realm".equalsIgnoreCase(parameter.getKey())) {
-                    list.add(parameter);
-                }
-            }
-        }
-        list.addAll(OAuth.decodeForm(getBodyAsString()));
-        return list;
     }
 
 }

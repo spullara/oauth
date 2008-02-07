@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 import net.oauth.signature.OAuthSignatureMethod;
 
 /**
+ * A request or response message used in the OAuth protocol.
+ * 
  * @author John Kristian
  */
 public class OAuthMessage {
@@ -57,12 +59,29 @@ public class OAuthMessage {
 
     private Map<String, String> parameterMap;
 
+    private boolean parametersAreComplete = false;
+
     public String toString() {
-        return "OAuthMessage(" + method + ", " + URL + ", " + parameters
-                + ")";
+        return "OAuthMessage(" + method + ", " + URL + ", " + parameters + ")";
     }
 
-    public List<Map.Entry<String, String>> getParameters() {
+    /** A caller is about to get a parameter. */
+    private void beforeGetParameter() throws IOException {
+        if (!parametersAreComplete) {
+            completeParameters();
+            parametersAreComplete = true;
+        }
+    }
+
+    /**
+     * Finish adding parameters; for example read an HTTP response body and
+     * parse parameters from it.
+     */
+    protected void completeParameters() throws IOException {
+    }
+
+    public List<Map.Entry<String, String>> getParameters() throws IOException {
+        beforeGetParameter();
         return Collections.unmodifiableList(parameters);
     }
 
@@ -81,27 +100,28 @@ public class OAuthMessage {
         parameterMap = null;
     }
 
-    public String getParameter(String name) {
+    public String getParameter(String name) throws IOException {
         return getParameterMap().get(name);
     }
 
-    public String getConsumerKey() {
+    public String getConsumerKey() throws IOException {
         return getParameter("oauth_consumer_key");
     }
 
-    public String getToken() {
+    public String getToken() throws IOException {
         return getParameter("oauth_token");
     }
 
-    public String getSignatureMethod() {
+    public String getSignatureMethod() throws IOException {
         return getParameter("oauth_signature_method");
     }
 
-    public String getSignature() {
+    public String getSignature() throws IOException {
         return getParameter("oauth_signature");
     }
 
-    protected Map<String, String> getParameterMap() {
+    protected Map<String, String> getParameterMap() throws IOException {
+        beforeGetParameter();
         if (parameterMap == null) {
             parameterMap = OAuth.newMap(parameters);
         }
@@ -135,7 +155,8 @@ public class OAuthMessage {
      * @throws OAuthProblemException
      *             one or more parameters are absent.
      */
-    public void requireParameters(String... names) throws OAuthProblemException {
+    public void requireParameters(String... names) throws IOException,
+            OAuthProblemException {
         Set<String> present = getParameterMap().keySet();
         List<String> absent = new ArrayList<String>();
         for (String required : names) {
@@ -212,9 +233,10 @@ public class OAuthMessage {
      * Construct a WWW-Authenticate or Authentication header value, containing
      * the given realm plus all the parameters whose names begin with "oauth_".
      */
-    public String getAuthorizationHeader(String realm) {
+    public String getAuthorizationHeader(String realm) throws IOException {
         StringBuilder into = new StringBuilder(AUTH_SCHEME);
         into.append(" realm=\"").append(OAuth.percentEncode(realm)).append('"');
+        beforeGetParameter();
         if (parameters != null) {
             for (Map.Entry parameter : parameters) {
                 String name = toString(parameter.getKey());

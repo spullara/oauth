@@ -17,8 +17,6 @@
 package net.oauth.client;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
@@ -40,15 +38,24 @@ class HttpMethodResponse extends OAuthMessage {
     public HttpMethodResponse(HttpMethod method) throws IOException {
         super(method.getName(), method.getURI().toString(), NO_PARAMETERS);
         this.method = method;
-        try {
-            addParameters(getResponseParameters());
-        } catch (Exception ignored) {
+        for (Header header : method.getResponseHeaders("WWW-Authenticate")) {
+            for (OAuth.Parameter parameter : decodeAuthorization(header
+                    .getValue())) {
+                if (!"realm".equalsIgnoreCase(parameter.getKey())) {
+                    addParameter(parameter);
+                }
+            }
         }
     }
 
     private final HttpMethod method;
 
     private String bodyAsString = null;
+
+    @Override
+    protected void completeParameters() throws IOException {
+        addParameters(OAuth.decodeForm(getBodyAsString()));
+    }
 
     @Override
     public String getBodyAsString() throws IOException {
@@ -94,20 +101,6 @@ class HttpMethodResponse extends OAuthMessage {
             }
             into.put("HTTP response", response.toString());
         }
-    }
-
-    private List<OAuth.Parameter> getResponseParameters() throws IOException {
-        List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
-        for (Header header : method.getResponseHeaders("WWW-Authenticate")) {
-            for (OAuth.Parameter parameter : decodeAuthorization(header
-                    .getValue())) {
-                if (!"realm".equalsIgnoreCase(parameter.getKey())) {
-                    list.add(parameter);
-                }
-            }
-        }
-        list.addAll(OAuth.decodeForm(getBodyAsString()));
-        return list;
     }
 
 }
