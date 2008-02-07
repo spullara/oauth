@@ -16,6 +16,7 @@
 
 package net.oauth;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,14 +26,13 @@ import java.util.Map;
  * 
  * @author John Kristian
  */
-public class OAuthConsumer {
+public class OAuthConsumer implements Serializable {
+
+    private static final long serialVersionUID = -2258581186977818580L;
 
     public final String callbackURL;
-
     public final String consumerKey;
-
     public final String consumerSecret;
-
     public final OAuthServiceProvider serviceProvider;
 
     public OAuthConsumer(String callbackURL, String consumerKey,

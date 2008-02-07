@@ -16,6 +16,7 @@
 
 package net.oauth;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,9 @@ import java.util.Map;
  * 
  * @author John Kristian
  */
-public class OAuthAccessor {
+public class OAuthAccessor implements Serializable {
+
+    private static final long serialVersionUID = 5590788443138352999L;
 
     public final OAuthConsumer consumer;
     public String requestToken;
