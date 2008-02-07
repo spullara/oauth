@@ -55,6 +55,17 @@ class HttpMethodResponse extends OAuthMessage {
 
     @Override
     protected void completeParameters() throws IOException {
+        Header contentTypeHeader = method.getResponseHeader("content-type");
+        if (contentTypeHeader != null) {
+            String contentType = contentTypeHeader.getValue();
+            int semi = contentType.indexOf(';');
+            if (semi >= 0)
+                contentType = contentType.substring(0, semi);
+            if (!("text/plain".equalsIgnoreCase(contentType) || OAuth.FORM_ENCODED
+                    .equalsIgnoreCase(contentType))) {
+                return;
+            }
+        }
         addParameters(OAuth.decodeForm(getBodyAsString()));
     }
 

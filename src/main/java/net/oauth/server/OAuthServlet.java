@@ -57,11 +57,10 @@ public class OAuthServlet {
                 getParameters(request));
     }
 
-    public static List<OAuth.Parameter> getParameters(
-            HttpServletRequest request) {
+    public static List<OAuth.Parameter> getParameters(HttpServletRequest request) {
         List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
-        for (Enumeration headers = request.getHeaders("Authorization"); 
-                headers != null && headers.hasMoreElements();) {
+        for (Enumeration headers = request.getHeaders("Authorization"); headers != null
+                && headers.hasMoreElements();) {
             String header = headers.nextElement().toString();
             for (OAuth.Parameter parameter : OAuthMessage
                     .decodeAuthorization(header)) {
@@ -92,6 +91,12 @@ public class OAuthServlet {
 
     public static void handleException(HttpServletResponse response,
             Exception e, String realm) throws IOException, ServletException {
+        handleException(response, e, realm, true);
+    }
+
+    public static void handleException(HttpServletResponse response,
+            Exception e, String realm, boolean sendBody) throws IOException,
+            ServletException {
         if (e instanceof OAuthProblemException) {
             OAuthProblemException problem = (OAuthProblemException) e;
             Object httpCode = problem.getParameters().get(
@@ -108,7 +113,9 @@ public class OAuthServlet {
                     .getParameters().entrySet());
             response.addHeader("WWW-Authenticate", message
                     .getAuthorizationHeader(realm));
-            sendForm(response, message.getParameters());
+            if (sendBody) {
+                sendForm(response, message.getParameters());
+            }
         } else if (e instanceof IOException) {
             throw (IOException) e;
         } else if (e instanceof ServletException) {
@@ -128,7 +135,8 @@ public class OAuthServlet {
         Integer SC_BAD_REQUEST = new Integer(HttpServletResponse.SC_BAD_REQUEST);
         Integer SC_SERVICE_UNAVAILABLE = new Integer(
                 HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        Integer SC_UNAUTHORIZED = new Integer(HttpServletResponse.SC_UNAUTHORIZED);
+        Integer SC_UNAUTHORIZED = new Integer(
+                HttpServletResponse.SC_UNAUTHORIZED);
         PROBLEM_TO_HTTP_CODE.put("version_rejected", SC_BAD_REQUEST);
         PROBLEM_TO_HTTP_CODE.put("parameter_absent", SC_BAD_REQUEST);
         PROBLEM_TO_HTTP_CODE.put("parameter_rejected", SC_BAD_REQUEST);
@@ -136,7 +144,7 @@ public class OAuthServlet {
         PROBLEM_TO_HTTP_CODE.put("signature_method_rejected", SC_BAD_REQUEST);
         PROBLEM_TO_HTTP_CODE
                 .put("consumer_key_refused", SC_SERVICE_UNAVAILABLE);
-        
+
         PROBLEM_TO_HTTP_CODE.put("invalid_consumer_key", SC_UNAUTHORIZED);
         PROBLEM_TO_HTTP_CODE.put("invalid_expired_token", SC_UNAUTHORIZED);
         PROBLEM_TO_HTTP_CODE.put("signature_invalid", SC_UNAUTHORIZED);

@@ -91,6 +91,16 @@ class URLConnectionResponse extends OAuthMessage {
 
     @Override
     protected void completeParameters() throws IOException {
+        String contentType = connection.getContentType();
+        if (contentType != null) {
+            int semi = contentType.indexOf(';');
+            if (semi >= 0)
+                contentType = contentType.substring(0, semi);
+            if (!("text/plain".equalsIgnoreCase(contentType) || OAuth.FORM_ENCODED
+                    .equalsIgnoreCase(contentType))) {
+                return;
+            }
+        }
         addParameters(OAuth.decodeForm(getBodyAsString()));
     }
 
