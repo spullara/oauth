@@ -62,6 +62,8 @@ public class OAuthProblemException extends Exception {
         Object code = getParameters().get(HTTP_STATUS_CODE);
         if (code == null) {
             return 200;
+        } else if (code instanceof Number) { // the usual case
+            return ((Number) code).intValue();
         } else {
             return Integer.parseInt(code.toString());
         }

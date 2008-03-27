@@ -19,6 +19,7 @@ package net.oauth.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import net.oauth.OAuthProblemException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 
@@ -83,6 +84,8 @@ class HttpMethodResponse extends OAuthResponseMessage {
             }
             into.put("HTTP request headers", request.toString());
         }
+        into.put(OAuthProblemException.HTTP_STATUS_CODE, //
+                new Integer(method.getStatusCode()));
         {
             StringBuilder response = new StringBuilder(method.getStatusLine()
                     .toString());

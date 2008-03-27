@@ -26,6 +26,7 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
 import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
 
 /**
  * The response part of a URLConnection, encapsulated as an OAuthMessage.
@@ -113,7 +114,10 @@ class URLConnectionResponse extends OAuthResponseMessage {
             StringBuilder response = new StringBuilder();
             if (connection instanceof HttpURLConnection) {
                 HttpURLConnection http = (HttpURLConnection) connection;
-                response.append(http.getResponseCode());
+                int responseCode = http.getResponseCode();
+                into.put(OAuthProblemException.HTTP_STATUS_CODE, //
+                        new Integer(responseCode));
+                response.append(responseCode);
                 String message = http.getResponseMessage();
                 if (message != null) {
                     response.append(" ").append(message);
