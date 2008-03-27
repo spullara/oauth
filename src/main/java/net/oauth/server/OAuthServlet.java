@@ -53,6 +53,12 @@ public class OAuthServlet {
         if (URL == null) {
             URL = request.getRequestURL().toString();
         }
+        int q = URL.indexOf('?');
+        if (q >= 0) {
+            URL = URL.substring(0, q);
+            // The query string parameters will be included in
+            // the result from getParameters(request).
+        }
         return new OAuthMessage(request.getMethod(), URL,
                 getParameters(request));
     }
