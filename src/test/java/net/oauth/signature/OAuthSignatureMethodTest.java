@@ -16,12 +16,14 @@
 
 package net.oauth.signature;
 
-import java.util.List;
 import junit.framework.TestCase;
+
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthMessage;
+
+import java.util.List;
 
 public class OAuthSignatureMethodTest extends TestCase {
 
@@ -99,6 +101,42 @@ public class OAuthSignatureMethodTest extends TestCase {
                     .getBaseString(new OAuthMessage(httpMethod, URL, parameters));
             assertEquals(label, expected, actual);
         }
+
+        OAuthMessage message = new OAuthMessage("GET",
+                "HTTP://Example.com:80/foo",
+                null);
+        String baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&http%3A%2F%2Fexample.com%2Ffoo&", baseString);
+
+        message = new OAuthMessage("GET",
+                "HTTP://Example.com:444/foo",
+                null);
+        baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&http%3A%2F%2Fexample.com%3A444%2Ffoo&", baseString);
+
+        message = new OAuthMessage("GET",
+                "HTTPS://Example.com:443/foo",
+                null);
+        baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&https%3A%2F%2Fexample.com%2Ffoo&", baseString);
+
+        message = new OAuthMessage("GET",
+                "hTtp://Example.com/Foo",
+                null);
+        baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&http%3A%2F%2Fexample.com%2FFoo&", baseString);
+
+        message = new OAuthMessage("GET",
+                "http://Example.com:443/foo",
+                null);
+        baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&http%3A%2F%2Fexample.com%3A443%2Ffoo&", baseString);
+
+        message = new OAuthMessage("GET",
+                "https://Example.com:80/foo",
+                null);
+        baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&https%3A%2F%2Fexample.com%3A80%2Ffoo&", baseString);
     }
 
     private static final String[][] SIGNATURES = //

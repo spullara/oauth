@@ -16,23 +16,27 @@
 
 package net.oauth.signature;
 
+import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
+import net.oauth.OAuthConsumer;
+import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
+
+import org.apache.commons.codec.binary.Base64;
+
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import net.oauth.OAuth;
-import net.oauth.OAuthAccessor;
-import net.oauth.OAuthConsumer;
-import net.oauth.OAuthMessage;
-import net.oauth.OAuthProblemException;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  * A pair of algorithms for computing and verifying an OAuth digital signature.
- * 
+ *
  * @author John Kristian
  */
 public abstract class OAuthSignatureMethod {
@@ -45,7 +49,7 @@ public abstract class OAuthSignatureMethod {
 
     /**
      * Check whether the message has a valid signature.
-     * 
+     *
      * @throws OAuthProblemException
      *             the signature is invalid
      */
@@ -124,8 +128,8 @@ public abstract class OAuthSignatureMethod {
         this.tokenSecret = tokenSecret;
     }
 
-    protected static String getBaseString(OAuthMessage message)
-            throws IOException {
+    public static String getBaseString(OAuthMessage message)
+            throws IOException, URISyntaxException {
         List<Map.Entry<String, String>> parameters;
         String url = message.URL;
         int q = url.indexOf('?');
@@ -139,8 +143,28 @@ public abstract class OAuthSignatureMethod {
             url = url.substring(0, q);
         }
         return OAuth.percentEncode(message.method.toUpperCase()) + '&'
-                + OAuth.percentEncode(url) + '&'
+                + OAuth.percentEncode(normalizeUrl(url)) + '&'
                 + OAuth.percentEncode(normalizeParameters(parameters));
+    }
+
+    protected static String normalizeUrl(String url) throws URISyntaxException {
+        URI uri = new URI(url);
+        String authority = uri.getAuthority().toLowerCase();
+        String scheme = uri.getScheme().toLowerCase();
+
+        boolean dropPort = (scheme.equals("http") && uri.getPort() == 80)
+                           || (scheme.equals("https") && uri.getPort() == 443);
+
+        if (dropPort) {
+            // find the last : in the authority
+            int index = authority.lastIndexOf(":");
+            if (index >= 0) {
+                authority = authority.substring(0, index);
+            }
+        }
+
+        // we know that there is no query and no fragment here.
+        return new URI(scheme, authority, uri.getPath(), null, null).toString();
     }
 
     protected static String normalizeParameters(
