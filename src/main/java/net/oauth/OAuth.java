@@ -102,7 +102,7 @@ public class OAuth {
     /** Parse a form-urlencoded document. */
     public static List<Parameter> decodeForm(String form) {
         List<Parameter> list = new ArrayList<Parameter>();
-        if (form != null) {
+        if (!isEmpty(form)) {
             for (String nvp : form.split("\\&")) {
                 int equals = nvp.indexOf('=');
                 String name;
@@ -241,4 +241,7 @@ public class OAuth {
         }
     }
 
+    public static boolean isEmpty(String str) {
+	return (str == null) || (str.length() == 0);
+    }
 }

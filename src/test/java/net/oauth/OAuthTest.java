@@ -18,6 +18,8 @@ package net.oauth;
 
 import junit.framework.TestCase;
 
+import java.util.List;
+
 public class OAuthTest extends TestCase {
 
     private static final String[] STANDARD =
@@ -66,6 +68,47 @@ public class OAuthTest extends TestCase {
 
     public void testDecodeFlexible() {
         testDecode(FLEXIBLE);
+    }
+
+    public void testDecodeFormCornerCases() throws Exception {
+
+	List<OAuth.Parameter> msgParams = OAuth.decodeForm("foo=bar");
+	assertEquals(1, msgParams.size());
+	assertEquals("foo", msgParams.get(0).getKey());
+	assertEquals("bar", msgParams.get(0).getValue());
+
+	msgParams = OAuth.decodeForm("foo");
+	assertEquals(1, msgParams.size());
+	assertEquals("foo", msgParams.get(0).getKey());
+	assertNull(msgParams.get(0).getValue());
+
+	msgParams = OAuth.decodeForm(null);
+	assertNotNull(msgParams);
+	assertEquals(0, msgParams.size());
+
+	msgParams = OAuth.decodeForm("");
+	assertNotNull(msgParams);
+	assertEquals(0, msgParams.size());
+
+	msgParams = OAuth.decodeForm("   ");
+	assertEquals(1, msgParams.size());
+	assertEquals("   ", msgParams.get(0).getKey());
+	assertNull(msgParams.get(0).getValue());
+
+	msgParams = OAuth.decodeForm("=");
+	assertEquals(1, msgParams.size());
+	assertEquals("", msgParams.get(0).getKey());
+	assertEquals("", msgParams.get(0).getValue());
+
+	msgParams = OAuth.decodeForm("= ");
+	assertEquals(1, msgParams.size());
+	assertEquals("", msgParams.get(0).getKey());
+	assertEquals(" ", msgParams.get(0).getValue());
+
+	msgParams = OAuth.decodeForm(" =");
+	assertEquals(1, msgParams.size());
+	assertEquals(" ", msgParams.get(0).getKey());
+	assertEquals("", msgParams.get(0).getValue());
     }
 
     private static void testDecode(String[] cases) {
