@@ -27,7 +27,7 @@ import net.oauth.signature.OAuthSignatureMethod;
 public class SimpleOAuthValidator implements OAuthValidator {
 
     // default window for timestamps is 5 minutes
-    public static final long DEFAULT_TIMESTAMP_WINDOW = 5 * 60;
+    public static final long DEFAULT_TIMESTAMP_WINDOW = 5 * 60 * 1000L;
 
     /**
      * Construct a validator that rejects messages more than five minutes out
@@ -47,14 +47,14 @@ public class SimpleOAuthValidator implements OAuthValidator {
      * @param maxVersion
      *            the maximum acceptable oauth_version
      */
-    public SimpleOAuthValidator(long timestampWindowSec, double maxVersion) {
-        this.timestampWindowSec = timestampWindowSec;
+    public SimpleOAuthValidator(long timestampWindowMsec, double maxVersion) {
+        this.timestampWindow = timestampWindowMsec;
         this.maxVersion = maxVersion;
     }
 
     protected final double minVersion = 1.0;
     protected final double maxVersion;
-    protected final long timestampWindowSec;
+    protected final long timestampWindow;
     private Env env = new Env();
 
     /** {@inherit} */
@@ -79,10 +79,10 @@ public class SimpleOAuthValidator implements OAuthValidator {
     /** This implementation doesn't check the nonce value. */
     protected void validateTimestampAndNonce(OAuthMessage message) throws Exception {
         message.requireParameters(OAuth.OAUTH_TIMESTAMP, OAuth.OAUTH_NONCE);
-        long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP));
+        long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP)) * 1000L;
         long now = env.currentTime();
-        long min = now - timestampWindowSec;
-        long max = now + timestampWindowSec;
+        long min = now - timestampWindow;
+        long max = now + timestampWindow;
         if (timestamp < min || max < timestamp) {
             OAuthProblemException problem = new OAuthProblemException("timestamp_refused");
             problem.setParameter("oauth_acceptable_timestamps", min + "-" + max);
@@ -102,7 +102,7 @@ public class SimpleOAuthValidator implements OAuthValidator {
 
     static class Env {
         public long currentTime() {
-            return System.currentTimeMillis() / 1000L;
+            return System.currentTimeMillis();
         }
     }
 }

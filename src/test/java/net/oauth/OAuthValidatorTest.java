@@ -28,22 +28,22 @@ public class OAuthValidatorTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        currentTime = System.currentTimeMillis() / 1000;
+        currentTime = (System.currentTimeMillis() / 1000) * 1000;
         validator = new SimpleOAuthValidator();
         validator.setEnvForTesting(new FakeEnv());
     }
 
     public void testSimpleOAuthValidator() throws Exception {
         final long window = SimpleOAuthValidator.DEFAULT_TIMESTAMP_WINDOW;
-        tryTimestamp(currentTime - window + 1);
-        tryTimestamp(currentTime + window - 1);
+        tryTimestamp(currentTime - window - 500); // round up
+        tryTimestamp(currentTime + window + 499); // round down
         try {
-            tryTimestamp(currentTime - window - 1);
+            tryTimestamp(currentTime - window - 501);
             fail("validator should have rejected timestamp, but didn't");
         } catch (OAuthProblemException expected) {
         }
         try {
-            tryTimestamp(currentTime + window + 1);
+            tryTimestamp(currentTime + window + 500);
             fail("validator should have rejected timestamp, but didn't");
         } catch (OAuthProblemException expected) {
         }
@@ -68,7 +68,7 @@ public class OAuthValidatorTest extends TestCase {
 
     private void tryTimestamp(long timestamp) throws Exception {
         OAuthMessage msg = new OAuthMessage("", "", OAuth.newList(
-                "oauth_timestamp", timestamp + "",
+                "oauth_timestamp", ((timestamp + 500) / 1000) + "",
                 "oauth_nonce", "lsfksdklfjfg"));
         validator.validateTimestampAndNonce(msg);
     }
