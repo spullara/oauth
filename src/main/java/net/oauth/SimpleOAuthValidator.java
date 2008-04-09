@@ -55,7 +55,6 @@ public class SimpleOAuthValidator implements OAuthValidator {
     protected final double minVersion = 1.0;
     protected final double maxVersion;
     protected final long timestampWindow;
-    private Env env = new Env();
 
     /** {@inherit} */
     public void validateMessage(OAuthMessage message, OAuthAccessor accessor) throws Exception {
@@ -80,7 +79,7 @@ public class SimpleOAuthValidator implements OAuthValidator {
     protected void validateTimestampAndNonce(OAuthMessage message) throws Exception {
         message.requireParameters(OAuth.OAUTH_TIMESTAMP, OAuth.OAUTH_NONCE);
         long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP)) * 1000L;
-        long now = env.currentTime();
+        long now = currentTimeMsec();
         long min = now - timestampWindow;
         long max = now + timestampWindow;
         if (timestamp < min || max < timestamp) {
@@ -96,13 +95,8 @@ public class SimpleOAuthValidator implements OAuthValidator {
         OAuthSignatureMethod.newSigner(message, accessor).validate(message);
     }
 
-    void setEnvForTesting(Env env) {
-        this.env = env;
+    protected long currentTimeMsec() {
+        return System.currentTimeMillis();
     }
 
-    static class Env {
-        public long currentTime() {
-            return System.currentTimeMillis();
-        }
-    }
 }

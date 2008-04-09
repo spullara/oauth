@@ -29,8 +29,10 @@ public class OAuthValidatorTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         currentTime = (System.currentTimeMillis() / 1000) * 1000;
-        validator = new SimpleOAuthValidator();
-        validator.setEnvForTesting(new FakeEnv());
+        validator = new SimpleOAuthValidator() {
+            @Override
+            protected long currentTimeMsec() {return currentTime;}
+        };
     }
 
     public void testSimpleOAuthValidator() throws Exception {
@@ -79,10 +81,4 @@ public class OAuthValidatorTest extends TestCase {
         validator.validateVersion(msg);
     }
 
-    private class FakeEnv extends SimpleOAuthValidator.Env {
-        @Override
-        public long currentTime() {
-            return currentTime;
-        }
-    }
 }
