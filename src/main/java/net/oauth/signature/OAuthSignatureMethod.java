@@ -16,14 +16,6 @@
 
 package net.oauth.signature;
 
-import net.oauth.OAuth;
-import net.oauth.OAuthAccessor;
-import net.oauth.OAuthConsumer;
-import net.oauth.OAuthMessage;
-import net.oauth.OAuthProblemException;
-
-import org.apache.commons.codec.binary.Base64;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,6 +25,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
+import net.oauth.OAuthConsumer;
+import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * A pair of algorithms for computing and verifying an OAuth digital signature.
@@ -192,6 +190,15 @@ public abstract class OAuthSignatureMethod {
     }
 
     private static final Base64 BASE64 = new Base64();
+
+    public static OAuthSignatureMethod newSigner(OAuthMessage message,
+            OAuthAccessor accessor) throws Exception {
+        message.requireParameters(OAuth.OAUTH_SIGNATURE_METHOD);
+        OAuthSignatureMethod signer = newMethod(message.getSignatureMethod(),
+                accessor);
+        signer.setTokenSecret(accessor.tokenSecret);
+        return signer;
+    }
 
     /** The factory for signature methods. */
     public static OAuthSignatureMethod newMethod(String name,

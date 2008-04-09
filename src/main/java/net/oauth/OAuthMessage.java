@@ -220,14 +220,18 @@ public class OAuthMessage {
 
     /** Add a signature to the message. */
     public void sign(OAuthAccessor accessor) throws Exception {
-        getSigner(accessor).sign(this);
+        OAuthSignatureMethod.newSigner(this, accessor).sign(this);
     }
 
-    @SuppressWarnings("deprecation")
-    public void validateMessage(OAuthAccessor accessor,
-            OAuthValidator validator) throws Exception {
-        validateParameters(validator);
-        validateSignature(accessor);
+    /**
+     * Check that the message is valid.
+     * 
+     * @throws OAuthProblemException
+     *             the message is invalid
+     */
+    public void validateMessage(OAuthAccessor accessor, OAuthValidator validator)
+            throws Exception {
+        validator.validateMessage(this, accessor);
     }
 
     /**
@@ -238,44 +242,7 @@ public class OAuthMessage {
      * @deprecated use {@link OAuthMessage#validateMessage} instead.
      */
     public void validateSignature(OAuthAccessor accessor) throws Exception {
-        getSigner(accessor).validate(this);
-    }
-
-    private void validateParameters(OAuthValidator validator) throws Exception {
-        String versionStr = getParameter(OAuth.OAUTH_VERSION);
-        if (OAuth.isEmpty(versionStr)) {
-            versionStr = "1.0";
-        }
-
-        String timestamp = getParameter(OAuth.OAUTH_TIMESTAMP);
-        if (OAuth.isEmpty(timestamp)) {
-            throw new OAuthProblemException("missing parameter: "
-                                            + OAuth.OAUTH_TIMESTAMP);
-        }
-
-        String nonce = getParameter(OAuth.OAUTH_NONCE);
-        if (OAuth.isEmpty(nonce)) {
-            throw new OAuthProblemException("missing parameter: "
-                                                + OAuth.OAUTH_NONCE);
-        }
-
-        requireParameters(OAuth.OAUTH_CONSUMER_KEY,
-                          OAuth.OAUTH_SIGNATURE_METHOD,
-                          OAuth.OAUTH_SIGNATURE);
-
-        validator.validateOAuthVersion(Double.parseDouble(versionStr));
-        // timestamp is seconds since 1970, but validator expects milliseconds
-        validator.validateTimestampAndNonce(1000L * Long.parseLong(timestamp),
-                                            nonce);
-    }
-
-    private OAuthSignatureMethod getSigner(OAuthAccessor accessor)
-            throws Exception {
-        requireParameters("oauth_signature_method");
-        OAuthSignatureMethod signer = OAuthSignatureMethod.newMethod(
-                getSignatureMethod(), accessor);
-        signer.setTokenSecret(accessor.tokenSecret);
-        return signer;
+        OAuthSignatureMethod.newSigner(this, accessor).validate(this);
     }
 
     /**

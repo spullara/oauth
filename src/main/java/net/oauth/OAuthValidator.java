@@ -16,35 +16,21 @@
 package net.oauth;
 
 /**
- * An OAuthValidator can be passed to OAuthMessage.validateMessage to ensure
- * that the message not only has a valid signature, but also conforms to a
- * few other requirements, in particular having a correct version number
- * and a fresh timestamp, as well as a unique nonce.
- *
+ * An algorithm to determine whether a message has a valid signature, a correct
+ * version number, a fresh timestamp, etc.
+ * 
  * @author balfanz@google.com (Dirk Balfanz)
+ * @author John Kristian
  */
 public interface OAuthValidator {
 
     /**
-     * Checks that the version parameter in an OAuthMessage is valid. If the
-     * message did not specify an oauth_version parameter, this method will
-     * be called with version=1.0.
-     * @param version the version parameter found in an OAuthMessage.
-     * @throws OAuthProblemException if the version was found to be invalid
-     *     (e.g. too new to be handled by this library).
+     * Check that the given message from the given accessor is valid.
+     * @throws OAuthProblemException the message is invalid.
+     * The implementation should throw exceptions that conform to the OAuth
+     * <a href="http://wiki.oauth.net/ProblemReporting">Problem Reporting extension</a>.
      */
-    public void validateOAuthVersion(double version)
-        throws OAuthProblemException;
+    public void validateMessage(OAuthMessage message, OAuthAccessor accessor)
+            throws Exception;
 
-    /**
-     * Checks that the timestamp and nonce in an OAuthMessage are valid.
-     * @param timestamp the timestamp in the message, in <b>milliseconds
-     *     since Jan 1, 1970, GMT</b>.
-     * @param nonce the nonce transmitted in the message, verbatim.
-     * @throws OAuthProblemException if the timestamp or nonce were invalid,
-     *    e.g., if the timestamp was too old, too far in the future,
-     *    or if the nonce has been seen before for the same timestamp.
-     */
-    public void validateTimestampAndNonce(long timestamp, String nonce)
-        throws OAuthProblemException;
 }

@@ -17,67 +17,71 @@ package net.oauth;
 
 import junit.framework.TestCase;
 
+/**
+ * @author Dirk Balfanz
+ * @author John Kristian
+ */
 public class OAuthValidatorTest extends TestCase {
 
     private long currentTime;
     private SimpleOAuthValidator validator;
-    private static final long fiveMins = 5 * 60 * 1000L;
 
     @Override
     protected void setUp() throws Exception {
+        currentTime = System.currentTimeMillis() / 1000;
         validator = new SimpleOAuthValidator();
         validator.setEnvForTesting(new FakeEnv());
     }
 
     public void testSimpleOAuthValidator() throws Exception {
-        currentTime = 43298723987L;
-        long okTime = currentTime - fiveMins + 10;
-        long badTime = currentTime - fiveMins - 10;
-        String nonce = "lsfksdklfjfg";
-
-        validator.validateTimestampAndNonce(okTime, nonce);
-
+        final long window = SimpleOAuthValidator.DEFAULT_TIMESTAMP_WINDOW;
+        tryTimestamp(currentTime - window + 1);
+        tryTimestamp(currentTime + window - 1);
         try {
-            validator.validateTimestampAndNonce(badTime, nonce);
+            tryTimestamp(currentTime - window - 1);
             fail("validator should have rejected timestamp, but didn't");
-        } catch (OAuthProblemException e) {
-            // this is expected.
+        } catch (OAuthProblemException expected) {
         }
-
-        okTime = currentTime + fiveMins - 10;
-        badTime = currentTime + fiveMins + 10;
-
-        validator.validateTimestampAndNonce(okTime, nonce);
-
         try {
-            validator.validateTimestampAndNonce(badTime, nonce);
+            tryTimestamp(currentTime + window + 1);
             fail("validator should have rejected timestamp, but didn't");
-        } catch (OAuthProblemException e) {
-            // this is expected.
+        } catch (OAuthProblemException expected) {
         }
 
-
-        validator.validateOAuthVersion(0.9);
-        validator.validateOAuthVersion(1.0);
-
+        tryVersion(1.0);
         try {
-            validator.validateOAuthVersion(1.2);
+            tryVersion(0.9);
             fail("validator should have rejected version, but didn't");
-        } catch (OAuthProblemException e) {
-            // this is expected.
+        } catch (OAuthProblemException expected) {
         }
-
         try {
-            validator.validateOAuthVersion(2.0);
+            tryVersion(1.2);
             fail("validator should have rejected version, but didn't");
-        } catch (OAuthProblemException e) {
-            // this is expected.
+        } catch (OAuthProblemException expected) {
         }
+        try {
+            tryVersion(2.0);
+            fail("validator should have rejected version, but didn't");
+        } catch (OAuthProblemException expected) {
+        }
+    }
+
+    private void tryTimestamp(long timestamp) throws Exception {
+        OAuthMessage msg = new OAuthMessage("", "", OAuth.newList(
+                "oauth_timestamp", timestamp + "",
+                "oauth_nonce", "lsfksdklfjfg"));
+        validator.validateTimestampAndNonce(msg);
+    }
+
+    private void tryVersion(double version) throws Exception {
+        OAuthMessage msg = new OAuthMessage("", "", OAuth.newList(
+                "oauth_version", version + ""));
+        validator.validateVersion(msg);
     }
 
     private class FakeEnv extends SimpleOAuthValidator.Env {
         @Override
-        public long getCurrentTime() {
+        public long currentTime() {
             return currentTime;
         }
     }

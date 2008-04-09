@@ -15,81 +15,85 @@
  */
 package net.oauth;
 
-import java.util.Date;
+import net.oauth.signature.OAuthSignatureMethod;
 
 /**
- * Default implementation of the OAuthValidator interface. A
- * SimpleOAuthValidator ignores the nonce in a message and merely
- * checks that the timestamp is not older than a certain maximum (which
- * can be specified in the constructor).
- *
- * If not specified, the default expiration time is 5 minutes, and the
- * maximum version supported is 1.0.
- *
+ * A simple OAuthValidator, which checks the version, whether the timestamp
+ * is close to now and the signature is valid. Each check may be overridden.
+ * 
  * @author balfanz@google.com (Dirk Balfanz)
- *
+ * @author John Kristian
  */
 public class SimpleOAuthValidator implements OAuthValidator {
 
     // default window for timestamps is 5 minutes
-    private static final long defaultTimestampWindow = 5 * 60 * 1000L;
-
-    private final long timestampWindow;
-    private final double maxVersion;
-    private Env env = new Env();
+    public static final long DEFAULT_TIMESTAMP_WINDOW = 5 * 60;
 
     /**
-     * Public constructor. Makes a SimpleOAuthValidator that rejects messages
-     * older than five minutes (or messages purporting to me more than five
-     * minutes into the future), and with a OAuth version bigger than 1.0.
+     * Construct a validator that rejects messages more than five minutes out
+     * of date, or with a OAuth version other than 1.0, or with an invalid
+     * signature.
      */
     public SimpleOAuthValidator() {
-        this(defaultTimestampWindow, Double.parseDouble(OAuth.VERSION_1_0));
+        this(DEFAULT_TIMESTAMP_WINDOW, Double.parseDouble(OAuth.VERSION_1_0));
     }
 
     /**
      * Public constructor.
-     * @param timestampWindow specifies, in milliseconds, the windows (into the
-     *        past and into the future) in which we'll accept timestamps..
-     * @param maxVersion specifies the maximum oauth version that this validator
-     *        will accept.
+     * 
+     * @param timestampWindowSec
+     *            specifies, in seconds, the windows (into the past and
+     *            into the future) in which we'll accept timestamps.
+     * @param maxVersion
+     *            the maximum acceptable oauth_version
      */
-    public SimpleOAuthValidator(long timestampWindow, double maxVersion) {
-        this.timestampWindow = timestampWindow;
+    public SimpleOAuthValidator(long timestampWindowSec, double maxVersion) {
+        this.timestampWindowSec = timestampWindowSec;
         this.maxVersion = maxVersion;
     }
 
+    protected final double minVersion = 1.0;
+    protected final double maxVersion;
+    protected final long timestampWindowSec;
+    private Env env = new Env();
+
     /** {@inherit} */
-    public void validateOAuthVersion(double version)
-            throws OAuthProblemException {
-        if (version > maxVersion) {
-            String message = new StringBuilder()
-                    .append("version in message (")
-                    .append(version)
-                    .append(") is bigger than max expected version (")
-                    .append(maxVersion)
-                    .append(").")
-                    .toString();
-            throw new OAuthProblemException(message);
+    public void validateMessage(OAuthMessage message, OAuthAccessor accessor) throws Exception {
+        validateVersion(message);
+        validateTimestampAndNonce(message);
+        validateSignature(message, accessor);
+    }
+
+    protected void validateVersion(OAuthMessage message) throws Exception {
+        String versionString = message.getParameter(OAuth.OAUTH_VERSION);
+        if (versionString != null) {
+            double version = Double.parseDouble(versionString);
+            if (version < minVersion || maxVersion < version) {
+                OAuthProblemException problem = new OAuthProblemException("version_rejected");
+                problem.setParameter("oauth_acceptable_versions", minVersion + "-" + maxVersion);
+                throw problem;
+            }
         }
     }
 
-    /** {@inherit} */
-    public void validateTimestampAndNonce(long timestamp, String nonce)
-            throws OAuthProblemException {
-
-        // we just check the timestamp age and ignore the nonce
-        long now = env.getCurrentTime();
-        if (Math.abs(now - timestamp) > timestampWindow) {
-            String message = new StringBuilder()
-                    .append("timestamp in message is too old. time now is ")
-                    .append(now / 1000L)
-                    .append(" timestamp is from ")
-                    .append(timestamp / 1000L)
-                    .append(".")
-                    .toString();
-            throw new OAuthProblemException(message);
+    /** This implementation doesn't check the nonce value. */
+    protected void validateTimestampAndNonce(OAuthMessage message) throws Exception {
+        message.requireParameters(OAuth.OAUTH_TIMESTAMP, OAuth.OAUTH_NONCE);
+        long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP));
+        long now = env.currentTime();
+        long min = now - timestampWindowSec;
+        long max = now + timestampWindowSec;
+        if (timestamp < min || max < timestamp) {
+            OAuthProblemException problem = new OAuthProblemException("timestamp_refused");
+            problem.setParameter("oauth_acceptable_timestamps", min + "-" + max);
+            throw problem;
         }
+    }
+
+    protected void validateSignature(OAuthMessage message, OAuthAccessor accessor) throws Exception {
+        message.requireParameters(OAuth.OAUTH_CONSUMER_KEY,
+                OAuth.OAUTH_SIGNATURE_METHOD, OAuth.OAUTH_SIGNATURE);
+        OAuthSignatureMethod.newSigner(message, accessor).validate(message);
     }
 
     void setEnvForTesting(Env env) {
@@ -97,8 +101,8 @@ public class SimpleOAuthValidator implements OAuthValidator {
     }
 
     static class Env {
-        public long getCurrentTime() {
-            return new Date().getTime();
+        public long currentTime() {
+            return System.currentTimeMillis() / 1000L;
         }
     }
 }
