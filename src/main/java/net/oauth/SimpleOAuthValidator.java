@@ -20,8 +20,8 @@ import net.oauth.signature.OAuthSignatureMethod;
 /**
  * A simple OAuthValidator, which checks the version, whether the timestamp
  * is close to now and the signature is valid. Each check may be overridden.
- * 
- * @author balfanz@google.com (Dirk Balfanz)
+ *
+ * @author Dirk Balfanz
  * @author John Kristian
  */
 public class SimpleOAuthValidator implements OAuthValidator {
@@ -40,7 +40,7 @@ public class SimpleOAuthValidator implements OAuthValidator {
 
     /**
      * Public constructor.
-     * 
+     *
      * @param timestampWindowSec
      *            specifies, in seconds, the windows (into the past and
      *            into the future) in which we'll accept timestamps.
