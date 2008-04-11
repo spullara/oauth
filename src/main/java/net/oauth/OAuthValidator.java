@@ -18,8 +18,8 @@ package net.oauth;
 /**
  * An algorithm to determine whether a message has a valid signature, a correct
  * version number, a fresh timestamp, etc.
- * 
- * @author balfanz@google.com (Dirk Balfanz)
+ *
+ * @author Dirk Balfanz
  * @author John Kristian
  */
 public interface OAuthValidator {
