@@ -30,7 +30,7 @@ import net.oauth.OAuthProblemException;
 
 /**
  * The response part of a URLConnection, encapsulated as an OAuthMessage.
- * 
+ *
  * @author John Kristian
  */
 class URLConnectionResponse extends OAuthResponseMessage {
@@ -44,9 +44,12 @@ class URLConnectionResponse extends OAuthResponseMessage {
             throws IOException {
         super(request.method, request.URL);
         this.connection = connection;
-        for (String header : connection.getHeaderFields().get(
-                "WWW-Authenticate")) {
-            this.decodeWWWAuthenticate(header);
+        List<String> wwwAuthHeaders = connection.getHeaderFields().get(
+                "WWW-Authenticate");
+        if (wwwAuthHeaders != null) {
+            for (String header : wwwAuthHeaders) {
+                this.decodeWWWAuthenticate(header);
+            }
         }
     }
 
