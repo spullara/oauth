@@ -137,6 +137,18 @@ public class OAuthSignatureMethodTest extends TestCase {
                 null);
         baseString = OAuthSignatureMethod.getBaseString(message);
         assertEquals("GET&https%3A%2F%2Fexample.com%3A80%2Ffoo&", baseString);
+
+        message = new OAuthMessage("GET",
+                "http://Example.com/email+with+plus@example.com",
+                null);
+        baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&http%3A%2F%2Fexample.com%2Femail%2Bwith%2Bplus%40example.com&", baseString);
+
+        message = new OAuthMessage("GET",
+            "http://Example.com/email%2Bwith%2Bplus%40example.com",
+                null);
+        baseString = OAuthSignatureMethod.getBaseString(message);
+        assertEquals("GET&http%3A%2F%2Fexample.com%2Femail%252Bwith%252Bplus%2540example.com&", baseString);
     }
 
     private static final String[][] SIGNATURES = //

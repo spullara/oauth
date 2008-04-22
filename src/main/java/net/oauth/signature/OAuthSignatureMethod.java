@@ -162,7 +162,7 @@ public abstract class OAuthSignatureMethod {
         }
 
         // we know that there is no query and no fragment here.
-        return new URI(scheme, authority, uri.getPath(), null, null).toString();
+        return scheme + "://" + authority + uri.getRawPath();
     }
 
     protected static String normalizeParameters(
