@@ -16,6 +16,7 @@
 
 package net.oauth.client;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -23,7 +24,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
+
 import net.oauth.OAuth;
+import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 
@@ -39,7 +42,8 @@ public class OAuthURLConnectionClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    public OAuthMessage invoke(OAuthMessage request) throws Exception {
+    public OAuthMessage invoke(OAuthMessage request)
+    throws IOException, OAuthException {
         URLConnection connection;
         if ("GET".equals(request.method)) {
             URL url = new URL(OAuth.addParameters(request.URL, request

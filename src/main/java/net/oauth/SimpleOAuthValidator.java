@@ -15,6 +15,9 @@
  */
 package net.oauth;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+
 import net.oauth.signature.OAuthSignatureMethod;
 
 /**
@@ -56,14 +59,17 @@ public class SimpleOAuthValidator implements OAuthValidator {
     protected final double maxVersion;
     protected final long timestampWindow;
 
-    /** {@inherit} */
-    public void validateMessage(OAuthMessage message, OAuthAccessor accessor) throws Exception {
+    /** {@inherit} 
+     * @throws URISyntaxException */
+    public void validateMessage(OAuthMessage message, OAuthAccessor accessor)
+    throws OAuthException, IOException, URISyntaxException {
         validateVersion(message);
         validateTimestampAndNonce(message);
         validateSignature(message, accessor);
     }
 
-    protected void validateVersion(OAuthMessage message) throws Exception {
+    protected void validateVersion(OAuthMessage message)
+    throws OAuthException, IOException {
         String versionString = message.getParameter(OAuth.OAUTH_VERSION);
         if (versionString != null) {
             double version = Double.parseDouble(versionString);
@@ -76,7 +82,8 @@ public class SimpleOAuthValidator implements OAuthValidator {
     }
 
     /** This implementation doesn't check the nonce value. */
-    protected void validateTimestampAndNonce(OAuthMessage message) throws Exception {
+    protected void validateTimestampAndNonce(OAuthMessage message)
+    throws IOException, OAuthProblemException {
         message.requireParameters(OAuth.OAUTH_TIMESTAMP, OAuth.OAUTH_NONCE);
         long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP)) * 1000L;
         long now = currentTimeMsec();
@@ -89,7 +96,8 @@ public class SimpleOAuthValidator implements OAuthValidator {
         }
     }
 
-    protected void validateSignature(OAuthMessage message, OAuthAccessor accessor) throws Exception {
+    protected void validateSignature(OAuthMessage message, OAuthAccessor accessor)
+    throws OAuthException, IOException, URISyntaxException {
         message.requireParameters(OAuth.OAUTH_CONSUMER_KEY,
                 OAuth.OAUTH_SIGNATURE_METHOD, OAuth.OAUTH_SIGNATURE);
         OAuthSignatureMethod.newSigner(message, accessor).validate(message);

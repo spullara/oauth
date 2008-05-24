@@ -17,6 +17,7 @@
 package net.oauth.client;
 
 import java.io.IOException;
+
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 

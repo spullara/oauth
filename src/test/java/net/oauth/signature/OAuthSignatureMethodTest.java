@@ -16,14 +16,14 @@
 
 package net.oauth.signature;
 
-import junit.framework.TestCase;
+import java.util.List;
 
+import junit.framework.TestCase;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
+import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
-
-import java.util.List;
 
 public class OAuthSignatureMethodTest extends TestCase {
 

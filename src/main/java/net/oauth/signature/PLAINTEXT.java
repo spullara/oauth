@@ -17,6 +17,7 @@
 package net.oauth.signature;
 
 import net.oauth.OAuth;
+import net.oauth.OAuthException;
 
 /**
  * @author John Kristian
@@ -30,7 +31,7 @@ class PLAINTEXT extends OAuthSignatureMethod {
 
     @Override
     protected boolean isValid(String signature, String baseString)
-            throws Exception {
+            throws OAuthException {
         return signature.equals(getSignature());
     }
 

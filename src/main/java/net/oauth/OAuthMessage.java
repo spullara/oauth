@@ -19,6 +19,7 @@ package net.oauth;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import net.oauth.signature.OAuthSignatureMethod;
 
 /**
@@ -167,9 +169,10 @@ public class OAuthMessage {
      *
      * @throws OAuthProblemException
      *             one or more parameters are absent.
+     * @throws IOException 
      */
-    public void requireParameters(String... names) throws IOException,
-            OAuthProblemException {
+    public void requireParameters(String... names) throws
+            OAuthProblemException, IOException {
         Set<String> present = getParameterMap().keySet();
         List<String> absent = new ArrayList<String>();
         for (String required : names) {
@@ -189,8 +192,11 @@ public class OAuthMessage {
     /**
      * Add some of the parameters needed to request access to a protected
      * resource, if they aren't already in the message.
+     * @throws IOException 
+     * @throws URISyntaxException 
      */
-    public void addRequiredParameters(OAuthAccessor accessor) throws Exception {
+    public void addRequiredParameters(OAuthAccessor accessor)
+    throws OAuthException, IOException, URISyntaxException {
         final Map<String, String> pMap = OAuth.newMap(parameters);
         if (pMap.get("oauth_token") == null && accessor.accessToken != null) {
             addParameter("oauth_token", accessor.accessToken);
@@ -218,30 +224,36 @@ public class OAuthMessage {
         this.sign(accessor);
     }
 
-    /** Add a signature to the message. */
-    public void sign(OAuthAccessor accessor) throws Exception {
+    /** Add a signature to the message. 
+     * @throws URISyntaxException */
+    public void sign(OAuthAccessor accessor) throws IOException, OAuthException, URISyntaxException {
         OAuthSignatureMethod.newSigner(this, accessor).sign(this);
     }
 
     /**
      * Check that the message is valid.
+     * @throws IOException 
+     * @throws URISyntaxException 
      * 
      * @throws OAuthProblemException
      *             the message is invalid
      */
     public void validateMessage(OAuthAccessor accessor, OAuthValidator validator)
-            throws Exception {
+            throws OAuthException, IOException, URISyntaxException {
         validator.validateMessage(this, accessor);
     }
 
     /**
      * Check that the message has a valid signature.
+     * @throws IOException 
+     * @throws URISyntaxException 
      *
      * @throws OAuthProblemException
      *             the signature is invalid
      * @deprecated use {@link OAuthMessage#validateMessage} instead.
      */
-    public void validateSignature(OAuthAccessor accessor) throws Exception {
+    public void validateSignature(OAuthAccessor accessor)
+    throws OAuthException, IOException, URISyntaxException {
         OAuthSignatureMethod.newSigner(this, accessor).validate(this);
     }
 

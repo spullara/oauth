@@ -17,6 +17,7 @@
 package net.oauth.client;
 
 import java.net.URL;
+
 import org.apache.commons.httpclient.HttpClient;
 
 /**

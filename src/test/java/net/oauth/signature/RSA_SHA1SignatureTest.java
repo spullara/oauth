@@ -29,6 +29,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Random;
+
 import junit.framework.TestCase;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;

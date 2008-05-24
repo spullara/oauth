@@ -16,12 +16,16 @@
 
 package net.oauth.client;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
+import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 
@@ -32,8 +36,10 @@ import net.oauth.OAuthProblemException;
  */
 public abstract class OAuthClient {
 
-    /** Get a fresh request token from the service provider. */
-    public void getRequestToken(OAuthAccessor accessor) throws Exception {
+    /** Get a fresh request token from the service provider. 
+     * @throws URISyntaxException */
+    public void getRequestToken(OAuthAccessor accessor)
+    throws IOException, OAuthException, URISyntaxException {
         accessor.accessToken = null;
         accessor.tokenSecret = null;
         Collection<OAuth.Parameter> parameters = null;
@@ -67,9 +73,11 @@ public abstract class OAuthClient {
      * resource.
      * 
      * @return the response
+     * @throws URISyntaxException 
      */
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
-            Collection<? extends Map.Entry> parameters) throws Exception {
+            Collection<? extends Map.Entry> parameters)
+    throws IOException, OAuthException, URISyntaxException {
         return invoke(accessor.newRequestMessage(null, url, parameters));
     }
 
@@ -78,7 +86,9 @@ public abstract class OAuthClient {
      * may be a request for a token, or for access to a protected resource.
      * 
      * @return the response
+     * @throws IOException 
      */
-    public abstract OAuthMessage invoke(OAuthMessage request) throws Exception;
+    public abstract OAuthMessage invoke(OAuthMessage request)
+        throws IOException, OAuthException;
 
 }

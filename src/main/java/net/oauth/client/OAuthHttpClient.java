@@ -16,11 +16,15 @@
 
 package net.oauth.client;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
+
 import net.oauth.OAuth;
+import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
+
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -42,7 +46,8 @@ public class OAuthHttpClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    public OAuthMessage invoke(OAuthMessage request) throws Exception {
+    public OAuthMessage invoke(OAuthMessage request)
+    throws IOException, OAuthException {
         HttpMethod method;
         if ("GET".equals(request.method)) {
             String url = OAuth.addParameters(request.URL, request.getParameters());

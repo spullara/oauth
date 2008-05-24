@@ -28,7 +28,7 @@ import java.util.Map;
  * 
  * @author John Kristian
  */
-public class OAuthProblemException extends Exception {
+public class OAuthProblemException extends OAuthException {
 
     public static final String OAUTH_PROBLEM = "oauth_problem";
 

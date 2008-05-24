@@ -16,9 +16,9 @@
 
 package net.oauth;
 
-import junit.framework.TestCase;
-
 import java.util.List;
+
+import junit.framework.TestCase;
 
 public class OAuthTest extends TestCase {
 

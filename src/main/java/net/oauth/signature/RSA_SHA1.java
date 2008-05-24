@@ -17,6 +17,7 @@
 package net.oauth.signature;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -30,6 +31,7 @@ import java.security.spec.X509EncodedKeySpec;
 
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
+import net.oauth.OAuthException;
 
 /**
  * Class to handle RSA-SHA1 signatures on OAuth requests. A consumer
@@ -88,55 +90,59 @@ public class RSA_SHA1 extends OAuthSignatureMethod {
 
     @Override
     protected void initialize(String name, OAuthAccessor accessor)
-            throws Exception {
+    throws OAuthException {
         super.initialize(name, accessor);
 
         Object privateKeyObject = accessor.consumer.getProperty(PRIVATE_KEY);
-        if (privateKeyObject != null) {
-            if (privateKeyObject instanceof PrivateKey) {
-                privateKey = (PrivateKey)privateKeyObject;
-            } else if (privateKeyObject instanceof String) {
-                privateKey = getPrivateKeyFromPem((String)privateKeyObject);
-            } else if (privateKeyObject instanceof byte[]) {
-                privateKey = getPrivateKeyFromDer((byte[])privateKeyObject);
-            } else {
-                throw new IllegalArgumentException(
-                    "Private key set through RSA_SHA1.PRIVATE_KEY must be of " +
-                    "type PrivateKey, String, or byte[], and not " +
-                    privateKeyObject.getClass().getName());
-            }
-        }
-
-        Object publicKeyObject = accessor.consumer.getProperty(PUBLIC_KEY);
-        if (publicKeyObject != null) {
-            if (publicKeyObject instanceof PublicKey) {
-                publicKey = (PublicKey)publicKeyObject;
-            } else if (publicKeyObject instanceof String) {
-                publicKey = getPublicKeyFromPem((String)publicKeyObject);
-            } else if (publicKeyObject instanceof byte[]) {
-                publicKey = getPublicKeyFromDer((byte[])publicKeyObject);
-            } else {
-                throw new IllegalArgumentException(
-                    "Public key set through RSA_SHA1.PRIVATE_KEY must be of " +
-                    "type PublicKey, String, or byte[], and not " +
-                    publicKeyObject.getClass().getName());
-            }
-        } else {  // public key was null. perhaps they gave us a X509 cert.
-            Object certObject = accessor.consumer.getProperty(X509_CERTIFICATE);
-            if (certObject != null) {
-                if (certObject instanceof X509Certificate) {
-                    publicKey = ((X509Certificate) certObject).getPublicKey();
-                } else if (certObject instanceof String) {
-                    publicKey = getPublicKeyFromPemCert((String)certObject);
-                } else if (certObject instanceof byte[]) {
-                    publicKey = getPublicKeyFromDerCert((byte[])certObject);
+        try {
+            if (privateKeyObject != null) {
+                if (privateKeyObject instanceof PrivateKey) {
+                    privateKey = (PrivateKey)privateKeyObject;
+                } else if (privateKeyObject instanceof String) {
+                    privateKey = getPrivateKeyFromPem((String)privateKeyObject);
+                } else if (privateKeyObject instanceof byte[]) {
+                    privateKey = getPrivateKeyFromDer((byte[])privateKeyObject);
                 } else {
                     throw new IllegalArgumentException(
-                        "X509Certificate set through RSA_SHA1.X509_CERTIFICATE" +
-                        " must be of type X509Certificate, String, or byte[]," +
-                        " and not " + certObject.getClass().getName());
+                            "Private key set through RSA_SHA1.PRIVATE_KEY must be of " +
+                            "type PrivateKey, String, or byte[], and not " +
+                            privateKeyObject.getClass().getName());
                 }
             }
+
+            Object publicKeyObject = accessor.consumer.getProperty(PUBLIC_KEY);
+            if (publicKeyObject != null) {
+                if (publicKeyObject instanceof PublicKey) {
+                    publicKey = (PublicKey)publicKeyObject;
+                } else if (publicKeyObject instanceof String) {
+                    publicKey = getPublicKeyFromPem((String)publicKeyObject);
+                } else if (publicKeyObject instanceof byte[]) {
+                    publicKey = getPublicKeyFromDer((byte[])publicKeyObject);
+                } else {
+                    throw new IllegalArgumentException(
+                            "Public key set through RSA_SHA1.PRIVATE_KEY must be of " +
+                            "type PublicKey, String, or byte[], and not " +
+                            publicKeyObject.getClass().getName());
+                }
+            } else {  // public key was null. perhaps they gave us a X509 cert.
+                Object certObject = accessor.consumer.getProperty(X509_CERTIFICATE);
+                if (certObject != null) {
+                    if (certObject instanceof X509Certificate) {
+                        publicKey = ((X509Certificate) certObject).getPublicKey();
+                    } else if (certObject instanceof String) {
+                        publicKey = getPublicKeyFromPemCert((String)certObject);
+                    } else if (certObject instanceof byte[]) {
+                        publicKey = getPublicKeyFromDerCert((byte[])certObject);
+                    } else {
+                        throw new IllegalArgumentException(
+                                "X509Certificate set through RSA_SHA1.X509_CERTIFICATE" +
+                                " must be of type X509Certificate, String, or byte[]," +
+                                " and not " + certObject.getClass().getName());
+                    }
+                }
+            }
+        } catch (GeneralSecurityException e) {
+            throw new OAuthException(e);
         }
     }
 
@@ -181,16 +187,28 @@ public class RSA_SHA1 extends OAuthSignatureMethod {
     }
 
     @Override
-    protected String getSignature(String baseString) throws Exception {
-        byte[] signature = sign(baseString.getBytes(OAuth.ENCODING));
-        return base64Encode(signature);
+    protected String getSignature(String baseString) throws OAuthException {
+        try {
+            byte[] signature = sign(baseString.getBytes(OAuth.ENCODING));
+            return base64Encode(signature);
+        } catch (UnsupportedEncodingException e) {
+            throw new OAuthException(e);
+        } catch (GeneralSecurityException e) {
+            throw new OAuthException(e);
+        }
     }
 
     @Override
     protected boolean isValid(String signature, String baseString)
-            throws Exception {
-        return verify(decodeBase64(signature),
-                      baseString.getBytes(OAuth.ENCODING));
+            throws OAuthException {
+        try {
+            return verify(decodeBase64(signature),
+                          baseString.getBytes(OAuth.ENCODING));
+        } catch (UnsupportedEncodingException e) {
+            throw new OAuthException(e);
+        } catch (GeneralSecurityException e) {
+            throw new OAuthException(e);
+        }
     }
 
     private byte[] sign(byte[] message) throws GeneralSecurityException {

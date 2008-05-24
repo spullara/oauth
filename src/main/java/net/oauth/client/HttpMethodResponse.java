@@ -19,7 +19,9 @@ package net.oauth.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+
 import net.oauth.OAuthProblemException;
+
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 

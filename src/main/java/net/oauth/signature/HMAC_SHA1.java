@@ -19,10 +19,13 @@ package net.oauth.signature;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+
 import net.oauth.OAuth;
+import net.oauth.OAuthException;
 
 /**
  * @author John Kristian
@@ -30,18 +33,29 @@ import net.oauth.OAuth;
 class HMAC_SHA1 extends OAuthSignatureMethod {
 
     @Override
-    protected String getSignature(String baseString)
-            throws GeneralSecurityException, UnsupportedEncodingException {
-        String signature = base64Encode(computeSignature(baseString));
-        return signature;
+    protected String getSignature(String baseString) throws OAuthException {
+        try {
+            String signature = base64Encode(computeSignature(baseString));
+            return signature;
+        } catch (GeneralSecurityException e) {
+            throw new OAuthException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new OAuthException(e);
+        }
     }
 
     @Override
     protected boolean isValid(String signature, String baseString)
-            throws GeneralSecurityException, UnsupportedEncodingException {
-        byte[] expected = computeSignature(baseString);
-        byte[] actual = decodeBase64(signature);
-        return Arrays.equals(expected, actual);
+    throws OAuthException {
+        try {
+            byte[] expected = computeSignature(baseString);
+            byte[] actual = decodeBase64(signature);
+            return Arrays.equals(expected, actual);
+        } catch (GeneralSecurityException e) {
+            throw new OAuthException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new OAuthException(e);
+        }
     }
 
     private byte[] computeSignature(String baseString)
