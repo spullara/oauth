@@ -167,6 +167,7 @@ public class RSA_SHA1SignatureTest extends TestCase {
         return message;
     }
 
+    @SuppressWarnings("deprecation")
     private static void doTests(OAuthMessage message,
                                 OAuthAccessor clientAccessor,
                                 OAuthAccessor serverAccessor) throws Exception {
