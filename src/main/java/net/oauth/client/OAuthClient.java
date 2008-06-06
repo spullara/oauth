@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Netflix, Inc.
+ * Copyright 2007, 2008 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
@@ -38,7 +37,7 @@ public abstract class OAuthClient {
 
     /** Get a fresh request token from the service provider. 
      * @throws URISyntaxException */
-    public void getRequestToken(OAuthAccessor accessor)
+    public void getRequestToken(OAuthAccessor accessor, String httpMethod)
     throws IOException, OAuthException, URISyntaxException {
         accessor.accessToken = null;
         accessor.tokenSecret = null;
@@ -54,7 +53,7 @@ public abstract class OAuthClient {
                         accessorSecret.toString()));
             }
         }
-        OAuthMessage response = invoke(accessor,
+        OAuthMessage response = invoke(accessor, httpMethod,
                 accessor.consumer.serviceProvider.requestTokenURL, parameters);
         accessor.requestToken = response.getParameter("oauth_token");
         accessor.tokenSecret = response.getParameter("oauth_token_secret");
@@ -67,6 +66,11 @@ public abstract class OAuthClient {
         }
     }
 
+    public void getRequestToken(OAuthAccessor accessor)
+    throws IOException, OAuthException, URISyntaxException {
+        getRequestToken(accessor, null);
+    }
+
     /**
      * Construct a request message, send it to the service provider and get the
      * response. This may be a request for a token, or for access to a protected
@@ -75,10 +79,16 @@ public abstract class OAuthClient {
      * @return the response
      * @throws URISyntaxException 
      */
+    public OAuthMessage invoke(OAuthAccessor accessor, String httpMethod, String url,
+            Collection<? extends Map.Entry> parameters)
+    throws IOException, OAuthException, URISyntaxException {
+        return invoke(accessor.newRequestMessage(httpMethod, url, parameters));
+    }
+
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
             Collection<? extends Map.Entry> parameters)
     throws IOException, OAuthException, URISyntaxException {
-        return invoke(accessor.newRequestMessage(null, url, parameters));
+        return invoke(accessor, null, url, parameters);
     }
 
     /**
