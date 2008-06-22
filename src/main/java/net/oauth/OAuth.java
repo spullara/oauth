@@ -52,6 +52,25 @@ public class OAuth {
     public static final String HMAC_SHA1 = "HMAC-SHA1";
     public static final String RSA_SHA1 = "RSA-SHA1";
 
+    public static class Problems {
+        public static final String TOKEN_NOT_AUTHORIZED = "token_not_authorized";
+        public static final String INVALID_USED_NONCE = "invalid_used_nonce";
+        public static final String SIGNATURE_INVALID = "signature_invalid";
+        public static final String INVALID_EXPIRED_TOKEN = "invalid_expired_token";
+        public static final String INVALID_CONSUMER_KEY = "invalid_consumer_key";
+        public static final String CONSUMER_KEY_REFUSED = "consumer_key_refused";
+        public static final String TIMESTAMP_REFUSED = "timestamp_refused";
+        public static final String PARAMETER_REJECTED = "parameter_rejected";
+        public static final String PARAMETER_ABSENT = "parameter_absent";
+        public static final String VERSION_REJECTED = "version_rejected";
+        public static final String SIGNATURE_METHOD_REJECTED = "signature_method_rejected";
+        
+        public static final String OAUTH_PARAMETERS_ABSENT = "oauth_parameters_absent";
+        public static final String OAUTH_PARAMETERS_REJECTED = "oauth_parameters_rejected";
+        public static final String OAUTH_ACCEPTABLE_TIMESTAMPS = "oauth_acceptable_timestamps";
+        public static final String OAUTH_ACCEPTABLE_VERSIONS = "oauth_acceptable_versions";
+    }
+    
     /** Return true if the given Content-Type header means FORM_ENCODED. */
     public static boolean isFormEncoded(String contentType) {
         if (contentType == null) {
