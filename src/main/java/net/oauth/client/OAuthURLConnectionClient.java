@@ -23,8 +23,8 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 import java.util.Map;
-
 import net.oauth.OAuth;
 import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
@@ -42,26 +42,21 @@ public class OAuthURLConnectionClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    public OAuthMessage invoke(OAuthMessage request)
-    throws IOException, OAuthException {
-        URLConnection connection;
-        if ("GET".equals(request.method)) {
-            URL url = new URL(OAuth.addParameters(request.URL, request
-                    .getParameters()));
-            connection = url.openConnection();
-            if (connection instanceof HttpURLConnection) {
-                ((HttpURLConnection) connection)
-                        .setRequestMethod(request.method);
-            }
-            connection.setDoInput(true);
-        } else {
-            URL url = new URL(request.URL);
-            connection = url.openConnection();
-            if (connection instanceof HttpURLConnection) {
-                ((HttpURLConnection) connection)
-                        .setRequestMethod(request.method);
-            }
-            connection.setDoInput(true);
+    public OAuthMessage invoke(OAuthMessage request) throws IOException,
+            OAuthException {
+        final URL url = ("GET".equals(request.method)) //
+        ? new URL(OAuth.addParameters(request.URL, request.getParameters())) //
+                : new URL(request.URL);
+        final URLConnection connection = url.openConnection();
+        if (connection instanceof HttpURLConnection) {
+            HttpURLConnection http = (HttpURLConnection) connection;
+            http.setRequestMethod(request.method);
+            http.setInstanceFollowRedirects(false);
+        }
+        connection.setDoInput(true);
+        Map<String, List<String>> requestProperties = connection
+                .getRequestProperties();
+        if (!"GET".equals(request.method)) {
             String form = OAuth.formEncode(request.getParameters());
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", OAuth.FORM_ENCODED);
@@ -75,7 +70,7 @@ public class OAuthURLConnectionClient extends OAuthClient {
             }
         }
         final OAuthMessage response = new URLConnectionResponse(request,
-                connection);
+                requestProperties, connection);
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
             int statusCode = http.getResponseCode();
@@ -89,5 +84,4 @@ public class OAuthURLConnectionClient extends OAuthClient {
         }
         return response;
     }
-
 }

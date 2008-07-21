@@ -25,13 +25,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
-
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 
 /**
  * The response part of a URLConnection, encapsulated as an OAuthMessage.
- *
+ * 
  * @author John Kristian
  */
 class URLConnectionResponse extends OAuthResponseMessage {
@@ -41,9 +40,11 @@ class URLConnectionResponse extends OAuthResponseMessage {
      * from OAuth WWW-Authenticate headers and the body. The header parameters
      * come first, followed by the ones from the response body.
      */
-    public URLConnectionResponse(OAuthMessage request, URLConnection connection)
-            throws IOException {
+    public URLConnectionResponse(OAuthMessage request,
+            Map<String, List<String>> requestProperties,
+            URLConnection connection) throws IOException {
         super(request.method, request.URL);
+        this.requestProperties = requestProperties;
         this.connection = connection;
         List<String> wwwAuthHeaders = connection.getHeaderFields().get(
                 "WWW-Authenticate");
@@ -54,8 +55,8 @@ class URLConnectionResponse extends OAuthResponseMessage {
         }
     }
 
+    private final Map<String, List<String>> requestProperties;
     private final URLConnection connection;
-
     private String bodyAsString = null;
 
     @Override
@@ -105,8 +106,8 @@ class URLConnectionResponse extends OAuthResponseMessage {
                 request.append("?").append(query);
             }
             request.append("\n");
-            for (Map.Entry<String, List<String>> header : connection
-                    .getRequestProperties().entrySet()) {
+            for (Map.Entry<String, List<String>> header : requestProperties
+                    .entrySet()) {
                 String key = header.getKey();
                 for (String value : header.getValue()) {
                     request.append(key).append(": ").append(value).append("\n");
@@ -130,10 +131,13 @@ class URLConnectionResponse extends OAuthResponseMessage {
             response.append("\n");
             for (Map.Entry<String, List<String>> header : connection
                     .getHeaderFields().entrySet()) {
-                String key = header.getKey();
+                String name = header.getKey();
                 for (String value : header.getValue()) {
-                    response.append(key).append(": ").append(value)
-                            .append("\n");
+                    response.append(name).append(": ").append(value).append(
+                            "\n");
+                    if ("Location".equalsIgnoreCase(name)) {
+                        into.put(OAuthProblemException.HTTP_LOCATION, value);
+                    }
                 }
             }
             String body = getBodyAsString();

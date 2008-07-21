@@ -30,13 +30,24 @@ import net.oauth.OAuthProblemException;
 
 /**
  * Utility methods for an OAuth client.
+ * <p>
+ * Methods of this class don't follow redirects. When they receive a redirect
+ * response, they throw an OAuthProblemException, with properties
+ * HTTP_STATUS_CODE = the redirect code and HTTP_LOCATION = the redirect URL.
+ * Such a redirect can't be handled at the HTTP level, if the second request
+ * must carry another OAuth signature (with different parameters). For example,
+ * Google's Service Provider routinely redirects requests for access to
+ * protected resources, and requires the redirected request to be signed.
  * 
  * @author John Kristian
  */
 public abstract class OAuthClient {
 
-    /** Get a fresh request token from the service provider. 
-     * @throws URISyntaxException */
+    /**
+     * Get a fresh request token from the service provider.
+     * 
+     * @throws URISyntaxException
+     */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod)
     throws IOException, OAuthException, URISyntaxException {
         accessor.accessToken = null;
@@ -94,9 +105,13 @@ public abstract class OAuthClient {
     /**
      * Send a request message to the service provider and get the response. This
      * may be a request for a token, or for access to a protected resource.
+     * (with different parameters).
      * 
      * @return the response
-     * @throws IOException 
+     * @throws IOException
+     *                 failed to communicate with the service provider
+     * @throws OAuthProblemException
+     *                 a problematic response was received
      */
     public abstract OAuthMessage invoke(OAuthMessage request)
         throws IOException, OAuthException;

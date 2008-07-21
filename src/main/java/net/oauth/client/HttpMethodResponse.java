@@ -19,9 +19,7 @@ package net.oauth.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-
 import net.oauth.OAuthProblemException;
-
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 
@@ -93,8 +91,12 @@ class HttpMethodResponse extends OAuthResponseMessage {
                     .toString());
             response.append("\n");
             for (Header header : method.getResponseHeaders()) {
-                response.append(header.getName()).append(": ").append(
-                        header.getValue()).append("\n");
+                String name = header.getName();
+                String value = header.getValue();
+                response.append(name).append(": ").append(value).append("\n");
+                if ("Location".equalsIgnoreCase(name)) {
+                    into.put(OAuthProblemException.HTTP_LOCATION, value);
+                }
             }
             String body = getBodyAsString();
             if (body != null) {

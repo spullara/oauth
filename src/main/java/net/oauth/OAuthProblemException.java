@@ -31,8 +31,8 @@ import java.util.Map;
 public class OAuthProblemException extends OAuthException {
 
     public static final String OAUTH_PROBLEM = "oauth_problem";
-
     public static final String HTTP_STATUS_CODE = "HTTP status";
+    public static final String HTTP_LOCATION = "HTTP Location";
 
     public OAuthProblemException() {
     }
