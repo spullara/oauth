@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +39,10 @@ class URLConnectionResponse extends OAuthResponseMessage {
      * from OAuth WWW-Authenticate headers and the body. The header parameters
      * come first, followed by the ones from the response body.
      */
-    public URLConnectionResponse(OAuthMessage request,
-            Map<String, List<String>> requestProperties,
+    public URLConnectionResponse(OAuthMessage request, String requestHeaders,
             URLConnection connection) throws IOException {
         super(request.method, request.URL);
-        this.requestProperties = requestProperties;
+        this.requestHeaders = requestHeaders;
         this.connection = connection;
         List<String> wwwAuthHeaders = connection.getHeaderFields().get(
                 "WWW-Authenticate");
@@ -55,7 +53,7 @@ class URLConnectionResponse extends OAuthResponseMessage {
         }
     }
 
-    private final Map<String, List<String>> requestProperties;
+    private final String requestHeaders;
     private final URLConnection connection;
     private String bodyAsString = null;
 
@@ -90,6 +88,13 @@ class URLConnectionResponse extends OAuthResponseMessage {
         return bodyAsString;
     }
 
+    @Override
+    protected void completeParameters() throws IOException {
+        if (isDecodable(connection.getContentType())) {
+            super.completeParameters();
+        }
+    }
+
     /**
      * Return a complete description of the HTTP exchange, represented by
      * strings named "URL", "HTTP request headers" and "HTTP response".
@@ -97,42 +102,33 @@ class URLConnectionResponse extends OAuthResponseMessage {
     @Override
     protected void dump(Map<String, Object> into) throws IOException {
         super.dump(into);
-        {
-            StringBuilder request = new StringBuilder(method);
-            URL url = new URL(this.URL);
-            request.append(" ").append(url.getPath());
-            String query = url.getQuery();
-            if (query != null && query.length() > 0) {
-                request.append("?").append(query);
-            }
-            request.append("\n");
-            for (Map.Entry<String, List<String>> header : requestProperties
-                    .entrySet()) {
-                String key = header.getKey();
-                for (String value : header.getValue()) {
-                    request.append(key).append(": ").append(value).append("\n");
-                }
-            }
-            into.put("HTTP request headers", request.toString());
-        }
+        into.put("HTTP request headers", requestHeaders);
         {
             StringBuilder response = new StringBuilder();
-            if (connection instanceof HttpURLConnection) {
-                HttpURLConnection http = (HttpURLConnection) connection;
-                int responseCode = http.getResponseCode();
-                into.put(OAuthProblemException.HTTP_STATUS_CODE, //
-                        new Integer(responseCode));
-                response.append(responseCode);
-                String message = http.getResponseMessage();
-                if (message != null) {
-                    response.append(" ").append(message);
-                }
+            HttpURLConnection http = (connection instanceof HttpURLConnection) ? (HttpURLConnection) connection
+                    : null;
+            Integer statusCode = null;
+            if (http != null) {
+                statusCode = Integer.valueOf(http.getResponseCode());
+                into.put(OAuthProblemException.HTTP_STATUS_CODE, statusCode);
             }
-            response.append("\n");
-            for (Map.Entry<String, List<String>> header : connection
-                    .getHeaderFields().entrySet()) {
-                String name = header.getKey();
-                for (String value : header.getValue()) {
+            String value;
+            for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
+                String name = connection.getHeaderFieldKey(i);
+                if (i == 0) {
+                    if (name == null && value != null
+                            && value.startsWith("HTTP/")) {
+                        response.append(value);
+                    } else if (http != null) {
+                        response.append(statusCode);
+                        String message = http.getResponseMessage();
+                        if (message != null) {
+                            response.append(" ").append(message);
+                        }
+                    }
+                    response.append("\n");
+                }
+                if (name != null) {
                     response.append(name).append(": ").append(value).append(
                             "\n");
                     if ("Location".equalsIgnoreCase(name)) {

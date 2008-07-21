@@ -54,8 +54,6 @@ public class OAuthURLConnectionClient extends OAuthClient {
             http.setInstanceFollowRedirects(false);
         }
         connection.setDoInput(true);
-        Map<String, List<String>> requestProperties = connection
-                .getRequestProperties();
         if (!"GET".equals(request.method)) {
             String form = OAuth.formEncode(request.getParameters());
             connection.setDoOutput(true);
@@ -69,8 +67,24 @@ public class OAuthURLConnectionClient extends OAuthClient {
                 output.close();
             }
         }
+        StringBuilder headers = new StringBuilder(request.method);
+        {
+            headers.append(" ").append(url.getPath());
+            String query = url.getQuery();
+            if (query != null && query.length() > 0) {
+                headers.append("?").append(query);
+            }
+            headers.append("\n");
+            for (Map.Entry<String, List<String>> header : connection
+                    .getRequestProperties().entrySet()) {
+                String key = header.getKey();
+                for (String value : header.getValue()) {
+                    headers.append(key).append(": ").append(value).append("\n");
+                }
+            }
+        }
         final OAuthMessage response = new URLConnectionResponse(request,
-                requestProperties, connection);
+                headers.toString(), connection);
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
             int statusCode = http.getResponseCode();

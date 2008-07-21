@@ -17,7 +17,6 @@
 package net.oauth.client;
 
 import java.io.IOException;
-
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 
@@ -46,4 +45,20 @@ public abstract class OAuthResponseMessage extends OAuthMessage {
         addParameters(OAuth.decodeForm(getBodyAsString()));
     }
 
+    /**
+     * Decide whether a message with the given Content-Type can be decoded as
+     * OAuth parameters.
+     */
+    protected boolean isDecodable(String contentType) {
+        if (contentType != null) {
+            int sep = contentType.indexOf(';');
+            String mimeType = (sep < 0) ? contentType : contentType.substring(
+                    0, sep);
+            mimeType = mimeType.trim();
+            if ("text/html".equalsIgnoreCase(mimeType)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

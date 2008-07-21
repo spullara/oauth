@@ -63,6 +63,14 @@ class HttpMethodResponse extends OAuthResponseMessage {
         return bodyAsString;
     }
 
+    @Override
+    protected void completeParameters() throws IOException {
+        Header contentType = method.getResponseHeader("Content-Type");
+        if (contentType == null || isDecodable(contentType.getValue())) {
+            super.completeParameters();
+        }
+    }
+
     /**
      * Return a complete description of the HTTP exchange, represented by
      * strings named "URL", "HTTP request headers" and "HTTP response".
@@ -92,10 +100,13 @@ class HttpMethodResponse extends OAuthResponseMessage {
             response.append("\n");
             for (Header header : method.getResponseHeaders()) {
                 String name = header.getName();
-                String value = header.getValue();
-                response.append(name).append(": ").append(value).append("\n");
-                if ("Location".equalsIgnoreCase(name)) {
-                    into.put(OAuthProblemException.HTTP_LOCATION, value);
+                if (name != null) {
+                    String value = header.getValue();
+                    response.append(name).append(": ").append(value).append(
+                            "\n");
+                    if ("Location".equalsIgnoreCase(name)) {
+                        into.put(OAuthProblemException.HTTP_LOCATION, value);
+                    }
                 }
             }
             String body = getBodyAsString();
