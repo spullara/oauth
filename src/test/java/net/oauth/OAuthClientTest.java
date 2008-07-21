@@ -27,32 +27,35 @@ import org.apache.commons.httpclient.HttpClient;
 
 public class OAuthClientTest extends TestCase {
 
+    public void setUp() {
+        clients = new OAuthClient[] { new OAuthURLConnectionClient(),
+                new OAuthHttpClient(new HttpClientPool() {
+                    public HttpClient getHttpClient(URL server) {
+                        return new HttpClient();
+                    }
+                }) };
+    }
+
     public void testRedirect() throws Exception {
-        testRedirect(new OAuthHttpClient(new HttpClientPool() {
-            public HttpClient getHttpClient(URL server) {
-                return new HttpClient();
+        for (OAuthClient client : clients) {
+            try {
+                OAuthMessage response = client.invoke(REQUEST);
+                fail("response: " + response);
+            } catch (OAuthProblemException e) {
+                Map<String, Object> parameters = e.getParameters();
+                assertEquals("status", "301", parameters
+                        .get(OAuthProblemException.HTTP_STATUS_CODE)
+                        + "");
+                assertEquals("Location", EXPECTED_LOCATION, parameters
+                        .get(OAuthProblemException.HTTP_LOCATION)
+                        + "");
             }
-        }));
-        testRedirect(new OAuthURLConnectionClient());
+        }
     }
 
     private static final OAuthMessage REQUEST = new OAuthMessage("GET",
             "http://google.com/search", OAuth.newList("q", "Java"));
     private static final String EXPECTED_LOCATION = "http://www.google.com/search?q=Java";
-
-    private void testRedirect(OAuthClient client) throws Exception {
-        try {
-            OAuthMessage response = client.invoke(REQUEST);
-            fail("response: " + response);
-        } catch (OAuthProblemException e) {
-            Map<String, Object> parameters = e.getParameters();
-            assertEquals("status", "301", parameters
-                    .get(OAuthProblemException.HTTP_STATUS_CODE)
-                    + "");
-            assertEquals("Location", EXPECTED_LOCATION, parameters
-                    .get(OAuthProblemException.HTTP_LOCATION)
-                    + "");
-        }
-    }
+    private OAuthClient[] clients;
 
 }
