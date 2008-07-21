@@ -43,18 +43,17 @@ public class OAuthClientTest extends TestCase {
                 fail("response: " + response);
             } catch (OAuthProblemException e) {
                 Map<String, Object> parameters = e.getParameters();
-                assertEquals("status", "301", parameters
-                        .get(OAuthProblemException.HTTP_STATUS_CODE)
-                        + "");
+                assertEquals("status", EXPECTED_STATUS, parameters
+                        .get(OAuthProblemException.HTTP_STATUS_CODE));
                 assertEquals("Location", EXPECTED_LOCATION, parameters
-                        .get(OAuthProblemException.HTTP_LOCATION)
-                        + "");
+                        .get(OAuthProblemException.HTTP_LOCATION));
             }
         }
     }
 
     private static final OAuthMessage REQUEST = new OAuthMessage("GET",
             "http://google.com/search", OAuth.newList("q", "Java"));
+    private static final Integer EXPECTED_STATUS = Integer.valueOf(301);
     private static final String EXPECTED_LOCATION = "http://www.google.com/search?q=Java";
     private OAuthClient[] clients;
 
