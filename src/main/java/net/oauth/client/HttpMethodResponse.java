@@ -18,7 +18,10 @@ package net.oauth.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import net.oauth.OAuth;
 import net.oauth.OAuthProblemException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
@@ -95,20 +98,19 @@ class HttpMethodResponse extends OAuthResponseMessage {
         into.put(OAuthProblemException.HTTP_STATUS_CODE, //
                 new Integer(method.getStatusCode()));
         {
-            StringBuilder response = new StringBuilder(method.getStatusLine()
-                    .toString());
-            response.append("\n");
+            List<OAuth.Parameter> responseHeaders = new ArrayList<OAuth.Parameter>();
+            StringBuilder response = new StringBuilder();
+            String value = method.getStatusLine().toString();
+            response.append(value).append("\n");
+            responseHeaders.add(new OAuth.Parameter(null, value));
             for (Header header : method.getResponseHeaders()) {
                 String name = header.getName();
-                if (name != null) {
-                    String value = header.getValue();
-                    response.append(name).append(": ").append(value).append(
-                            "\n");
-                    if ("Location".equalsIgnoreCase(name)) {
-                        into.put(OAuthProblemException.HTTP_LOCATION, value);
-                    }
-                }
+                value = header.getValue();
+                response.append(name).append(": ").append(value).append("\n");
+                responseHeaders.add(new OAuth.Parameter(name.toLowerCase(),
+                        value));
             }
+            into.put(OAuthProblemException.RESPONSE_HEADERS, responseHeaders);
             String body = getBodyAsString();
             if (body != null) {
                 response.append("\n");
@@ -117,5 +119,4 @@ class HttpMethodResponse extends OAuthResponseMessage {
             into.put("HTTP response", response.toString());
         }
     }
-
 }

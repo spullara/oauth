@@ -17,6 +17,7 @@
 package net.oauth;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;
 import net.oauth.client.HttpClientPool;
@@ -45,12 +46,14 @@ public class OAuthClientTest extends TestCase {
                 Map<String, Object> parameters = e.getParameters();
                 assertEquals("status", EXPECTED_STATUS, parameters
                         .get(OAuthProblemException.HTTP_STATUS_CODE));
-                assertEquals("Location", EXPECTED_LOCATION, parameters
-                        .get(OAuthProblemException.HTTP_LOCATION));
+                Map<String, String> headers = OAuth
+                        .newMap(((List<OAuth.Parameter>) parameters
+                                .get(OAuthProblemException.RESPONSE_HEADERS)));
+                assertEquals("Location", EXPECTED_LOCATION, headers
+                        .get("location"));
             }
         }
     }
-
     private static final OAuthMessage REQUEST = new OAuthMessage("GET",
             "http://google.com/search", OAuth.newList("q", "Java"));
     private static final Integer EXPECTED_STATUS = Integer.valueOf(301);

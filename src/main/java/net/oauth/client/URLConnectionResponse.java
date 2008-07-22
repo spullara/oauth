@@ -22,8 +22,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 
@@ -104,7 +106,6 @@ class URLConnectionResponse extends OAuthResponseMessage {
         super.dump(into);
         into.put("HTTP request headers", requestHeaders);
         {
-            StringBuilder response = new StringBuilder();
             HttpURLConnection http = (connection instanceof HttpURLConnection) ? (HttpURLConnection) connection
                     : null;
             Integer statusCode = null;
@@ -112,30 +113,28 @@ class URLConnectionResponse extends OAuthResponseMessage {
                 statusCode = Integer.valueOf(http.getResponseCode());
                 into.put(OAuthProblemException.HTTP_STATUS_CODE, statusCode);
             }
+            StringBuilder response = new StringBuilder();
+            List<OAuth.Parameter> responseHeaders = new ArrayList<OAuth.Parameter>();
             String value;
             for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
                 String name = connection.getHeaderFieldKey(i);
-                if (i == 0) {
-                    if (name == null && value != null
-                            && value.startsWith("HTTP/")) {
-                        response.append(value);
-                    } else if (http != null) {
-                        response.append(statusCode);
-                        String message = http.getResponseMessage();
-                        if (message != null) {
-                            response.append(" ").append(message);
-                        }
+                if (i == 0 && name != null && http != null) {
+                    String firstLine = "HTTP " + statusCode;
+                    String message = http.getResponseMessage();
+                    if (message != null) {
+                        firstLine += (" " + message);
                     }
-                    response.append("\n");
+                    response.append(firstLine).append("\n");
+                    responseHeaders.add(new OAuth.Parameter(null, firstLine));
                 }
                 if (name != null) {
-                    response.append(name).append(": ").append(value).append(
-                            "\n");
-                    if ("Location".equalsIgnoreCase(name)) {
-                        into.put(OAuthProblemException.HTTP_LOCATION, value);
-                    }
+                    response.append(name).append(": ");
+                    name = name.toLowerCase();
                 }
+                response.append(value).append("\n");
+                responseHeaders.add(new OAuth.Parameter(name, value));
             }
+            into.put(OAuthProblemException.RESPONSE_HEADERS, responseHeaders);
             String body = getBodyAsString();
             if (body != null) {
                 response.append("\n");

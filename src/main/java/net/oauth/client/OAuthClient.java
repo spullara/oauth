@@ -29,15 +29,20 @@ import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 
 /**
- * Utility methods for an OAuth client.
+ * Methods for an OAuth consumer to request tokens from a service provider.
+ * <p>
+ * This class can also be used to request access to protected resources, in some
+ * cases. But not in all cases. For example, this class can't send OAuth
+ * parameters in an HTTP Authentication header.
  * <p>
  * Methods of this class don't follow redirects. When they receive a redirect
  * response, they throw an OAuthProblemException, with properties
- * HTTP_STATUS_CODE = the redirect code and HTTP_LOCATION = the redirect URL.
- * Such a redirect can't be handled at the HTTP level, if the second request
- * must carry another OAuth signature (with different parameters). For example,
- * Google's Service Provider routinely redirects requests for access to
- * protected resources, and requires the redirected request to be signed.
+ * HTTP_STATUS_CODE = the redirect code and the redirect URL(s) contained in
+ * RESPONSE_HEADERS named 'Location'. Such a redirect can't be handled at the
+ * HTTP level, if the second request must carry another OAuth signature (with
+ * different parameters). For example, Google's Service Provider routinely
+ * redirects requests for access to protected resources, and requires the
+ * redirected request to be signed.
  * 
  * @author John Kristian
  */
@@ -84,8 +89,7 @@ public abstract class OAuthClient {
 
     /**
      * Construct a request message, send it to the service provider and get the
-     * response. This may be a request for a token, or for access to a protected
-     * resource.
+     * response.
      * 
      * @return the response
      * @throws URISyntaxException 
@@ -103,9 +107,7 @@ public abstract class OAuthClient {
     }
 
     /**
-     * Send a request message to the service provider and get the response. This
-     * may be a request for a token, or for access to a protected resource.
-     * (with different parameters).
+     * Send a request message to the service provider and get the response.
      * 
      * @return the response
      * @throws IOException

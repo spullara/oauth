@@ -31,8 +31,21 @@ import java.util.Map;
 public class OAuthProblemException extends OAuthException {
 
     public static final String OAUTH_PROBLEM = "oauth_problem";
+
+    /**
+     * The key of a parameter whose value is an Integer representing the HTTP
+     * response status code; for example Integer.valueOf(200).
+     */
     public static final String HTTP_STATUS_CODE = "HTTP status";
-    public static final String HTTP_LOCATION = "HTTP Location";
+ 
+    /**
+     * The key of a parameter whose value is a List<OAuth.Parameter>
+     * representing the headers from a response message. The header names are
+     * lower case, in this list. For an HTTP response, the first header has a
+     * null name, and its value is the first line from the HTTP message; for
+     * example "HTTP/1.1 200 OK".
+     */
+    public static final String RESPONSE_HEADERS = "response headers";
 
     public OAuthProblemException() {
     }
