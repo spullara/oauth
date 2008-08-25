@@ -17,12 +17,10 @@
 package net.oauth.signature;
 
 import java.util.List;
-
 import junit.framework.TestCase;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
-import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 
 public class OAuthSignatureMethodTest extends TestCase {
@@ -60,8 +58,10 @@ public class OAuthSignatureMethodTest extends TestCase {
     // label, signature method, HTTP method, URL, parameters,
     // consumer secret, token secret, expected
     {
-            { "simple", "HMAC-SHA1", "GET", "http://example.com", "n=v", "cs",
-                    "ts", "GET&http%3A%2F%2Fexample.com&n%3Dv" },
+            { "simple", "HMAC-SHA1", "GET", "http://example.com/", "n=v", "cs",
+                    "ts", "GET&http%3A%2F%2Fexample.com%2F&n%3Dv" },
+            { "no path", "HMAC-SHA1", "GET", "http://example.com", "n=v", "cs",
+                    "ts", "GET&http%3A%2F%2Fexample.com%2F&n%3Dv" },
             {
                     "OAuth A request",
                     "HMAC-SHA1",

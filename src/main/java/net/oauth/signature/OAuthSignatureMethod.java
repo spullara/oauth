@@ -25,14 +25,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
-
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -156,12 +154,10 @@ public abstract class OAuthSignatureMethod {
 
     protected static String normalizeUrl(String url) throws URISyntaxException {
         URI uri = new URI(url);
-        String authority = uri.getAuthority().toLowerCase();
         String scheme = uri.getScheme().toLowerCase();
-
+        String authority = uri.getAuthority().toLowerCase();
         boolean dropPort = (scheme.equals("http") && uri.getPort() == 80)
                            || (scheme.equals("https") && uri.getPort() == 443);
-
         if (dropPort) {
             // find the last : in the authority
             int index = authority.lastIndexOf(":");
@@ -169,9 +165,12 @@ public abstract class OAuthSignatureMethod {
                 authority = authority.substring(0, index);
             }
         }
-
+        String path = uri.getRawPath();
+        if (path == null || path.length() <= 0) {
+            path = "/"; // conforms to RFC 2616 section 3.2.2
+        }
         // we know that there is no query and no fragment here.
-        return scheme + "://" + authority + uri.getRawPath();
+        return scheme + "://" + authority + path;
     }
 
     protected static String normalizeParameters(
