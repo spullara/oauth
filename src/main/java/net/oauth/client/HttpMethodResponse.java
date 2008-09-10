@@ -38,16 +38,17 @@ class HttpMethodResponse extends OAuthResponseMessage {
      * from OAuth WWW-Authenticate headers and the body. The header parameters
      * come first, followed by the ones from the response body.
      */
-    public HttpMethodResponse(HttpMethod method) throws IOException {
+    public HttpMethodResponse(HttpMethod method, byte[] requestBody) throws IOException {
         super(method.getName(), method.getURI().toString());
         this.method = method;
+        this.requestBody = requestBody;
         for (Header header : method.getResponseHeaders("WWW-Authenticate")) {
             decodeWWWAuthenticate(header.getValue());
         }
     }
 
     private final HttpMethod method;
-
+    private final byte[] requestBody;
     private String bodyAsString = null;
 
     @Override
@@ -74,10 +75,7 @@ class HttpMethodResponse extends OAuthResponseMessage {
         }
     }
 
-    /**
-     * Return a complete description of the HTTP exchange, represented by
-     * strings named "URL", "HTTP request headers" and "HTTP response".
-     */
+    /** Return a complete description of the HTTP exchange. */
     @Override
     protected void dump(Map<String, Object> into) throws IOException {
         super.dump(into);
@@ -88,12 +86,17 @@ class HttpMethodResponse extends OAuthResponseMessage {
             if (query != null && query.length() > 0) {
                 request.append("?").append(query);
             }
-            request.append("\n");
+            request.append(EOL);
             for (Header header : method.getRequestHeaders()) {
                 request.append(header.getName()).append(": ").append(
-                        header.getValue()).append("\n");
+                        header.getValue()).append(EOL);
             }
-            into.put("HTTP request headers", request.toString());
+            into.put(HTTP_REQUEST_HEADERS, request.toString());
+            request.append(EOL);
+            if (requestBody != null) {
+                request.append(new String(requestBody, "ISO-8859-1"));
+            }
+            into.put(HTTP_REQUEST,  request.toString());
         }
         into.put(OAuthProblemException.HTTP_STATUS_CODE, //
                 new Integer(method.getStatusCode()));
@@ -101,22 +104,22 @@ class HttpMethodResponse extends OAuthResponseMessage {
             List<OAuth.Parameter> responseHeaders = new ArrayList<OAuth.Parameter>();
             StringBuilder response = new StringBuilder();
             String value = method.getStatusLine().toString();
-            response.append(value).append("\n");
+            response.append(value).append(EOL);
             responseHeaders.add(new OAuth.Parameter(null, value));
             for (Header header : method.getResponseHeaders()) {
                 String name = header.getName();
                 value = header.getValue();
-                response.append(name).append(": ").append(value).append("\n");
+                response.append(name).append(": ").append(value).append(EOL);
                 responseHeaders.add(new OAuth.Parameter(name.toLowerCase(),
                         value));
             }
             into.put(OAuthProblemException.RESPONSE_HEADERS, responseHeaders);
+            response.append(EOL);
             String body = getBodyAsString();
             if (body != null) {
-                response.append("\n");
                 response.append(body);
             }
-            into.put("HTTP response", response.toString());
+            into.put(HTTP_RESPONSE, response.toString());
         }
     }
 }

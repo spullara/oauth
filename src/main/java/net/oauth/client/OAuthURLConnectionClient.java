@@ -18,14 +18,12 @@ package net.oauth.client;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import net.oauth.OAuth;
 import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
@@ -42,62 +40,61 @@ public class OAuthURLConnectionClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    public OAuthMessage invoke(OAuthMessage request) throws IOException,
-            OAuthException {
-        final boolean sendBody = !"GET".equalsIgnoreCase(request.method);
-        final URL url = new URL(sendBody ? request.URL : OAuth.addParameters(
-                request.URL, request.getParameters()));
+    protected OAuthMessage invoke(String httpMethod, String urlString,
+            Collection<? extends Map.Entry<String, String>> addHeaders, byte[] body)
+        throws IOException, OAuthException
+    {
+        final URL url = new URL(urlString);
         final URLConnection connection = url.openConnection();
+        connection.setDoInput(true);
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
-            http.setRequestMethod(request.method);
+            http.setRequestMethod(httpMethod);
             http.setInstanceFollowRedirects(false);
         }
-        connection.setDoInput(true);
-        if (sendBody) {
-            connection.setRequestProperty("Content-Type", OAuth.FORM_ENCODED);
-        }
-        StringBuilder headers = new StringBuilder(request.method);
+        StringBuilder headers = new StringBuilder(httpMethod);
         {
             headers.append(" ").append(url.getPath());
             String query = url.getQuery();
             if (query != null && query.length() > 0) {
                 headers.append("?").append(query);
             }
-            headers.append("\n");
+            headers.append(EOL);
             for (Map.Entry<String, List<String>> header : connection
                     .getRequestProperties().entrySet()) {
                 String key = header.getKey();
                 for (String value : header.getValue()) {
-                    headers.append(key).append(": ").append(value).append("\n");
+                    headers.append(key).append(": ").append(value).append(EOL);
                 }
             }
         }
-        if (sendBody) {
-            String body = OAuth.formEncode(request.getParameters());
+        for (Map.Entry<String, String> header : addHeaders) {
+            connection.setRequestProperty(header.getKey(), header.getValue());
+            headers.append(header.getKey()).append(": ").append(header.getValue());
+        }
+        if (body != null) {
             connection.setDoOutput(true);
             OutputStream output = connection.getOutputStream();
             try {
-                Writer writer = new OutputStreamWriter(output, "ISO-8859-1");
-                writer.write(body);
-                writer.close();
+                output.write(body);
             } finally {
                 output.close();
             }
         }
-        final OAuthMessage response = new URLConnectionResponse(request,
-                headers.toString(), connection);
+        final OAuthMessage response = new URLConnectionResponse(httpMethod,
+                urlString, headers.toString(), body, connection);
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
             int statusCode = http.getResponseCode();
             if (statusCode != HttpURLConnection.HTTP_OK) {
-                Map<String, Object> dump = response.getDump();
-                OAuthProblemException problem = new OAuthProblemException(
-                        (String) dump.get(OAuthProblemException.OAUTH_PROBLEM));
-                problem.getParameters().putAll(dump);
+                OAuthProblemException problem = new OAuthProblemException();
+                problem.getParameters().putAll(response.getDump());
                 throw problem;
             }
         }
         return response;
     }
+
+    private static final String EOL = OAuthResponseMessage.EOL;
+
 }

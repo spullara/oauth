@@ -152,6 +152,12 @@ public class OAuthMessage {
                 .getBytes("ISO-8859-1"));
     }
 
+    /** The name of a dump entry whose value is the HTTP request. */
+    public static final String HTTP_REQUEST = "HTTP request";
+
+    /** The name of a dump entry whose value is the HTTP response. */
+    public static final String HTTP_RESPONSE = "HTTP response";
+
     /** Construct a verbose description of this message and its origins. */
     public Map<String, Object> getDump() throws IOException {
         Map<String, Object> into = new HashMap<String, Object>();

@@ -61,4 +61,11 @@ public abstract class OAuthResponseMessage extends OAuthMessage {
         }
         return true;
     }
+
+    /** The name of a dump entry whose value is the HTTP request headers. */
+    protected static final String HTTP_REQUEST_HEADERS = "HTTP request headers";
+
+    /** The standard end-of-line marker in an HTTP message. */
+    protected static final String EOL = "\r\n";
+
 }

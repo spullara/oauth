@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
-import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 
 /**
@@ -41,13 +40,14 @@ class URLConnectionResponse extends OAuthResponseMessage {
      * from OAuth WWW-Authenticate headers and the body. The header parameters
      * come first, followed by the ones from the response body.
      */
-    public URLConnectionResponse(OAuthMessage request, String requestHeaders,
-            URLConnection connection) throws IOException {
-        super(request.method, request.URL);
+    public URLConnectionResponse(String method, String url,
+            String requestHeaders, byte[] requestBody, URLConnection connection)
+            throws IOException {
+        super(method, url);
         this.requestHeaders = requestHeaders;
+        this.requestBody = requestBody;
         this.connection = connection;
-        List<String> wwwAuthHeaders = connection.getHeaderFields().get(
-                "WWW-Authenticate");
+        List<String> wwwAuthHeaders = connection.getHeaderFields().get("WWW-Authenticate");
         if (wwwAuthHeaders != null) {
             for (String header : wwwAuthHeaders) {
                 this.decodeWWWAuthenticate(header);
@@ -56,13 +56,18 @@ class URLConnectionResponse extends OAuthResponseMessage {
     }
 
     private final String requestHeaders;
+    private final byte[] requestBody;
     private final URLConnection connection;
     private String bodyAsString = null;
 
     @Override
     public InputStream getBodyAsStream() throws IOException {
         if (bodyAsString == null) {
-            return connection.getInputStream();
+            try {
+                return connection.getInputStream();
+            } catch(IOException ohWell) {
+                return null;
+            }
         }
         return super.getBodyAsStream();
     }
@@ -71,7 +76,7 @@ class URLConnectionResponse extends OAuthResponseMessage {
     public String getBodyAsString() throws IOException {
         if (bodyAsString == null) {
             InputStream input = getBodyAsStream();
-            try {
+            if (input != null) try {
                 String encoding = connection.getContentEncoding();
                 if (encoding == null) {
                     encoding = "ISO-8859-1";
@@ -97,14 +102,19 @@ class URLConnectionResponse extends OAuthResponseMessage {
         }
     }
 
-    /**
-     * Return a complete description of the HTTP exchange, represented by
-     * strings named "URL", "HTTP request headers" and "HTTP response".
-     */
+    /** Return a complete description of the HTTP exchange. */
     @Override
     protected void dump(Map<String, Object> into) throws IOException {
         super.dump(into);
-        into.put("HTTP request headers", requestHeaders);
+        into.put(HTTP_REQUEST_HEADERS, requestHeaders);
+        {
+            StringBuilder request = new StringBuilder(requestHeaders);
+            request.append(EOL);
+            if (requestBody != null) {
+                request.append(new String(requestBody, "ISO-8859-1"));
+            }
+            into.put(HTTP_REQUEST, request.toString());
+        }
         {
             HttpURLConnection http = (connection instanceof HttpURLConnection) ? (HttpURLConnection) connection
                     : null;
@@ -124,23 +134,23 @@ class URLConnectionResponse extends OAuthResponseMessage {
                     if (message != null) {
                         firstLine += (" " + message);
                     }
-                    response.append(firstLine).append("\n");
+                    response.append(firstLine).append(EOL);
                     responseHeaders.add(new OAuth.Parameter(null, firstLine));
                 }
                 if (name != null) {
                     response.append(name).append(": ");
                     name = name.toLowerCase();
                 }
-                response.append(value).append("\n");
+                response.append(value).append(EOL);
                 responseHeaders.add(new OAuth.Parameter(name, value));
             }
             into.put(OAuthProblemException.RESPONSE_HEADERS, responseHeaders);
+            response.append(EOL);
             String body = getBodyAsString();
             if (body != null) {
-                response.append("\n");
                 response.append(body);
             }
-            into.put("HTTP response", response.toString());
+            into.put(HTTP_RESPONSE, response.toString());
         }
     }
 

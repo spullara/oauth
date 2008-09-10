@@ -16,31 +16,23 @@
 
 package net.oauth;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;
-import net.oauth.client.HttpClientPool;
 import net.oauth.client.OAuthClient;
 import net.oauth.client.OAuthHttpClient;
 import net.oauth.client.OAuthURLConnectionClient;
-import org.apache.commons.httpclient.HttpClient;
 
 public class OAuthClientTest extends TestCase {
 
     public void setUp() {
-        clients = new OAuthClient[] { new OAuthURLConnectionClient(),
-                new OAuthHttpClient(new HttpClientPool() {
-                    public HttpClient getHttpClient(URL server) {
-                        return new HttpClient();
-                    }
-                }) };
+        clients = new OAuthClient[] { new OAuthURLConnectionClient(), new OAuthHttpClient() };
     }
 
     public void testRedirect() throws Exception {
         for (OAuthClient client : clients) {
             try {
-                OAuthMessage response = client.invoke(REQUEST);
+                OAuthMessage response = client.invoke(REQUEST, OAuthClient.ParameterStyle.BODY);
                 fail("response: " + response);
             } catch (OAuthProblemException e) {
                 Map<String, Object> parameters = e.getParameters();

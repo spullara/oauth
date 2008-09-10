@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
@@ -32,8 +34,8 @@ import net.oauth.OAuthProblemException;
  * Methods for an OAuth consumer to request tokens from a service provider.
  * <p>
  * This class can also be used to request access to protected resources, in some
- * cases. But not in all cases. For example, this class can't send OAuth
- * parameters in an HTTP Authentication header.
+ * cases. But not in all cases. For example, this class can't handle binary
+ * message bodies.
  * <p>
  * Methods of this class don't follow redirects. When they receive a redirect
  * response, they throw an OAuthProblemException, with properties
@@ -97,13 +99,29 @@ public abstract class OAuthClient {
     public OAuthMessage invoke(OAuthAccessor accessor, String httpMethod, String url,
             Collection<? extends Map.Entry> parameters)
     throws IOException, OAuthException, URISyntaxException {
-        return invoke(accessor.newRequestMessage(httpMethod, url, parameters));
+        String ps = (String) accessor.consumer.getProperty(PARAMETER_STYLE);
+        ParameterStyle style = (ps == null) ? ParameterStyle.BODY
+                : Enum.valueOf(ParameterStyle.class, ps);
+        return invoke(accessor.newRequestMessage(httpMethod, url, parameters),
+                style);
     }
+
+    /**
+     * The name of the OAuthConsumer property whose value is the ParameterStyle
+     * to be used by invoke.
+     */
+    public static final String PARAMETER_STYLE = "parameterStyle";
 
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
             Collection<? extends Map.Entry> parameters)
     throws IOException, OAuthException, URISyntaxException {
         return invoke(accessor, null, url, parameters);
+    }
+
+    /** @deprecated Use invoke(OAuthMessage, ParameterStyle) instead. */
+    public OAuthMessage invoke(OAuthMessage request) throws IOException,
+            OAuthException {
+        return invoke(request, ParameterStyle.BODY);
     }
 
     /**
@@ -115,7 +133,76 @@ public abstract class OAuthClient {
      * @throws OAuthProblemException
      *                 a problematic response was received
      */
-    public abstract OAuthMessage invoke(OAuthMessage request)
-        throws IOException, OAuthException;
+    /** Send a message to the service provider and get the response. */
+    public OAuthMessage invoke(OAuthMessage request, ParameterStyle style)
+            throws IOException, OAuthException {
+        final boolean isPost = "POST".equalsIgnoreCase(request.method);
+        if (style == ParameterStyle.BODY && !isPost) {
+            style = ParameterStyle.QUERY_STRING;
+        }
+        String url = request.URL;
+        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+        String body = null;
+        switch (style) {
+          case QUERY_STRING:
+              url = OAuth.addParameters(url, request.getParameters());
+              break;
+          case BODY:
+              body = OAuth.formEncode(request.getParameters());
+              headers.add(new OAuth.Parameter("Content-Type", OAuth.FORM_ENCODED));
+              break;
+          case AUTHORIZATION_HEADER:
+              headers.add(new OAuth.Parameter("Authorization", request.getAuthorizationHeader("")));
+              // Find the non-OAuth parameters:
+              List<Map.Entry<String, String>> others = request.getParameters();
+              if (others != null && !others.isEmpty()) {
+                  others = new ArrayList<Map.Entry<String, String>>(others);
+                  for (Iterator<Map.Entry<String, String>> p = others.iterator(); p.hasNext(); ) {
+                      if (p.next().getKey().startsWith("oauth_")) {
+                          p.remove();
+                      }
+                  }
+                  // Place the non-OAuth parameters elsewhere in the request:
+                  if (isPost) {
+                      body = OAuth.formEncode(others);
+                  } else {
+                      url = OAuth.addParameters(url, others);
+                  }
+              }
+              break;
+        }
+        if (body == null && isPost) {
+            body = "";
+        }
+        return invoke(request.method, url, headers,
+                body == null ? null : body.getBytes("ISO-8859-1"));
+    }
+
+    /** Where to place parameters in an HTTP message. */
+    public enum ParameterStyle {
+        AUTHORIZATION_HEADER, BODY, QUERY_STRING;
+    };
+
+    /**
+     * Send an HTTP request and return the response.
+     * 
+     * @param method
+     *                the HTTP request method; e.g. "GET" or "POST"
+     * @param url
+     *                identifies the HTTP server and resource
+     * @param headers
+     *                HTTP request headers, in addition to the standard headers.
+     *                May be empty, to indicate that no additional headers are
+     *                needed
+     * @param body
+     *                HTTP request body, or null to indicate that a body should
+     *                not be transmitted
+     * @return the HTTP response. Its parameters property will contain the OAuth
+     *         parameters from the HTTP response, if it was successful (status
+     *         200).
+     */
+    protected abstract OAuthMessage invoke(String method, String url,
+            Collection<? extends Map.Entry<String, String>> headers, byte[] body)
+            throws IOException, OAuthException;
 
 }
