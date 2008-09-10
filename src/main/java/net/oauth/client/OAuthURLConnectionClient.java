@@ -44,9 +44,9 @@ public class OAuthURLConnectionClient extends OAuthClient {
     @Override
     public OAuthMessage invoke(OAuthMessage request) throws IOException,
             OAuthException {
-        final URL url = ("GET".equals(request.method)) //
-        ? new URL(OAuth.addParameters(request.URL, request.getParameters())) //
-                : new URL(request.URL);
+        final boolean sendBody = !"GET".equalsIgnoreCase(request.method);
+        final URL url = new URL(sendBody ? request.URL : OAuth.addParameters(
+                request.URL, request.getParameters()));
         final URLConnection connection = url.openConnection();
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
@@ -54,18 +54,8 @@ public class OAuthURLConnectionClient extends OAuthClient {
             http.setInstanceFollowRedirects(false);
         }
         connection.setDoInput(true);
-        if (!"GET".equals(request.method)) {
-            String form = OAuth.formEncode(request.getParameters());
-            connection.setDoOutput(true);
+        if (sendBody) {
             connection.setRequestProperty("Content-Type", OAuth.FORM_ENCODED);
-            OutputStream output = connection.getOutputStream();
-            try {
-                Writer writer = new OutputStreamWriter(output, "ISO-8859-1");
-                writer.write(form);
-                writer.close();
-            } finally {
-                output.close();
-            }
         }
         StringBuilder headers = new StringBuilder(request.method);
         {
@@ -81,6 +71,18 @@ public class OAuthURLConnectionClient extends OAuthClient {
                 for (String value : header.getValue()) {
                     headers.append(key).append(": ").append(value).append("\n");
                 }
+            }
+        }
+        if (sendBody) {
+            String body = OAuth.formEncode(request.getParameters());
+            connection.setDoOutput(true);
+            OutputStream output = connection.getOutputStream();
+            try {
+                Writer writer = new OutputStreamWriter(output, "ISO-8859-1");
+                writer.write(body);
+                writer.close();
+            } finally {
+                output.close();
             }
         }
         final OAuthMessage response = new URLConnectionResponse(request,
