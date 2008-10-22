@@ -59,9 +59,9 @@ public class OAuthMessage {
         }
     }
 
-    public final String method;
+    public String method;
 
-    public final String URL;
+    public String URL;
 
     private final List<Map.Entry<String, String>> parameters;
 
