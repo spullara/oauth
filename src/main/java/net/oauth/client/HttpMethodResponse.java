@@ -31,7 +31,7 @@ import org.apache.commons.httpclient.HttpMethod;
  * 
  * @author John Kristian
  */
-class HttpMethodResponse extends OAuthResponseMessage {
+public class HttpMethodResponse extends OAuthResponseMessage {
 
     /**
      * Construct an OAuthMessage from the HTTP response, including parameters

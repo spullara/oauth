@@ -33,7 +33,7 @@ import net.oauth.OAuthProblemException;
  * 
  * @author John Kristian
  */
-class URLConnectionResponse extends OAuthResponseMessage {
+public class URLConnectionResponse extends OAuthResponseMessage {
 
     /**
      * Construct an OAuthMessage from the HTTP response, including parameters

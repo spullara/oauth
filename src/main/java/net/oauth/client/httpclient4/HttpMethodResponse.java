@@ -38,7 +38,7 @@ import org.apache.http.util.EntityUtils;
  * 
  * @author Sean Sullivan
  */
-class HttpMethodResponse extends OAuthResponseMessage {
+public class HttpMethodResponse extends OAuthResponseMessage {
 
     /**
      * Construct an OAuthMessage from the HTTP response, including parameters
