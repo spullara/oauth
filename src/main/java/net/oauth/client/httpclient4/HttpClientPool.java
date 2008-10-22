@@ -18,16 +18,14 @@ package net.oauth.client.httpclient4;
 
 import java.net.URL;
 
-
 /**
  * 
  * A source of Apache HttpClient 4 objects.
  * 
- * This class relies on Apache HttpClient 4.x
+ * This class relies on <a href="http://hc.apache.org">Apache HttpClient</a>
+ * version 4.
  * 
- *    http://hc.apache.org
- *    
- *
+ * @author Sean Sullivan
  */
 public interface HttpClientPool {
 

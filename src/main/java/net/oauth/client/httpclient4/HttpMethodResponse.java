@@ -30,15 +30,13 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.util.EntityUtils;
 
-
 /**
- * The response part of an HttpMethod, encapsulated as an OAuthMessage.
+ * An HttpResponse, encapsulated as an OAuthMessage.
  * 
- * This class relies on Apache HttpClient 4.x
+ * This class relies on <a href="http://hc.apache.org">Apache HttpClient</a>
+ * version 4.
  * 
- *    http://hc.apache.org
- *    
- *
+ * @author Sean Sullivan
  */
 class HttpMethodResponse extends OAuthResponseMessage {
 
@@ -47,7 +45,8 @@ class HttpMethodResponse extends OAuthResponseMessage {
      * from OAuth WWW-Authenticate headers and the body. The header parameters
      * come first, followed by the ones from the response body.
      */
-    public HttpMethodResponse(HttpRequestBase request, HttpResponse response, byte[] requestBody) throws IOException {
+    public HttpMethodResponse(HttpRequestBase request, HttpResponse response, byte[] requestBody)
+    throws IOException {
         super(request.getMethod(), request.getURI().toString());
         this.httpRequest = request;
         this.httpResponse = response;
@@ -73,13 +72,12 @@ class HttpMethodResponse extends OAuthResponseMessage {
     @Override
     public String getBodyAsString() throws IOException {
         if (bodyAsString == null) {
-        	HttpEntity entity = httpResponse.getEntity();
-        	if (entity == null) {
-        		bodyAsString = null;
-        	}
-        	else {
-        		bodyAsString = EntityUtils.toString(entity);
-        	}
+            HttpEntity entity = httpResponse.getEntity();
+            if (entity == null) {
+                bodyAsString = null;
+            } else {
+                bodyAsString = EntityUtils.toString(entity);
+            }
         }
         return bodyAsString;
     }
@@ -113,7 +111,7 @@ class HttpMethodResponse extends OAuthResponseMessage {
             if (requestBody != null) {
                 request.append(new String(requestBody, "ISO-8859-1"));
             }
-            into.put(HTTP_REQUEST,  request.toString());
+            into.put(HTTP_REQUEST, request.toString());
         }
         into.put(OAuthProblemException.HTTP_STATUS_CODE, //
                 new Integer(httpResponse.getStatusLine().getStatusCode()));
@@ -139,5 +137,5 @@ class HttpMethodResponse extends OAuthResponseMessage {
             into.put(HTTP_RESPONSE, response.toString());
         }
     }
-    
+
 }
