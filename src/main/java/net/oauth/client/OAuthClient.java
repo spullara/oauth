@@ -50,25 +50,31 @@ import net.oauth.OAuthProblemException;
  */
 public abstract class OAuthClient {
 
-    /**
-     * Get a fresh request token from the service provider.
-     * 
-     * @throws URISyntaxException
-     */
+    /** Get a fresh request token from the service provider. */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod)
+    throws IOException, OAuthException, URISyntaxException {
+        getRequestToken(accessor, httpMethod, null);
+    }
+
+    /** Get a fresh request token from the service provider. */
+    public void getRequestToken(OAuthAccessor accessor, String httpMethod,
+            Collection<? extends Map.Entry> parameters)
     throws IOException, OAuthException, URISyntaxException {
         accessor.accessToken = null;
         accessor.tokenSecret = null;
-        Collection<OAuth.Parameter> parameters = null;
         {
             // This code supports the 'Variable Accessor Secret' extension
             // described in http://oauth.pbwiki.com/AccessorSecret
             Object accessorSecret = accessor
                     .getProperty(OAuthConsumer.ACCESSOR_SECRET);
             if (accessorSecret != null) {
-                parameters = new ArrayList<OAuth.Parameter>(1);
-                parameters.add(new OAuth.Parameter("oauth_accessor_secret",
+                List<Map.Entry> p = (parameters == null)
+                    ? new ArrayList<Map.Entry>(1)
+                    : new ArrayList<Map.Entry>(parameters);
+                p.add(new OAuth.Parameter("oauth_accessor_secret",
                         accessorSecret.toString()));
+                parameters = p;
+                // But don't modify the caller's parameters.
             }
         }
         OAuthMessage response = invoke(accessor, httpMethod,
