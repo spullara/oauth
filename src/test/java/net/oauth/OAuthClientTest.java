@@ -26,7 +26,8 @@ import net.oauth.client.OAuthURLConnectionClient;
 public class OAuthClientTest extends TestCase {
 
     public void setUp() {
-        clients = new OAuthClient[] { new OAuthURLConnectionClient(), new OAuthHttpClient() };
+        clients = new OAuthClient[] { new OAuthURLConnectionClient(), new OAuthHttpClient(),
+                new net.oauth.client.httpclient4.OAuthHttpClient()};
     }
 
     public void testRedirect() throws Exception {
@@ -46,6 +47,7 @@ public class OAuthClientTest extends TestCase {
             }
         }
     }
+
     private static final OAuthMessage REQUEST = new OAuthMessage("GET",
             "http://google.com/search", OAuth.newList("q", "Java"));
     private static final Integer EXPECTED_STATUS = Integer.valueOf(301);
