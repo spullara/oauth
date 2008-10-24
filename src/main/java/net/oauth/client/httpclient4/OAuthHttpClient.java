@@ -82,7 +82,7 @@ public class OAuthHttpClient extends net.oauth.client.OAuthClient {
 
         HttpClient client = clientPool.getHttpClient(new URL(httpRequest.getURI().toString()));
 
-        client.getParams().setIntParameter(ClientPNames.MAX_REDIRECTS, 0);
+        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
 
         HttpResponse httpResponse = client.execute(httpRequest);
 
