@@ -232,6 +232,9 @@ public class OAuthMessage {
         if (pMap.get("oauth_nonce") == null) {
             addParameter("oauth_nonce", System.nanoTime() + "");
         }
+        if (pMap.get("oauth_version") == null) {
+        	addParameter("oauth_version", "1.0");
+        }
         this.sign(accessor);
     }
 
