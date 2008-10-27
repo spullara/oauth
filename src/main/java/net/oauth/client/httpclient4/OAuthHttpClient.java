@@ -26,8 +26,10 @@ import net.oauth.OAuthProblemException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.entity.ByteArrayEntity;
@@ -62,16 +64,22 @@ public class OAuthHttpClient extends net.oauth.client.OAuthClient {
     @Override
     protected OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers, byte[] body)
-            throws IOException, OAuthException
-    {
+            throws IOException, OAuthException {
         final boolean isPost = "POST".equalsIgnoreCase(method);
+        final boolean isPut = "PUT".equalsIgnoreCase(method);
         HttpRequestBase httpRequest;
-        if (isPost) {
-            HttpPost post = new HttpPost(url);
-            if (body != null) {
-                post.setEntity(new ByteArrayEntity(body));
+        if (isPost || isPut) {
+            HttpEntityEnclosingRequestBase entityEnclosingMethod = new HttpPost(
+                    url);
+            if (isPost) {
+                entityEnclosingMethod = new HttpPost(url);
+            } else {
+                entityEnclosingMethod = new HttpPut(url);
             }
-            httpRequest = post;
+            if (body != null) {
+                entityEnclosingMethod.setEntity(new ByteArrayEntity(body));
+            }
+            httpRequest = entityEnclosingMethod;
         } else {
             httpRequest = new HttpGet(url);
         }
@@ -80,9 +88,11 @@ public class OAuthHttpClient extends net.oauth.client.OAuthClient {
             httpRequest.addHeader(header.getKey(), header.getValue());
         }
 
-        HttpClient client = clientPool.getHttpClient(new URL(httpRequest.getURI().toString()));
+        HttpClient client = clientPool.getHttpClient(new URL(httpRequest
+                .getURI().toString()));
 
-        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
+        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS,
+                false);
 
         HttpResponse httpResponse = client.execute(httpRequest);
 

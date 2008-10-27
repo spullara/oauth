@@ -27,8 +27,10 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 
 /**
  * Utility methods for an OAuth client based on the Jakarta Commons HTTP client.
@@ -56,17 +58,24 @@ public class OAuthHttpClient extends OAuthClient {
     private final HttpClientPool clientPool;
 
     @Override
-    protected OAuthMessage invoke(String method, String url, Collection<? extends Map.Entry<String, String>> headers, byte[] body)
-        throws IOException, OAuthException
-    {
+    protected OAuthMessage invoke(String method, String url,
+            Collection<? extends Map.Entry<String, String>> headers, byte[] body)
+            throws IOException, OAuthException {
         final boolean isPost = "POST".equalsIgnoreCase(method);
+        final boolean isPut = "PUT".equalsIgnoreCase(method);
         HttpMethod httpMethod;
-        if (isPost) {
-            PostMethod post = new PostMethod(url);
-            if (body != null) {
-                post.setRequestEntity(new ByteArrayRequestEntity(body));
+        if (isPost || isPut) {
+            EntityEnclosingMethod entityEnclosingMethod;
+            if (isPost) {
+                entityEnclosingMethod = new PostMethod(url);
+            } else {
+                entityEnclosingMethod = new PutMethod(url);
             }
-            httpMethod = post;
+            if (body != null) {
+                entityEnclosingMethod
+                        .setRequestEntity(new ByteArrayRequestEntity(body));
+            }
+            httpMethod = entityEnclosingMethod;
         } else {
             httpMethod = new GetMethod(url);
         }

@@ -52,14 +52,14 @@ public abstract class OAuthClient {
 
     /** Get a fresh request token from the service provider. */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod)
-    throws IOException, OAuthException, URISyntaxException {
+            throws IOException, OAuthException, URISyntaxException {
         getRequestToken(accessor, httpMethod, null);
     }
 
     /** Get a fresh request token from the service provider. */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod,
-            Collection<? extends Map.Entry> parameters)
-    throws IOException, OAuthException, URISyntaxException {
+            Collection<? extends Map.Entry> parameters) throws IOException,
+            OAuthException, URISyntaxException {
         accessor.accessToken = null;
         accessor.tokenSecret = null;
         {
@@ -68,9 +68,9 @@ public abstract class OAuthClient {
             Object accessorSecret = accessor
                     .getProperty(OAuthConsumer.ACCESSOR_SECRET);
             if (accessorSecret != null) {
-                List<Map.Entry> p = (parameters == null)
-                    ? new ArrayList<Map.Entry>(1)
-                    : new ArrayList<Map.Entry>(parameters);
+                List<Map.Entry> p = (parameters == null) ? new ArrayList<Map.Entry>(
+                        1)
+                        : new ArrayList<Map.Entry>(parameters);
                 p.add(new OAuth.Parameter("oauth_accessor_secret",
                         accessorSecret.toString()));
                 parameters = p;
@@ -90,8 +90,8 @@ public abstract class OAuthClient {
         }
     }
 
-    public void getRequestToken(OAuthAccessor accessor)
-    throws IOException, OAuthException, URISyntaxException {
+    public void getRequestToken(OAuthAccessor accessor) throws IOException,
+            OAuthException, URISyntaxException {
         getRequestToken(accessor, null);
     }
 
@@ -100,14 +100,14 @@ public abstract class OAuthClient {
      * response.
      * 
      * @return the response
-     * @throws URISyntaxException 
+     * @throws URISyntaxException
      */
-    public OAuthMessage invoke(OAuthAccessor accessor, String httpMethod, String url,
-            Collection<? extends Map.Entry> parameters)
-    throws IOException, OAuthException, URISyntaxException {
+    public OAuthMessage invoke(OAuthAccessor accessor, String httpMethod,
+            String url, Collection<? extends Map.Entry> parameters)
+            throws IOException, OAuthException, URISyntaxException {
         String ps = (String) accessor.consumer.getProperty(PARAMETER_STYLE);
-        ParameterStyle style = (ps == null) ? ParameterStyle.BODY
-                : Enum.valueOf(ParameterStyle.class, ps);
+        ParameterStyle style = (ps == null) ? ParameterStyle.BODY : Enum
+                .valueOf(ParameterStyle.class, ps);
         return invoke(accessor.newRequestMessage(httpMethod, url, parameters),
                 style);
     }
@@ -119,8 +119,8 @@ public abstract class OAuthClient {
     public static final String PARAMETER_STYLE = "parameterStyle";
 
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
-            Collection<? extends Map.Entry> parameters)
-    throws IOException, OAuthException, URISyntaxException {
+            Collection<? extends Map.Entry> parameters) throws IOException,
+            OAuthException, URISyntaxException {
         return invoke(accessor, null, url, parameters);
     }
 
@@ -143,6 +143,7 @@ public abstract class OAuthClient {
     public OAuthMessage invoke(OAuthMessage request, ParameterStyle style)
             throws IOException, OAuthException {
         final boolean isPost = "POST".equalsIgnoreCase(request.method);
+        final boolean isPut = "PUT".equalsIgnoreCase(request.method);
         if (style == ParameterStyle.BODY && !isPost) {
             style = ParameterStyle.QUERY_STRING;
         }
@@ -150,38 +151,44 @@ public abstract class OAuthClient {
         List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
         String body = null;
         switch (style) {
-          case QUERY_STRING:
-              url = OAuth.addParameters(url, request.getParameters());
-              break;
-          case BODY:
-              body = OAuth.formEncode(request.getParameters());
-              headers.add(new OAuth.Parameter("Content-Type", OAuth.FORM_ENCODED));
-              break;
-          case AUTHORIZATION_HEADER:
-              headers.add(new OAuth.Parameter("Authorization", request.getAuthorizationHeader("")));
-              // Find the non-OAuth parameters:
-              List<Map.Entry<String, String>> others = request.getParameters();
-              if (others != null && !others.isEmpty()) {
-                  others = new ArrayList<Map.Entry<String, String>>(others);
-                  for (Iterator<Map.Entry<String, String>> p = others.iterator(); p.hasNext(); ) {
-                      if (p.next().getKey().startsWith("oauth_")) {
-                          p.remove();
-                      }
-                  }
-                  // Place the non-OAuth parameters elsewhere in the request:
-                  if (isPost) {
-                      body = OAuth.formEncode(others);
-                  } else {
-                      url = OAuth.addParameters(url, others);
-                  }
-              }
-              break;
+        case QUERY_STRING:
+            url = OAuth.addParameters(url, request.getParameters());
+            break;
+        case BODY:
+            body = OAuth.formEncode(request.getParameters());
+            headers
+                    .add(new OAuth.Parameter("Content-Type", OAuth.FORM_ENCODED));
+            break;
+        case AUTHORIZATION_HEADER:
+            headers.add(new OAuth.Parameter("Authorization", request
+                    .getAuthorizationHeader("")));
+            // Find the non-OAuth parameters:
+            List<Map.Entry<String, String>> others = request.getParameters();
+            if (others != null && !others.isEmpty()) {
+                others = new ArrayList<Map.Entry<String, String>>(others);
+                for (Iterator<Map.Entry<String, String>> p = others.iterator(); p
+                        .hasNext();) {
+                    if (p.next().getKey().startsWith("oauth_")) {
+                        p.remove();
+                    }
+                }
+                // Place the non-OAuth parameters elsewhere in the request:
+                if (isPost) {
+                    body = OAuth.formEncode(others);
+                } else {
+                    url = OAuth.addParameters(url, others);
+                }
+            }
+            break;
         }
-        if (body == null && isPost) {
+        if (isPut) {
+            body = request.getBodyAsString();
+        }
+        if (body == null && (isPost || isPut)) {
             body = "";
         }
-        return invoke(request.method, url, headers,
-                body == null ? null : body.getBytes("ISO-8859-1"));
+        return invoke(request.method, url, headers, body == null ? null : body
+                .getBytes("ISO-8859-1"));
     }
 
     /** Where to place parameters in an HTTP message. */
