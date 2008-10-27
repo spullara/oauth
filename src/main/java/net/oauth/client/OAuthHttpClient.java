@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -61,6 +62,7 @@ public class OAuthHttpClient extends OAuthClient {
     protected OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers, byte[] body)
             throws IOException, OAuthException {
+        final boolean isDelete = "DELETE".equalsIgnoreCase(method);
         final boolean isPost = "POST".equalsIgnoreCase(method);
         final boolean isPut = "PUT".equalsIgnoreCase(method);
         HttpMethod httpMethod;
@@ -76,6 +78,8 @@ public class OAuthHttpClient extends OAuthClient {
                         .setRequestEntity(new ByteArrayRequestEntity(body));
             }
             httpMethod = entityEnclosingMethod;
+        } else if (isDelete) {
+            httpMethod = new DeleteMethod(url);
         } else {
             httpMethod = new GetMethod(url);
         }

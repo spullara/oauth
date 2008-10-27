@@ -26,6 +26,7 @@ import net.oauth.OAuthProblemException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -65,6 +66,7 @@ public class OAuthHttpClient extends net.oauth.client.OAuthClient {
     protected OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers, byte[] body)
             throws IOException, OAuthException {
+        final boolean isDelete = "DELETE".equalsIgnoreCase(method);
         final boolean isPost = "POST".equalsIgnoreCase(method);
         final boolean isPut = "PUT".equalsIgnoreCase(method);
         HttpRequestBase httpRequest;
@@ -80,6 +82,8 @@ public class OAuthHttpClient extends net.oauth.client.OAuthClient {
                 entityEnclosingMethod.setEntity(new ByteArrayEntity(body));
             }
             httpRequest = entityEnclosingMethod;
+        } else if (isDelete) {
+            httpRequest = new HttpDelete(url);
         } else {
             httpRequest = new HttpGet(url);
         }

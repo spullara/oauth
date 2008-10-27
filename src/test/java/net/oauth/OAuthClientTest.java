@@ -61,7 +61,9 @@ public class OAuthClientTest extends TestCase {
                 { new OAuthMessage("POST", echo, OAuth.newList("x", "y")),
                         "POST\n" + "x=y\n" + OAuth.FORM_ENCODED + "\n" },
                 { new OAuthMessage("PUT", echo, OAuth.newList("x", "y")),
-                        "PUT\n" + "x=y\n" + null + "\n" } };
+                        "PUT\n" + "x=y\n" + null + "\n" },
+                { new OAuthMessage("DELETE", echo, OAuth.newList("x", "y")),
+                        "DELETE\n" + "x=y\n" + null + "\n" } };
         for (OAuthClient client : clients) {
             for (Object[] testCase : messages) {
                 OAuthMessage request = (OAuthMessage) testCase[0];
