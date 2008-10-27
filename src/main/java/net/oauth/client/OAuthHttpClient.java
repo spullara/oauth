@@ -16,88 +16,18 @@
 
 package net.oauth.client;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Collection;
-import java.util.Map;
-import net.oauth.OAuthException;
-import net.oauth.OAuthMessage;
-import net.oauth.OAuthProblemException;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-
 /**
- * Utility methods for an OAuth client based on the Jakarta Commons HTTP client.
- * 
- * @author John Kristian
+ * @deprecated use {@link net.oauth.client.httpclient3.OAuthHttpClient} instead
  */
-public class OAuthHttpClient extends OAuthClient {
-
-    public OAuthHttpClient(HttpClientPool clientPool) {
-        this.clientPool = clientPool;
-    }
+@Deprecated
+public class OAuthHttpClient extends
+        net.oauth.client.httpclient3.OAuthHttpClient {
 
     public OAuthHttpClient() {
-        this(NOT_POOLED);
     }
 
-    private static final HttpClientPool NOT_POOLED = new HttpClientPool() {
-        // This trivial 'pool' simply allocates a new client every time.
-        // More efficient implementations are possible.
-        public HttpClient getHttpClient(URL server) {
-            return new HttpClient();
-        }
-    };
-
-    private final HttpClientPool clientPool;
-
-    @Override
-    protected OAuthMessage invoke(String method, String url,
-            Collection<? extends Map.Entry<String, String>> headers, byte[] body)
-            throws IOException, OAuthException {
-        final boolean isDelete = "DELETE".equalsIgnoreCase(method);
-        final boolean isPost = "POST".equalsIgnoreCase(method);
-        final boolean isPut = "PUT".equalsIgnoreCase(method);
-        HttpMethod httpMethod;
-        if (isPost || isPut) {
-            EntityEnclosingMethod entityEnclosingMethod;
-            if (isPost) {
-                entityEnclosingMethod = new PostMethod(url);
-            } else {
-                entityEnclosingMethod = new PutMethod(url);
-            }
-            if (body != null) {
-                entityEnclosingMethod
-                        .setRequestEntity(new ByteArrayRequestEntity(body));
-            }
-            httpMethod = entityEnclosingMethod;
-        } else if (isDelete) {
-            httpMethod = new DeleteMethod(url);
-        } else {
-            httpMethod = new GetMethod(url);
-        }
-        httpMethod.setFollowRedirects(false);
-        for (Map.Entry<String, String> header : headers) {
-            httpMethod.addRequestHeader(header.getKey(), header.getValue());
-        }
-        HttpClient client = clientPool.getHttpClient(new URL(httpMethod
-                .getURI().toString()));
-        client.executeMethod(httpMethod);
-        final OAuthMessage response = new HttpMethodResponse(httpMethod, body);
-        int statusCode = httpMethod.getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
-            OAuthProblemException problem = new OAuthProblemException();
-            problem.getParameters().putAll(response.getDump());
-            throw problem;
-        }
-        return response;
+    public OAuthHttpClient(HttpClientPool clientPool) {
+        super(clientPool);
     }
 
 }

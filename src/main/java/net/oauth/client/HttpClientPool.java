@@ -16,18 +16,10 @@
 
 package net.oauth.client;
 
-import java.net.URL;
-
-import org.apache.commons.httpclient.HttpClient;
-
 /**
- * A source of Jakarta Commons HttpClient objects.
- * 
- * @author John Kristian
+ * @deprecated use {@link net.oauth.client.httpclient3.HttpClientPool} instead
  */
-public interface HttpClientPool {
-
-    /** Get the appropriate HttpClient for sending a request to the given URL. */
-    public HttpClient getHttpClient(URL server);
-
+@Deprecated
+public interface HttpClientPool extends
+        net.oauth.client.httpclient3.HttpClientPool {
 }

@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package net.oauth.client;
+package net.oauth.client.httpclient3;
 
-import java.io.IOException;
-import org.apache.commons.httpclient.HttpMethod;
+import java.net.URL;
+import org.apache.commons.httpclient.HttpClient;
 
 /**
- * @deprecated use {@link net.oauth.client.httpclient3.HttpMethodResponse}
- *             instead
+ * A source of Jakarta Commons HttpClient objects.
+ * 
+ * @author John Kristian
  */
-@Deprecated
-public class HttpMethodResponse extends
-        net.oauth.client.httpclient3.HttpMethodResponse {
+public interface HttpClientPool {
 
-    public HttpMethodResponse(HttpMethod method, byte[] requestBody)
-            throws IOException {
-        super(method, requestBody);
-    }
+    /** Get the appropriate HttpClient for sending a request to the given URL. */
+    public HttpClient getHttpClient(URL server);
 
 }

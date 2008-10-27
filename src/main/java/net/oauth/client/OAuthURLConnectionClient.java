@@ -29,10 +29,10 @@ import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 
 /**
- * Utility methods for an OAuth client based on URLConnection.
+ * Utility methods for an OAuth client based on HttpURLConnection.
  * <p>
- * OAuthHttpClient performs better than this class, as a rule; since it does
- * things like connection pooling.
+ * httpclient3.OAuthHttpClient or httpclient4.OAuthHttpClient perform better
+ * than this class, as a rule; since they do things like connection pooling.
  * 
  * @author John Kristian
  */
