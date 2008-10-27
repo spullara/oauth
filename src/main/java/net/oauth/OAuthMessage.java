@@ -143,13 +143,14 @@ public class OAuthMessage {
 
     /**
      * Get a stream from which to read the body of the HTTP request or response.
-     * This is designed to support efficient streaming of a large response. If
+     * This is designed to support efficient streaming of a large message. If
      * you call this method before calling getBodyAsString, then subsequent
      * calls to either method will propagate an exception.
      */
     public InputStream getBodyAsStream() throws IOException {
-        return new ByteArrayInputStream(getBodyAsString()
-                .getBytes("ISO-8859-1"));
+        String body = getBodyAsString();
+        return new ByteArrayInputStream((body == null) ? NO_BYTES :
+            body.getBytes("ISO-8859-1"));
     }
 
     /** The name of a dump entry whose value is the HTTP request. */
@@ -326,11 +327,9 @@ public class OAuthMessage {
     }
 
     public static final String AUTH_SCHEME = "OAuth";
-
     static final Pattern AUTHORIZATION = Pattern.compile("\\s*(\\w*)\\s+(.*)");
-
     static final Pattern NVP = Pattern.compile("(\\S*)\\s*\\=\\s*\"([^\"]*)\"");
-
+    protected static final byte[] NO_BYTES = new byte[0];
     protected static final List<Map.Entry> NO_PARAMETERS = Collections
             .emptyList();
 
