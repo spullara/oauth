@@ -168,7 +168,11 @@ public class OAuthMessage {
         return DEFAULT_CHARSET;
     }
 
-    /** Get the body of the HTTP request or response. */
+    /**
+     * Get the body of the HTTP request or response.
+     * 
+     * @return the body, or null to indicate there is no body.
+     */
     public String getBodyAsString() throws IOException {
         return null; // stub
     }
@@ -178,11 +182,14 @@ public class OAuthMessage {
      * This is designed to support efficient streaming of a large message. If
      * you call this method before calling getBodyAsString, then subsequent
      * calls to either method will propagate an exception.
+     * 
+     * @return a stream from which to read the body, or null to indicate there
+     *         is no body.
      */
     public InputStream getBodyAsStream() throws IOException {
         String body = getBodyAsString();
-        return new ByteArrayInputStream((body == null) ? NO_BYTES :
-            body.getBytes(getContentCharset()));
+        return (body == null) ? null :
+            new ByteArrayInputStream(body.getBytes(getContentCharset()));
     }
 
     /** The name of a dump entry whose value is the HTTP request. */
