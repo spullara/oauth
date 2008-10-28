@@ -23,6 +23,7 @@ import java.util.Map;
 import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
+import net.oauth.client.OAuthClient;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -42,7 +43,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
  * 
  * @author Sean Sullivan
  */
-public class OAuthHttpClient extends net.oauth.client.OAuthClient {
+public class OAuthHttpClient extends OAuthClient {
 
     private final HttpClientPool clientPool;
 

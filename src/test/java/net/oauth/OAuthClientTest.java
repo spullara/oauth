@@ -16,6 +16,7 @@
 
 package net.oauth;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -61,19 +62,30 @@ public class OAuthClientTest extends TestCase {
 
     public void testInvokeMessage() throws Exception {
         final String echo = "http://localhost:" + port + "/Echo";
+        final String data = new String(new char[] { 0, 1, ' ', 'a', 127, 128,
+                0xFF, 0x3000, 0x4E00 });
+        final byte[] utf8 = data.getBytes("UTF-8");
+        List<OAuth.Parameter> parameters = OAuth.newList("x", "y",
+                "oauth_token", "t");
+        String parametersForm = "oauth_token=t&x=y";
         final Object[][] messages = new Object[][] {
-                { new OAuthMessage("GET", echo, OAuth.newList("x", "y")),
-                        "GET\n" + "x=y\n", null },
-                { new OAuthMessage("POST", echo, OAuth.newList("x", "y")),
-                        "POST\n" + "x=y\n", OAuth.FORM_ENCODED },
+                { new OAuthMessage("GET", echo, parameters),
+                        "GET\n" + parametersForm + "\n", null },
+                { new OAuthMessage("POST", echo, parameters),
+                        "POST\n" + parametersForm + "\n", OAuth.FORM_ENCODED },
                 {
-                        new MessageWithBody("PUT", echo, OAuth
-                                .newList("x", "y"),
-                                "text/plain;charset=\"UTF-8\"", "Hello!"),
-                        "PUT\n" + "x=y\n" + "Hello!",
-                        "text/plain; charset=UTF-8" },
-                { new OAuthMessage("DELETE", echo, OAuth.newList("x", "y")),
-                        "DELETE\n" + "x=y\n", null } };
+                        new MessageWithBody("PUT", echo, parameters,
+                                "text/OAuthClientTest; charset=\"UTF-8\"", utf8),
+                        "PUT\n" + parametersForm + "\n" + data,
+                        "text/OAuthClientTest; charset=UTF-8" },
+                {
+                        new MessageWithBody("PUT", echo, parameters,
+                                "application/octet-stream", utf8),
+                        "PUT\n" + parametersForm + "\n"
+                                + new String(utf8, "ISO-8859-1"),
+                        "application/octet-stream" },
+                { new OAuthMessage("DELETE", echo, parameters),
+                        "DELETE\n" + parametersForm + "\n", null } };
         for (OAuthClient client : clients) {
             for (Object[] testCase : messages) {
                 OAuthMessage request = (OAuthMessage) testCase[0];
@@ -92,23 +104,6 @@ public class OAuthClientTest extends TestCase {
                         expectedContentType, response.getContentType());
             }
         }
-    }
-
-    private static String readAll(InputStream from, String encoding)
-            throws IOException {
-        StringBuilder into = new StringBuilder();
-        if (from != null) {
-            try {
-                Reader r = new InputStreamReader(from, encoding);
-                char[] s = new char[512];
-                for (int n; 0 < (n = r.read(s));) {
-                    into.append(s, 0, n);
-                }
-            } finally {
-                from.close();
-            }
-        }
-        return into.toString();
     }
 
     private OAuthClient[] clients;
@@ -137,22 +132,43 @@ public class OAuthClientTest extends TestCase {
         server.stop();
     }
 
+    private static String readAll(InputStream from, String encoding)
+            throws IOException {
+        StringBuilder into = new StringBuilder();
+        if (from != null) {
+            try {
+                Reader r = new InputStreamReader(from, encoding);
+                char[] s = new char[512];
+                for (int n; 0 < (n = r.read(s));) {
+                    into.append(s, 0, n);
+                }
+            } finally {
+                from.close();
+            }
+        }
+        return into.toString();
+    }
+
     private static class MessageWithBody extends OAuthMessage {
 
         public MessageWithBody(String method, String URL,
                 Collection<? extends Entry> parameters, String contentType,
-                String body) {
+                byte[] body) {
             super(method, URL, parameters);
-            this.contentType = contentType;
             this.body = body;
+            this.contentType = contentType;
         }
 
+        private final byte[] body;
         private final String contentType;
-        private final String body;
 
         @Override
+        public InputStream getBodyAsStream() throws IOException {
+            return new ByteArrayInputStream(body);
+        }
+
         public String getBodyAsString() throws IOException {
-            return body;
+            return readAll(getBodyAsStream(), getContentCharset());
         }
 
         @Override

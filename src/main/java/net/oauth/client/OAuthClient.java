@@ -16,7 +16,10 @@
 
 package net.oauth.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -144,19 +147,21 @@ public abstract class OAuthClient {
             throws IOException, OAuthException {
         final boolean isPost = "POST".equalsIgnoreCase(request.method);
         final boolean isPut = "PUT".equalsIgnoreCase(request.method);
-        if (style == ParameterStyle.BODY && !isPost) {
+        InputStream body = request.getBodyAsStream();
+        if (style == ParameterStyle.BODY && !(isPost && body == null)) {
             style = ParameterStyle.QUERY_STRING;
         }
         String url = request.URL;
         List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
-        String body = request.getBodyAsString();
         String contentType = request.getContentType();
         switch (style) {
         case QUERY_STRING:
             url = OAuth.addParameters(url, request.getParameters());
             break;
         case BODY:
-            body = addParameters(body, request.getParameters());
+            body = new ByteArrayInputStream(OAuth.formEncode(
+                    request.getParameters()).getBytes(
+                    request.getContentCharset()));
             contentType = OAuth.FORM_ENCODED;
             break;
         case AUTHORIZATION_HEADER:
@@ -173,8 +178,9 @@ public abstract class OAuthClient {
                     }
                 }
                 // Place the non-OAuth parameters elsewhere in the request:
-                if (isPost) {
-                    body = addParameters(body, others);
+                if (isPost && body == null) {
+                    body = new ByteArrayInputStream(OAuth.formEncode(others)
+                            .getBytes(request.getContentCharset()));
                 } else {
                     url = OAuth.addParameters(url, others);
                 }
@@ -185,27 +191,15 @@ public abstract class OAuthClient {
             if (contentType != null) {
                 headers.add(new OAuth.Parameter("Content-Type", contentType));
             }
-            if (body == null) {
-                body = "";
-            }
         }
-        return invoke(request.method, url, headers, body == null ? null : body
-                .getBytes("ISO-8859-1"));
+        return invoke(request.method, url, headers, body);
     }
+
     /** Where to place parameters in an HTTP message. */
     public enum ParameterStyle {
         AUTHORIZATION_HEADER, BODY, QUERY_STRING;
     };
 
-    private static String addParameters(String body,
-            Collection<Map.Entry<String, String>> parameters)
-            throws IOException {
-        if (parameters != null && !parameters.isEmpty()) {
-            body = ((body == null || body.length() <= 0) ? "" : body + "&")
-                    + OAuth.formEncode(parameters);
-        }
-        return body;
-    }
     /**
      * Send an HTTP request and return the response.
      * 
@@ -227,5 +221,23 @@ public abstract class OAuthClient {
     protected abstract OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers, byte[] body)
             throws IOException, OAuthException;
+
+    protected OAuthMessage invoke(String method, String url,
+            Collection<? extends Map.Entry<String, String>> headers,
+            InputStream body) throws IOException, OAuthException {
+        return invoke(method, url, headers, readAll(body));
+    }
+
+    protected static byte[] readAll(InputStream from) throws IOException {
+        if (from == null) {
+            return null;
+        }
+        ByteArrayOutputStream into = new ByteArrayOutputStream();
+        byte[] b = new byte[1024];
+        for (int n; 0 <= (n = from.read(b));) {
+            into.write(b, 0, n);
+        }
+        return into.toByteArray();
+    }
 
 }
