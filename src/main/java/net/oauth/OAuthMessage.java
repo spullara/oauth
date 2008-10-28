@@ -181,7 +181,7 @@ public class OAuthMessage {
      * Get a stream from which to read the body of the HTTP request or response.
      * This is designed to support efficient streaming of a large message. If
      * you call this method before calling getBodyAsString, then subsequent
-     * calls to either method will propagate an exception.
+     * calls to either method may propagate an exception.
      * 
      * @return a stream from which to read the body, or null to indicate there
      *         is no body.
