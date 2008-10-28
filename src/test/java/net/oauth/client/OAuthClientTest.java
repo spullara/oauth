@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.oauth;
+package net.oauth.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,8 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import junit.framework.TestCase;
-import net.oauth.client.OAuthClient;
-import net.oauth.client.OAuthURLConnectionClient;
+import net.oauth.OAuth;
+import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
 import net.oauth.client.OAuthClient.ParameterStyle;
 import net.oauth.client.httpclient3.OAuthHttpClient;
 import net.oauth.signature.Echo;
@@ -109,6 +110,32 @@ public class OAuthClientTest extends TestCase {
                     assertEquals(id, testCase[2], response.getContentType());
                 }
             }
+        }
+    }
+
+    public void testExcerptInputStream() throws Exception {
+        InputStream input = new OAuthClient.ExcerptInputStream(
+                new ByteArrayInputStream("abcdef".getBytes()));
+        assertEquals('a', input.read());
+        byte[] actual = new byte[3];
+        assertEquals(3, input.read(actual));
+        assertEquals('b', actual[0]);
+        assertEquals('c', actual[1]);
+        assertEquals('d', actual[2]);
+        assertEquals(1, input.read(actual, 1, 1));
+        assertEquals('e', actual[1]);
+        assertEquals(1, input.read(actual, 1, 2));
+        assertEquals('f', actual[1]);
+        assertEquals(-1, input.read());
+        byte[] expected = new byte[] { -128, -1, 0, 1, 127 };
+        input = new OAuthClient.ExcerptInputStream(new ByteArrayInputStream(
+                expected));
+        actual = new byte[6];
+        actual[0] = (byte) input.read();
+        actual[1] = (byte) input.read();
+        assertEquals(3, input.read(actual, 2, 4));
+        for (int i = 0; i < expected.length; ++i) {
+            assertEquals(expected[i], actual[i]);
         }
     }
     private OAuthClient[] clients;

@@ -218,9 +218,11 @@ public abstract class OAuthClient {
      * @param body
      *                HTTP request body, or null to indicate that a body should
      *                not be transmitted
-     * @return the HTTP response. Its parameters property will contain the OAuth
-     *         parameters from the HTTP response, if it was successful (status
-     *         200).
+     * @param bodyEncoding
+     *                the character encoding of the request body
+     * 
+     * @return the HTTP response, including the OAuth parameters if the response
+     *         was successful (status 200).
      */
     protected abstract OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers,
@@ -262,7 +264,11 @@ public abstract class OAuthClient {
         @Override
         public int read() throws IOException {
             byte[] b = new byte[1];
-            return (read(b) <= 0) ? -1 : b[1];
+            return (read(b) <= 0) ? -1 : unsigned(b[0]);
+        }
+
+        private static int unsigned(byte b) {
+            return (b >= 0) ? b : ((int) b) + 256;
         }
 
         @Override
