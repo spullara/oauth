@@ -89,19 +89,17 @@ public class OAuthClientTest extends TestCase {
         for (OAuthClient client : clients) {
             for (Object[] testCase : messages) {
                 OAuthMessage request = (OAuthMessage) testCase[0];
+                final String id = client + " " + request.method;
                 OAuthMessage response = null;
                 try {
                     response = client.invoke(request,
                             OAuthClient.ParameterStyle.BODY);
                 } catch (OAuthProblemException e) {
-                    fail(e.getParameters().toString());
+                    fail(id + ": " + e + "\n" + e.getParameters().toString());
                 }
-                assertEquals(client + " " + request.method, testCase[1],
-                        readAll(response.getBodyAsStream(), response
-                                .getContentCharset()));
-                String expectedContentType = (String) testCase[2];
-                assertEquals(client + " " + request.method,
-                        expectedContentType, response.getContentType());
+                assertEquals(id, testCase[1], readAll(response
+                        .getBodyAsStream(), response.getContentCharset()));
+                assertEquals(id, testCase[2], response.getContentType());
             }
         }
     }
