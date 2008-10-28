@@ -183,6 +183,7 @@ public abstract class OAuthClient {
                 if (isPost && body == null) {
                     body = new ByteArrayInputStream(OAuth.formEncode(others)
                             .getBytes(request.getContentCharset()));
+                    contentType = OAuth.FORM_ENCODED;
                 } else {
                     url = OAuth.addParameters(url, others);
                 }
