@@ -17,6 +17,7 @@
 package net.oauth.client.httpclient4;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
@@ -34,7 +35,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.params.ClientPNames;
-import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 /**
@@ -65,11 +66,12 @@ public class OAuthHttpClient extends OAuthClient {
 
     @Override
     protected OAuthMessage invoke(String method, String url,
-            Collection<? extends Map.Entry<String, String>> headers, byte[] body)
-            throws IOException, OAuthException {
+            Collection<? extends Map.Entry<String, String>> headers,
+            InputStream body) throws IOException, OAuthException {
         final boolean isDelete = "DELETE".equalsIgnoreCase(method);
         final boolean isPost = "POST".equalsIgnoreCase(method);
         final boolean isPut = "PUT".equalsIgnoreCase(method);
+        final ExcerptInputStream input = new ExcerptInputStream(body);
         HttpRequestBase httpRequest;
         if (isPost || isPut) {
             HttpEntityEnclosingRequestBase entityEnclosingMethod = new HttpPost(
@@ -80,7 +82,8 @@ public class OAuthHttpClient extends OAuthClient {
                 entityEnclosingMethod = new HttpPut(url);
             }
             if (body != null) {
-                entityEnclosingMethod.setEntity(new ByteArrayEntity(body));
+                entityEnclosingMethod
+                        .setEntity(new InputStreamEntity(input, -1));
             }
             httpRequest = entityEnclosingMethod;
         } else if (isDelete) {
@@ -102,7 +105,7 @@ public class OAuthHttpClient extends OAuthClient {
         HttpResponse httpResponse = client.execute(httpRequest);
 
         final OAuthMessage response = new HttpMethodResponse(httpRequest,
-                httpResponse, body);
+                httpResponse, input.getExcerpt());
 
         int statusCode = httpResponse.getStatusLine().getStatusCode();
 

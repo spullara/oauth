@@ -17,6 +17,7 @@
 package net.oauth.client.httpclient3;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
@@ -27,10 +28,10 @@ import net.oauth.client.OAuthClient;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 
@@ -61,11 +62,12 @@ public class OAuthHttpClient extends OAuthClient {
 
     @Override
     protected OAuthMessage invoke(String method, String url,
-            Collection<? extends Map.Entry<String, String>> headers, byte[] body)
-            throws IOException, OAuthException {
+            Collection<? extends Map.Entry<String, String>> headers,
+            InputStream body) throws IOException, OAuthException {
         final boolean isDelete = "DELETE".equalsIgnoreCase(method);
         final boolean isPost = "POST".equalsIgnoreCase(method);
         final boolean isPut = "PUT".equalsIgnoreCase(method);
+        final ExcerptInputStream input = new ExcerptInputStream(body);
         HttpMethod httpMethod;
         if (isPost || isPut) {
             EntityEnclosingMethod entityEnclosingMethod;
@@ -76,7 +78,7 @@ public class OAuthHttpClient extends OAuthClient {
             }
             if (body != null) {
                 entityEnclosingMethod
-                        .setRequestEntity(new ByteArrayRequestEntity(body));
+                        .setRequestEntity(new InputStreamRequestEntity(input));
             }
             httpMethod = entityEnclosingMethod;
         } else if (isDelete) {
@@ -91,7 +93,8 @@ public class OAuthHttpClient extends OAuthClient {
         HttpClient client = clientPool.getHttpClient(new URL(httpMethod
                 .getURI().toString()));
         client.executeMethod(httpMethod);
-        final OAuthMessage response = new HttpMethodResponse(httpMethod, body);
+        final OAuthMessage response = new HttpMethodResponse(httpMethod, input
+                .getExcerpt());
         int statusCode = httpMethod.getStatusCode();
         if (statusCode != HttpStatus.SC_OK) {
             OAuthProblemException problem = new OAuthProblemException();

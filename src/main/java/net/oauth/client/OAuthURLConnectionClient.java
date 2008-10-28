@@ -17,6 +17,7 @@
 package net.oauth.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -41,7 +42,7 @@ public class OAuthURLConnectionClient extends OAuthClient {
     /** Send a message to the service provider and get the response. */
     @Override
     protected OAuthMessage invoke(String httpMethod, String urlString,
-            Collection<? extends Map.Entry<String, String>> addHeaders, byte[] body)
+            Collection<? extends Map.Entry<String, String>> addHeaders, InputStream body)
         throws IOException, OAuthException
     {
         final URL url = new URL(urlString);
@@ -72,17 +73,18 @@ public class OAuthURLConnectionClient extends OAuthClient {
             connection.setRequestProperty(header.getKey(), header.getValue());
             headers.append(header.getKey()).append(": ").append(header.getValue());
         }
+        final ExcerptInputStream input = new ExcerptInputStream(body);
         if (body != null) {
             connection.setDoOutput(true);
             OutputStream output = connection.getOutputStream();
             try {
-                output.write(body);
+                input.copyAll(output);
             } finally {
                 output.close();
             }
         }
         final OAuthMessage response = new URLConnectionResponse(httpMethod,
-                urlString, headers.toString(), body, connection);
+                urlString, headers.toString(), input.getExcerpt(), connection);
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
             int statusCode = http.getResponseCode();

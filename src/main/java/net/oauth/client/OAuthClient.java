@@ -18,8 +18,10 @@ package net.oauth.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,8 +39,8 @@ import net.oauth.OAuthProblemException;
  * Methods for an OAuth consumer to request tokens from a service provider.
  * <p>
  * This class can also be used to request access to protected resources, in some
- * cases. But not in all cases. For example, this class can't handle binary
- * message bodies.
+ * cases. But not in all cases. For example, this class can't handle arbitrary
+ * HTTP headers.
  * <p>
  * Methods of this class don't follow redirects. When they receive a redirect
  * response, they throw an OAuthProblemException, with properties
@@ -219,25 +221,67 @@ public abstract class OAuthClient {
      *         200).
      */
     protected abstract OAuthMessage invoke(String method, String url,
-            Collection<? extends Map.Entry<String, String>> headers, byte[] body)
-            throws IOException, OAuthException;
-
-    protected OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers,
-            InputStream body) throws IOException, OAuthException {
-        return invoke(method, url, headers, readAll(body));
-    }
+            InputStream body) throws IOException, OAuthException;
 
-    protected static byte[] readAll(InputStream from) throws IOException {
-        if (from == null) {
-            return null;
+    /** A decorator that retains a copy of the first few bytes of data. */
+    protected static class ExcerptInputStream extends FilterInputStream {
+
+        /**
+         * A marker that's appended to the excerpt if it's less than the
+         * complete stream.
+         */
+        public static final byte[] ELLIPSIS = " ...".getBytes();
+
+        public ExcerptInputStream(InputStream in) {
+            super(in);
         }
-        ByteArrayOutputStream into = new ByteArrayOutputStream();
-        byte[] b = new byte[1024];
-        for (int n; 0 <= (n = from.read(b));) {
-            into.write(b, 0, n);
+
+        private static final int maxSize = 1024;
+        private final ByteArrayOutputStream excerpt = new ByteArrayOutputStream();
+
+        /** Copy all the data from this stream to the given output stream. */
+        public void copyAll(OutputStream into) throws IOException {
+            byte[] b = new byte[1024];
+            for (int n; 0 < (n = read(b));) {
+                into.write(b, 0, n);
+            }
         }
-        return into.toByteArray();
+
+        /**
+         * The first few bytes of data that have been read so far, plus ELLIPSIS
+         * if this is less than all the bytes that have been read.
+         */
+        public byte[] getExcerpt() {
+            return excerpt.toByteArray();
+        }
+
+        @Override
+        public int read() throws IOException {
+            byte[] b = new byte[1];
+            return (read(b) <= 0) ? -1 : b[1];
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return read(b, 0, b.length);
+        }
+
+        @Override
+        public int read(byte[] b, int offset, int length) throws IOException {
+            final int n = super.read(b, offset, length);
+            if (n > 0) {
+                final int e = Math.min(n, maxSize - excerpt.size());
+                if (e >= 0) {
+                    excerpt.write(b, offset, e);
+                    if (e < n) {
+                        excerpt.write(ELLIPSIS);
+                    }
+                }
+            }
+            return n;
+        }
+
     }
 
 }
