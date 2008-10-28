@@ -182,7 +182,7 @@ public class OAuthMessage {
     public InputStream getBodyAsStream() throws IOException {
         String body = getBodyAsString();
         return new ByteArrayInputStream((body == null) ? NO_BYTES :
-            body.getBytes("ISO-8859-1"));
+            body.getBytes(getContentCharset()));
     }
 
     /** The name of a dump entry whose value is the HTTP request. */
