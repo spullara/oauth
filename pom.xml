@@ -11,7 +11,7 @@
   <parent>
     <groupId>net.oauth</groupId>
     <artifactId>oauth-parent</artifactId>
-    <version>20081022</version>
+    <version>20081027</version>
   </parent>
   <artifactId>core</artifactId>
   <packaging>jar</packaging>
@@ -26,6 +26,7 @@
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <version>2.4</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
