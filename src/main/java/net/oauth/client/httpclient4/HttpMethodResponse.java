@@ -118,7 +118,7 @@ public class HttpMethodResponse extends OAuthResponseMessage {
             into.put(HTTP_REQUEST_HEADERS, request.toString());
             request.append(EOL);
             if (requestBody != null) {
-                request.append(new String(requestBody, "ISO-8859-1"));
+                request.append(new String(requestBody, getContentCharset()));
             }
             into.put(HTTP_REQUEST, request.toString());
         }
