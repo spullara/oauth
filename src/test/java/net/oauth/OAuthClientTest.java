@@ -16,9 +16,15 @@
 
 package net.oauth;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.Socket;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import junit.framework.TestCase;
 import net.oauth.client.OAuthClient;
 import net.oauth.client.OAuthURLConnectionClient;
@@ -57,13 +63,17 @@ public class OAuthClientTest extends TestCase {
         final String echo = "http://localhost:" + port + "/Echo";
         final Object[][] messages = new Object[][] {
                 { new OAuthMessage("GET", echo, OAuth.newList("x", "y")),
-                        "GET\n" + "x=y\n" + null + "\n" },
+                        "GET\n" + "x=y\n", null },
                 { new OAuthMessage("POST", echo, OAuth.newList("x", "y")),
-                        "POST\n" + "x=y\n" + OAuth.FORM_ENCODED + "\n" },
-                { new OAuthMessage("PUT", echo, OAuth.newList("x", "y")),
-                        "PUT\n" + "x=y\n" + null + "\n" },
+                        "POST\n" + "x=y\n", OAuth.FORM_ENCODED },
+                {
+                        new MessageWithBody("PUT", echo, OAuth
+                                .newList("x", "y"),
+                                "text/plain;charset=\"UTF-8\"", "Hello!"),
+                        "PUT\n" + "x=y\n" + "Hello!",
+                        "text/plain; charset=UTF-8" },
                 { new OAuthMessage("DELETE", echo, OAuth.newList("x", "y")),
-                        "DELETE\n" + "x=y\n" + null + "\n" } };
+                        "DELETE\n" + "x=y\n", null } };
         for (OAuthClient client : clients) {
             for (Object[] testCase : messages) {
                 OAuthMessage request = (OAuthMessage) testCase[0];
@@ -74,11 +84,33 @@ public class OAuthClientTest extends TestCase {
                 } catch (OAuthProblemException e) {
                     fail(e.getParameters().toString());
                 }
-                assertEquals(client.toString(), testCase[1], response
-                        .getBodyAsString());
+                assertEquals(client + " " + request.method, testCase[1],
+                        readAll(response.getBodyAsStream(), response
+                                .getContentCharset()));
+                String expectedContentType = (String) testCase[2];
+                assertEquals(client + " " + request.method,
+                        expectedContentType, response.getContentType());
             }
         }
     }
+
+    private static String readAll(InputStream from, String encoding)
+            throws IOException {
+        StringBuilder into = new StringBuilder();
+        if (from != null) {
+            try {
+                Reader r = new InputStreamReader(from, encoding);
+                char[] s = new char[512];
+                for (int n; 0 < (n = r.read(s));) {
+                    into.append(s, 0, n);
+                }
+            } finally {
+                from.close();
+            }
+        }
+        return into.toString();
+    }
+
     private OAuthClient[] clients;
     private int port = 1025;
     private Server server;
@@ -103,6 +135,31 @@ public class OAuthClientTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         server.stop();
+    }
+
+    private static class MessageWithBody extends OAuthMessage {
+
+        public MessageWithBody(String method, String URL,
+                Collection<? extends Entry> parameters, String contentType,
+                String body) {
+            super(method, URL, parameters);
+            this.contentType = contentType;
+            this.body = body;
+        }
+
+        private final String contentType;
+        private final String body;
+
+        @Override
+        public String getBodyAsString() throws IOException {
+            return body;
+        }
+
+        @Override
+        public String getContentType() {
+            return contentType;
+        }
+
     }
 
 }

@@ -60,14 +60,13 @@ public class Echo extends HttpServlet {
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         response.setHeader("Cache-Control", "no-cache");
-        response.setContentType("application/octet-stream");
-        response.setCharacterEncoding("UTF-8");
+        response.setContentType(request.getContentType());
+        response.setCharacterEncoding(request.getCharacterEncoding());
         final ServletOutputStream out = response.getOutputStream();
         out.print(request.getMethod() + "\n");
         final OAuthMessage msg = OAuthServlet.getMessage(request, null);
         out.print(OAuthSignatureMethod.normalizeParameters(msg.getParameters())
                 + "\n");
-        out.print(request.getContentType() + "\n");
 
         if ("true".equalsIgnoreCase(request.getParameter("echoHeader"))) {
             {

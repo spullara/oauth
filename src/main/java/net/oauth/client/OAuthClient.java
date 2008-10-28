@@ -149,15 +149,15 @@ public abstract class OAuthClient {
         }
         String url = request.URL;
         List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
-        String body = null;
+        String body = request.getBodyAsString();
+        String contentType = request.getContentType();
         switch (style) {
         case QUERY_STRING:
             url = OAuth.addParameters(url, request.getParameters());
             break;
         case BODY:
-            body = OAuth.formEncode(request.getParameters());
-            headers
-                    .add(new OAuth.Parameter("Content-Type", OAuth.FORM_ENCODED));
+            body = addParameters(body, request.getParameters());
+            contentType = OAuth.FORM_ENCODED;
             break;
         case AUTHORIZATION_HEADER:
             headers.add(new OAuth.Parameter("Authorization", request
@@ -174,28 +174,38 @@ public abstract class OAuthClient {
                 }
                 // Place the non-OAuth parameters elsewhere in the request:
                 if (isPost) {
-                    body = OAuth.formEncode(others);
+                    body = addParameters(body, others);
                 } else {
                     url = OAuth.addParameters(url, others);
                 }
             }
             break;
         }
-        if (isPut) {
-            body = request.getBodyAsString();
-        }
-        if (body == null && (isPost || isPut)) {
-            body = "";
+        if (isPost || isPut) {
+            if (contentType != null) {
+                headers.add(new OAuth.Parameter("Content-Type", contentType));
+            }
+            if (body == null) {
+                body = "";
+            }
         }
         return invoke(request.method, url, headers, body == null ? null : body
                 .getBytes("ISO-8859-1"));
     }
-
     /** Where to place parameters in an HTTP message. */
     public enum ParameterStyle {
         AUTHORIZATION_HEADER, BODY, QUERY_STRING;
     };
 
+    private static String addParameters(String body,
+            Collection<Map.Entry<String, String>> parameters)
+            throws IOException {
+        if (parameters != null && !parameters.isEmpty()) {
+            body = ((body == null || body.length() <= 0) ? "" : body + "&")
+                    + OAuth.formEncode(parameters);
+        }
+        return body;
+    }
     /**
      * Send an HTTP request and return the response.
      * 

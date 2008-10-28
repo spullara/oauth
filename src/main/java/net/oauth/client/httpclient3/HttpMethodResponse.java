@@ -47,11 +47,20 @@ public class HttpMethodResponse extends OAuthResponseMessage {
         for (Header header : method.getResponseHeaders("WWW-Authenticate")) {
             decodeWWWAuthenticate(header.getValue());
         }
+        Header[] headers = method.getResponseHeaders("Content-Type");
+        contentType = (headers == null || headers.length <= 0) ? null
+                : headers[headers.length - 1].getValue();
     }
 
     private final HttpMethod method;
     private final byte[] requestBody;
     private String bodyAsString = null;
+    private final String contentType;
+
+    @Override
+    public String getContentType() {
+        return contentType;
+    }
 
     @Override
     public InputStream getBodyAsStream() throws IOException {

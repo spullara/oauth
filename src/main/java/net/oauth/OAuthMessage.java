@@ -136,6 +136,38 @@ public class OAuthMessage {
         return parameterMap;
     }
 
+    /**
+     * The MIME type of the body of this message.
+     * 
+     * @return the MIME type, or null to indicate the type is unknown.
+     */
+    public String getContentType() {
+        return null; // stub
+    }
+
+    /**
+     * The charset of the body of this message.
+     * 
+     * @return the name of an encoding, or "ISO-8859-1" if no charset has been
+     *         specified.
+     */
+    public String getContentCharset() {
+        String contentType = getContentType();
+        if (contentType != null) {
+            Matcher m = CHARSET.matcher(contentType);
+            if (m.find()) {
+                String charset = m.group(1);
+                if (charset.length() >= 2 && charset.charAt(0) == '"'
+                        && charset.charAt(charset.length() - 1) == '"') {
+                    charset = charset.substring(1, charset.length() - 1);
+                    charset = charset.replace("\\\"", "\"");
+                }
+                return charset;
+            }
+        }
+        return DEFAULT_CHARSET;
+    }
+
     /** Get the body of the HTTP request or response. */
     public String getBodyAsString() throws IOException {
         return null; // stub
@@ -332,6 +364,9 @@ public class OAuthMessage {
     protected static final byte[] NO_BYTES = new byte[0];
     protected static final List<Map.Entry> NO_PARAMETERS = Collections
             .emptyList();
+    protected static final String DEFAULT_CHARSET = "ISO-8859-1";
+    private static final Pattern CHARSET = Pattern.compile
+       ("; *charset *= *([^;\"]*|\"([^\"]|\\\\\")*\")(;|$)");
 
     private static final String toString(Object from) {
         return (from == null) ? null : from.toString();

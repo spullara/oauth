@@ -47,18 +47,26 @@ public class URLConnectionResponse extends OAuthResponseMessage {
         this.requestHeaders = requestHeaders;
         this.requestBody = requestBody;
         this.connection = connection;
-        List<String> wwwAuthHeaders = connection.getHeaderFields().get("WWW-Authenticate");
+        Map<String, List<String>> headers = connection.getHeaderFields();
+        List<String> wwwAuthHeaders = headers.get("WWW-Authenticate");
         if (wwwAuthHeaders != null) {
             for (String header : wwwAuthHeaders) {
                 this.decodeWWWAuthenticate(header);
             }
         }
+        contentType = connection.getContentType();
     }
 
     private final String requestHeaders;
     private final byte[] requestBody;
     private final URLConnection connection;
     private String bodyAsString = null;
+    private final String contentType;
+
+    @Override
+    public String getContentType() {
+        return contentType;
+    }
 
     @Override
     public InputStream getBodyAsStream() throws IOException {
