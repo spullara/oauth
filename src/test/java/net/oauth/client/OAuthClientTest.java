@@ -25,11 +25,11 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import junit.framework.TestCase;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
+import net.oauth.client.OAuthClient.ExcerptInputStream;
 import net.oauth.client.OAuthClient.ParameterStyle;
 import net.oauth.client.httpclient3.OAuthHttpClient;
 import net.oauth.signature.Echo;
@@ -114,7 +114,7 @@ public class OAuthClientTest extends TestCase {
     }
 
     public void testExcerptInputStream() throws Exception {
-        InputStream input = new OAuthClient.ExcerptInputStream(
+        ExcerptInputStream input = new ExcerptInputStream(
                 new ByteArrayInputStream("abcdef".getBytes()));
         assertEquals('a', input.read());
         byte[] actual = new byte[3];
@@ -128,8 +128,7 @@ public class OAuthClientTest extends TestCase {
         assertEquals('f', actual[1]);
         assertEquals(-1, input.read());
         byte[] expected = new byte[] { -128, -1, 0, 1, 127 };
-        input = new OAuthClient.ExcerptInputStream(new ByteArrayInputStream(
-                expected));
+        input = new ExcerptInputStream(new ByteArrayInputStream(expected));
         actual = new byte[6];
         actual[0] = (byte) input.read();
         actual[1] = (byte) input.read();
@@ -137,7 +136,22 @@ public class OAuthClientTest extends TestCase {
         for (int i = 0; i < expected.length; ++i) {
             assertEquals(expected[i], actual[i]);
         }
+        expected = new byte[1024 + ExcerptInputStream.ELLIPSIS.length];
+        for (int i = 0; i < 1024; ++i) {
+            expected[i] = (byte) i;
+        }
+        System.arraycopy(ExcerptInputStream.ELLIPSIS, 0, expected, 1024,
+                ExcerptInputStream.ELLIPSIS.length);
+        input = new ExcerptInputStream(new ByteArrayInputStream(expected));
+        while (input.read(actual) > 0)
+            ;
+        actual = input.getExcerpt();
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; ++i) {
+            assertEquals(expected[i], actual[i]);
+        }
     }
+
     private OAuthClient[] clients;
     private int port = 1025;
     private Server server;
@@ -184,7 +198,7 @@ public class OAuthClientTest extends TestCase {
     private static class MessageWithBody extends OAuthMessage {
 
         public MessageWithBody(String method, String URL,
-                Collection<? extends Entry> parameters, String contentType,
+                Collection<OAuth.Parameter> parameters, String contentType,
                 byte[] body) {
             super(method, URL, parameters);
             this.body = body;
