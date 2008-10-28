@@ -223,7 +223,7 @@ public abstract class OAuthClient {
      */
     protected abstract OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers,
-            InputStream body, String bodyCharset) throws IOException,
+            InputStream body, String bodyEncoding) throws IOException,
             OAuthException;
 
     /** A decorator that retains a copy of the first few bytes of data. */

@@ -41,8 +41,8 @@ public class URLConnectionResponse extends OAuthResponseMessage {
      * come first, followed by the ones from the response body.
      */
     public URLConnectionResponse(String method, String url,
-            String requestHeaders, byte[] requestBody, String requestEncoding, URLConnection connection)
-            throws IOException {
+            String requestHeaders, byte[] requestBody, String requestEncoding,
+            URLConnection connection) throws IOException {
         super(method, url);
         this.requestHeaders = requestHeaders;
         this.requestBody = requestBody;
