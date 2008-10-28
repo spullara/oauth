@@ -47,8 +47,7 @@ public class URLConnectionResponse extends OAuthResponseMessage {
         this.requestHeaders = requestHeaders;
         this.requestBody = requestBody;
         this.connection = connection;
-        Map<String, List<String>> headers = connection.getHeaderFields();
-        List<String> wwwAuthHeaders = headers.get("WWW-Authenticate");
+        List<String> wwwAuthHeaders = connection.getHeaderFields().get("WWW-Authenticate");
         if (wwwAuthHeaders != null) {
             for (String header : wwwAuthHeaders) {
                 this.decodeWWWAuthenticate(header);
