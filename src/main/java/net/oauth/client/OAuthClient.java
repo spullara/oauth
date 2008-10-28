@@ -194,7 +194,8 @@ public abstract class OAuthClient {
                 headers.add(new OAuth.Parameter("Content-Type", contentType));
             }
         }
-        return invoke(request.method, url, headers, body);
+        return invoke(request.method, url, headers, body, request
+                .getContentCharset());
     }
 
     /** Where to place parameters in an HTTP message. */
@@ -222,7 +223,8 @@ public abstract class OAuthClient {
      */
     protected abstract OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers,
-            InputStream body) throws IOException, OAuthException;
+            InputStream body, String bodyCharset) throws IOException,
+            OAuthException;
 
     /** A decorator that retains a copy of the first few bytes of data. */
     protected static class ExcerptInputStream extends FilterInputStream {

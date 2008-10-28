@@ -45,12 +45,14 @@ public class HttpMethodResponse extends OAuthResponseMessage {
      * from OAuth WWW-Authenticate headers and the body. The header parameters
      * come first, followed by the ones from the response body.
      */
-    public HttpMethodResponse(HttpRequestBase request, HttpResponse response, byte[] requestBody)
-    throws IOException {
+    public HttpMethodResponse(HttpRequestBase request, HttpResponse response,
+            byte[] requestBody, String requestEncoding) throws IOException
+    {
         super(request.getMethod(), request.getURI().toString());
         this.httpRequest = request;
         this.httpResponse = response;
         this.requestBody = requestBody;
+        this.requestEncoding = requestEncoding;
         for (Header header : response.getHeaders("WWW-Authenticate")) {
             decodeWWWAuthenticate(header.getValue());
         }
@@ -62,6 +64,7 @@ public class HttpMethodResponse extends OAuthResponseMessage {
     private final HttpRequestBase httpRequest;
     private final HttpResponse httpResponse;
     private final byte[] requestBody;
+    private final String requestEncoding;
     private String bodyAsString = null;
     private final String contentType;
 
@@ -118,7 +121,7 @@ public class HttpMethodResponse extends OAuthResponseMessage {
             into.put(HTTP_REQUEST_HEADERS, request.toString());
             request.append(EOL);
             if (requestBody != null) {
-                request.append(new String(requestBody, getContentCharset()));
+                request.append(new String(requestBody, requestEncoding));
             }
             into.put(HTTP_REQUEST, request.toString());
         }

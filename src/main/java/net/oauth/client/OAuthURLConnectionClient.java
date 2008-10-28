@@ -42,7 +42,7 @@ public class OAuthURLConnectionClient extends OAuthClient {
     /** Send a message to the service provider and get the response. */
     @Override
     protected OAuthMessage invoke(String httpMethod, String urlString,
-            Collection<? extends Map.Entry<String, String>> addHeaders, InputStream body)
+            Collection<? extends Map.Entry<String, String>> addHeaders, InputStream body, String bodyEncoding)
         throws IOException, OAuthException
     {
         final URL url = new URL(urlString);
@@ -84,7 +84,7 @@ public class OAuthURLConnectionClient extends OAuthClient {
             }
         }
         final OAuthMessage response = new URLConnectionResponse(httpMethod,
-                urlString, headers.toString(), input.getExcerpt(), connection);
+                urlString, headers.toString(), input.getExcerpt(), bodyEncoding, connection);
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
             int statusCode = http.getResponseCode();

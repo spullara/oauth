@@ -63,7 +63,8 @@ public class OAuthHttpClient extends OAuthClient {
     @Override
     protected OAuthMessage invoke(String method, String url,
             Collection<? extends Map.Entry<String, String>> headers,
-            InputStream body) throws IOException, OAuthException {
+            InputStream body, String bodyCharset) throws IOException,
+            OAuthException {
         final boolean isDelete = "DELETE".equalsIgnoreCase(method);
         final boolean isPost = "POST".equalsIgnoreCase(method);
         final boolean isPut = "PUT".equalsIgnoreCase(method);
@@ -94,7 +95,7 @@ public class OAuthHttpClient extends OAuthClient {
                 .getURI().toString()));
         client.executeMethod(httpMethod);
         final OAuthMessage response = new HttpMethodResponse(httpMethod, input
-                .getExcerpt());
+                .getExcerpt(), bodyCharset);
         int statusCode = httpMethod.getStatusCode();
         if (statusCode != HttpStatus.SC_OK) {
             OAuthProblemException problem = new OAuthProblemException();

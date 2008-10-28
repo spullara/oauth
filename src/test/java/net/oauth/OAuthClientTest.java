@@ -97,6 +97,8 @@ public class OAuthClientTest extends TestCase {
                 } catch (OAuthProblemException e) {
                     fail(id + ": " + e + "\n" + e.getParameters().toString());
                 }
+                // System.out.println(response.getDump()
+                // .get(OAuthMessage.HTTP_REQUEST));
                 assertEquals(id, testCase[1], readAll(response
                         .getBodyAsStream(), response.getContentCharset()));
                 assertEquals(id, testCase[2], response.getContentType());

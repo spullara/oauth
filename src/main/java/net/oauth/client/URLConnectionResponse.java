@@ -41,11 +41,12 @@ public class URLConnectionResponse extends OAuthResponseMessage {
      * come first, followed by the ones from the response body.
      */
     public URLConnectionResponse(String method, String url,
-            String requestHeaders, byte[] requestBody, URLConnection connection)
+            String requestHeaders, byte[] requestBody, String requestEncoding, URLConnection connection)
             throws IOException {
         super(method, url);
         this.requestHeaders = requestHeaders;
         this.requestBody = requestBody;
+        this.requestEncoding = requestEncoding;
         this.connection = connection;
         List<String> wwwAuthHeaders = connection.getHeaderFields().get("WWW-Authenticate");
         if (wwwAuthHeaders != null) {
@@ -58,6 +59,7 @@ public class URLConnectionResponse extends OAuthResponseMessage {
 
     private final String requestHeaders;
     private final byte[] requestBody;
+    private final String requestEncoding;
     private final URLConnection connection;
     private String bodyAsString = null;
     private final String contentType;
@@ -118,7 +120,7 @@ public class URLConnectionResponse extends OAuthResponseMessage {
             StringBuilder request = new StringBuilder(requestHeaders);
             request.append(EOL);
             if (requestBody != null) {
-                request.append(new String(requestBody, getContentCharset()));
+                request.append(new String(requestBody, requestEncoding));
             }
             into.put(HTTP_REQUEST, request.toString());
         }

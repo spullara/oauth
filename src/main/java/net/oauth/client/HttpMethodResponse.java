@@ -17,6 +17,7 @@
 package net.oauth.client;
 
 import java.io.IOException;
+import net.oauth.OAuthMessage;
 import org.apache.commons.httpclient.HttpMethod;
 
 /**
@@ -29,7 +30,7 @@ public class HttpMethodResponse extends
 
     public HttpMethodResponse(HttpMethod method, byte[] requestBody)
             throws IOException {
-        super(method, requestBody);
+        super(method, requestBody, OAuthMessage.DEFAULT_CHARSET);
     }
 
 }
