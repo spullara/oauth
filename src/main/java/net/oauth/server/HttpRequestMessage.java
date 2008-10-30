@@ -62,20 +62,20 @@ public class HttpRequestMessage extends OAuthMessage {
 
     public static List<OAuth.Parameter> getParameters(HttpServletRequest request) {
         List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
-        for (Enumeration headers = request.getHeaders("Authorization"); headers != null
+        for (Enumeration<String> headers = request.getHeaders("Authorization"); headers != null
                 && headers.hasMoreElements();) {
-            String header = headers.nextElement().toString();
+            String header = headers.nextElement();
             for (OAuth.Parameter parameter : OAuthMessage
                     .decodeAuthorization(header)) {
-                if (!parameter.getKey().equalsIgnoreCase("realm")) {
+                if (!"realm".equalsIgnoreCase(parameter.getKey())) {
                     list.add(parameter);
                 }
             }
         }
         for (Object e : request.getParameterMap().entrySet()) {
-            Map.Entry entry = (Map.Entry) e;
-            String name = entry.getKey().toString();
-            for (String value : (String[]) entry.getValue()) {
+            Map.Entry<String, String[]> entry = (Map.Entry<String, String[]>) e;
+            String name = entry.getKey();
+            for (String value : entry.getValue()) {
                 list.add(new OAuth.Parameter(name, value));
             }
         }
