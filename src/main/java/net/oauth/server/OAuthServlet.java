@@ -17,16 +17,11 @@
 package net.oauth.server;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
@@ -62,30 +57,7 @@ public class OAuthServlet {
             // The query string parameters will be included in
             // the result from getParameters(request).
         }
-        return new OAuthMessage(request.getMethod(), URL,
-                getParameters(request));
-    }
-
-    public static List<OAuth.Parameter> getParameters(HttpServletRequest request) {
-        List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
-        for (Enumeration headers = request.getHeaders("Authorization"); headers != null
-                && headers.hasMoreElements();) {
-            String header = headers.nextElement().toString();
-            for (OAuth.Parameter parameter : OAuthMessage
-                    .decodeAuthorization(header)) {
-                if (!parameter.getKey().equalsIgnoreCase("realm")) {
-                    list.add(parameter);
-                }
-            }
-        }
-        for (Object e : request.getParameterMap().entrySet()) {
-            Map.Entry entry = (Map.Entry) e;
-            String name = entry.getKey().toString();
-            for (String value : (String[]) entry.getValue()) {
-                list.add(new OAuth.Parameter(name, value));
-            }
-        }
-        return list;
+        return new HttpRequestMessage(request, URL);
     }
 
     /** Reconstruct the requested URL, complete with query string (if any). */

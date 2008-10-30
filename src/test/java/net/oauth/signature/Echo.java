@@ -17,13 +17,14 @@
 package net.oauth.signature;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -60,23 +61,22 @@ public class Echo extends HttpServlet {
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         response.setHeader("Cache-Control", "no-cache");
-        response.setContentType(request.getContentType());
-        response.setCharacterEncoding(request.getCharacterEncoding());
-        final ServletOutputStream out = response.getOutputStream();
-        out.print(request.getMethod() + "\n");
         final OAuthMessage msg = OAuthServlet.getMessage(request, null);
+        response.setContentType(msg.getContentType());
+        response.setCharacterEncoding(msg.getContentCharset());
+        final ServletOutputStream out = response.getOutputStream();
+        out.print(msg.method + "\n");
         out.print(OAuthSignatureMethod.normalizeParameters(msg.getParameters())
                 + "\n");
-
-        if ("true".equalsIgnoreCase(request.getParameter("echoHeader"))) {
+        if ("true".equalsIgnoreCase(msg.getParameter("echoHeader"))) {
             {
-                String path = (new URL(request.getRequestURL().toString()))
-                        .getPath();
+                URL url = new URL(msg.URL);
+                String path = url.getPath();
                 String queryString = request.getQueryString();
                 if (queryString != null) {
                     path += ("?" + queryString);
                 }
-                out.println(request.getMethod() + " " + path);
+                out.println(msg.method + " " + path);
             }
             for (Enumeration names = request.getHeaderNames(); names
                     .hasMoreElements();) {
@@ -89,16 +89,15 @@ public class Echo extends HttpServlet {
             }
             out.println();
         }
-        if ("true".equalsIgnoreCase(request.getParameter("echoParameters"))) {
-            final Map parameters = request.getParameterMap();
-            for (Object name : parameters.keySet()) {
-                for (String value : (String[]) parameters.get(name)) {
-                    out.println(name + ": " + value);
-                }
+        if ("true".equalsIgnoreCase(msg.getParameter("echoParameters"))) {
+            final List<Map.Entry<String, String>> parameters = msg
+                    .getParameters();
+            for (Map.Entry<String, String> parameter : parameters) {
+                out.println(parameter.getKey() + ": " + parameter.getValue());
             }
             out.println();
         }
-        final String echoData = request.getParameter("echoData");
+        final String echoData = msg.getParameter("echoData");
         if (echoData != null) {
             int n = Integer.parseInt(echoData);
             for (; n > 0; n -= (DATA.length + 1)) {
@@ -108,11 +107,10 @@ public class Echo extends HttpServlet {
             }
             out.write('\n');
         }
-        if (!"false".equalsIgnoreCase(request.getParameter("echoBody"))) {
-            ServletInputStream in = request.getInputStream();
+        if (!"false".equalsIgnoreCase(msg.getParameter("echoBody"))) {
+            InputStream in = msg.getBodyAsStream();
             final byte[] buffer = new byte[1024];
-            int n;
-            while (0 < (n = in.read(buffer))) {
+            for (int n; 0 < (n = in.read(buffer));) {
                 out.write(buffer, 0, n);
             }
         }

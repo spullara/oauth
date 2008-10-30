@@ -18,8 +18,6 @@ package net.oauth.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -54,7 +52,6 @@ public class URLConnectionResponse extends OAuthResponseMessage {
                 this.decodeWWWAuthenticate(header);
             }
         }
-        contentType = connection.getContentType();
     }
 
     private final String requestHeaders;
@@ -62,11 +59,10 @@ public class URLConnectionResponse extends OAuthResponseMessage {
     private final String requestEncoding;
     private final URLConnection connection;
     private String bodyAsString = null;
-    private final String contentType;
 
     @Override
     public String getContentType() {
-        return contentType;
+        return connection.getContentType();
     }
 
     @Override
@@ -86,17 +82,7 @@ public class URLConnectionResponse extends OAuthResponseMessage {
         if (bodyAsString == null) {
             InputStream input = getBodyAsStream();
             if (input != null) try {
-                String encoding = connection.getContentEncoding();
-                if (encoding == null) {
-                    encoding = "ISO-8859-1";
-                }
-                Reader reader = new InputStreamReader(input, encoding);
-                StringBuilder b = new StringBuilder();
-                char[] c = new char[1024];
-                int len;
-                while (0 < (len = reader.read(c)))
-                    b.append(c, 0, len);
-                bodyAsString = b.toString();
+                bodyAsString = readAll(input, getContentCharset());
             } finally {
                 input.close();
             }

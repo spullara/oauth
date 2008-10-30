@@ -19,8 +19,6 @@ package net.oauth.client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.List;
@@ -105,7 +103,7 @@ public class OAuthClientTest extends TestCase {
                     }
                     // System.out.println(response.getDump()
                     // .get(OAuthMessage.HTTP_REQUEST));
-                    assertEquals(id, testCase[1], readAll(response
+                    assertEquals(id, testCase[1], OAuthMessage.readAll(response
                             .getBodyAsStream(), response.getContentCharset()));
                     assertEquals(id, testCase[2], response.getContentType());
                 }
@@ -178,23 +176,6 @@ public class OAuthClientTest extends TestCase {
         server.stop();
     }
 
-    private static String readAll(InputStream from, String encoding)
-            throws IOException {
-        StringBuilder into = new StringBuilder();
-        if (from != null) {
-            try {
-                Reader r = new InputStreamReader(from, encoding);
-                char[] s = new char[512];
-                for (int n; 0 < (n = r.read(s));) {
-                    into.append(s, 0, n);
-                }
-            } finally {
-                from.close();
-            }
-        }
-        return into.toString();
-    }
-
     private static class MessageWithBody extends OAuthMessage {
 
         public MessageWithBody(String method, String URL,
@@ -214,7 +195,7 @@ public class OAuthClientTest extends TestCase {
         }
 
         public String getBodyAsString() throws IOException {
-            return readAll(getBodyAsStream(), getContentCharset());
+            return OAuthMessage.readAll(getBodyAsStream(), getContentCharset());
         }
 
         @Override

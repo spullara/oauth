@@ -85,9 +85,7 @@ public class HttpMethodResponse extends OAuthResponseMessage {
     public String getBodyAsString() throws IOException {
         if (bodyAsString == null) {
             HttpEntity entity = httpResponse.getEntity();
-            if (entity == null) {
-                bodyAsString = null;
-            } else {
+            if (entity != null) {
                 bodyAsString = EntityUtils.toString(entity);
             }
         }

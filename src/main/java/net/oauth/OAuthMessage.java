@@ -19,6 +19,8 @@ package net.oauth;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -335,6 +337,23 @@ public class OAuthMessage {
                                     OAuth.percentEncode(toString(parameter
                                             .getValue()))).append('"');
                 }
+            }
+        }
+        return into.toString();
+    }
+
+    public static String readAll(InputStream from, String encoding)
+            throws IOException {
+        StringBuilder into = new StringBuilder();
+        if (from != null) {
+            try {
+                Reader r = new InputStreamReader(from, encoding);
+                char[] s = new char[512];
+                for (int n; 0 < (n = r.read(s));) {
+                    into.append(s, 0, n);
+                }
+            } finally {
+                from.close();
             }
         }
         return into.toString();
