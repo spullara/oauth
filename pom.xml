@@ -1,17 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <repositories>
-    <repository>
-      <id>codehaus-release-repo</id>
-      <name>Codehaus Release Repo</name>
-      <url>http://repository.codehaus.org</url>
-    </repository>
-  </repositories>
   <parent>
     <groupId>net.oauth</groupId>
     <artifactId>oauth-parent</artifactId>
-    <version>20081027</version>
+    <version>20081103</version>
   </parent>
   <artifactId>core</artifactId>
   <packaging>jar</packaging>
@@ -47,4 +40,11 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <repositories>
+    <repository>
+      <id>codehaus-release-repo</id>
+      <name>Codehaus Release Repo</name>
+      <url>http://repository.codehaus.org</url>
+    </repository>
+  </repositories>
 </project>
