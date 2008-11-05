@@ -65,21 +65,19 @@ public class OAuthHttpClient extends OAuthClient {
             Collection<? extends Map.Entry<String, String>> headers,
             InputStream body, String bodyEncoding) throws IOException,
             OAuthException {
-        final boolean isDelete = "DELETE".equalsIgnoreCase(method);
-        final boolean isPost = "POST".equalsIgnoreCase(method);
-        final boolean isPut = "PUT".equalsIgnoreCase(method);
+        final boolean isDelete = DELETE.equalsIgnoreCase(method);
+        final boolean isPost = POST.equalsIgnoreCase(method);
+        final boolean isPut = PUT.equalsIgnoreCase(method);
         final ExcerptInputStream input = new ExcerptInputStream(body);
         HttpMethod httpMethod;
         if (isPost || isPut) {
-            EntityEnclosingMethod entityEnclosingMethod;
-            if (isPost) {
-                entityEnclosingMethod = new PostMethod(url);
-            } else {
-                entityEnclosingMethod = new PutMethod(url);
-            }
+            EntityEnclosingMethod entityEnclosingMethod =
+                isPost ? new PostMethod(url) : new PutMethod(url);
             if (body != null) {
-                entityEnclosingMethod
-                        .setRequestEntity(new InputStreamRequestEntity(input));
+                String contentLength = remove(headers, CONTENT_LENGTH);
+                entityEnclosingMethod.setRequestEntity((contentLength == null)
+                        ? new InputStreamRequestEntity(input)
+                        : new InputStreamRequestEntity(input, Long.parseLong(contentLength)));
             }
             httpMethod = entityEnclosingMethod;
         } else if (isDelete) {

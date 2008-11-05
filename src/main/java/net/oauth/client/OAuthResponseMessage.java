@@ -17,6 +17,9 @@
 package net.oauth.client;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 
@@ -67,5 +70,7 @@ public abstract class OAuthResponseMessage extends OAuthMessage {
 
     /** The standard end-of-line marker in an HTTP message. */
     protected static final String EOL = "\r\n";
+
+    private static final List<Map.Entry> NO_PARAMETERS = Collections.emptyList();
 
 }

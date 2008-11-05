@@ -171,6 +171,30 @@ public class OAuthMessage {
     }
 
     /**
+     * The value of the last HTTP header with the given name. The name is case
+     * insensitive.
+     * 
+     * @return the value of the last header, or null to indicate that there is
+     *         no such header in this message.
+     */
+    public String getHeader(String name) {
+        if (CONTENT_TYPE.equalsIgnoreCase(name)) {
+            return getContentType();
+        }
+        return null; // no such header
+    }
+
+    /** All HTTP headers. */
+    public List<Map.Entry<String, String>> getHeaders() {
+        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+        String contentType = getContentType();
+        if (contentType != null) {
+            headers.add(new OAuth.Parameter(CONTENT_TYPE, contentType));
+        }
+        return headers;
+    }
+
+    /**
      * Get the body of the HTTP request or response.
      * 
      * @return the body, or null to indicate there is no body.
@@ -385,14 +409,12 @@ public class OAuthMessage {
     }
 
     public static final String AUTH_SCHEME = "OAuth";
-    static final Pattern AUTHORIZATION = Pattern.compile("\\s*(\\w*)\\s+(.*)");
-    static final Pattern NVP = Pattern.compile("(\\S*)\\s*\\=\\s*\"([^\"]*)\"");
-    protected static final byte[] NO_BYTES = new byte[0];
-    protected static final List<Map.Entry> NO_PARAMETERS = Collections
-            .emptyList();
+    public static final String CONTENT_TYPE = "Content-Type";
     protected static final String DEFAULT_CHARSET = "ISO-8859-1";
-    private static final Pattern CHARSET = Pattern.compile
-       ("; *charset *= *([^;\"]*|\"([^\"]|\\\\\")*\")(;|$)");
+
+    private static final Pattern AUTHORIZATION = Pattern.compile("\\s*(\\w*)\\s+(.*)");
+    private static final Pattern NVP = Pattern.compile("(\\S*)\\s*\\=\\s*\"([^\"]*)\"");
+    private static final Pattern CHARSET = Pattern.compile("; *charset *= *([^;\"]*|\"([^\"]|\\\\\")*\")(;|$)");
 
     private static final String toString(Object from) {
         return (from == null) ? null : from.toString();

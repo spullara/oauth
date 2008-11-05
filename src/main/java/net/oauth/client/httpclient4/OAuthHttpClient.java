@@ -69,22 +69,18 @@ public class OAuthHttpClient extends OAuthClient {
             Collection<? extends Map.Entry<String, String>> headers,
             InputStream body, String bodyEncoding) throws IOException,
             OAuthException {
-        final boolean isDelete = "DELETE".equalsIgnoreCase(method);
-        final boolean isPost = "POST".equalsIgnoreCase(method);
-        final boolean isPut = "PUT".equalsIgnoreCase(method);
+        final boolean isDelete = DELETE.equalsIgnoreCase(method);
+        final boolean isPost = POST.equalsIgnoreCase(method);
+        final boolean isPut = PUT.equalsIgnoreCase(method);
         final ExcerptInputStream input = new ExcerptInputStream(body);
         HttpRequestBase httpRequest;
         if (isPost || isPut) {
-            HttpEntityEnclosingRequestBase entityEnclosingMethod = new HttpPost(
-                    url);
-            if (isPost) {
-                entityEnclosingMethod = new HttpPost(url);
-            } else {
-                entityEnclosingMethod = new HttpPut(url);
-            }
+            HttpEntityEnclosingRequestBase entityEnclosingMethod =
+                isPost ? new HttpPost(url) : new HttpPut(url);
             if (body != null) {
-                entityEnclosingMethod
-                        .setEntity(new InputStreamEntity(input, -1));
+                String contentLength = remove(headers, CONTENT_LENGTH);
+                entityEnclosingMethod.setEntity(new InputStreamEntity(input,
+                        contentLength == null ? -1 : Long.parseLong(contentLength)));
             }
             httpRequest = entityEnclosingMethod;
         } else if (isDelete) {
@@ -92,30 +88,21 @@ public class OAuthHttpClient extends OAuthClient {
         } else {
             httpRequest = new HttpGet(url);
         }
-
         for (Map.Entry<String, String> header : headers) {
             httpRequest.addHeader(header.getKey(), header.getValue());
         }
-
         HttpClient client = clientPool.getHttpClient(new URL(httpRequest
                 .getURI().toString()));
-
-        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS,
-                false);
-
+        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
         HttpResponse httpResponse = client.execute(httpRequest);
-
         final OAuthMessage response = new HttpMethodResponse(httpRequest,
                 httpResponse, input.getExcerpt(), bodyEncoding);
-
         int statusCode = httpResponse.getStatusLine().getStatusCode();
-
         if (statusCode != HttpStatus.SC_OK) {
             OAuthProblemException problem = new OAuthProblemException();
             problem.getParameters().putAll(response.getDump());
             throw problem;
         }
-
         return response;
     }
 

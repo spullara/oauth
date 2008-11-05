@@ -147,25 +147,26 @@ public abstract class OAuthClient {
     /** Send a message to the service provider and get the response. */
     public OAuthMessage invoke(OAuthMessage request, ParameterStyle style)
             throws IOException, OAuthException {
-        final boolean isPost = "POST".equalsIgnoreCase(request.method);
-        final boolean isPut = "PUT".equalsIgnoreCase(request.method);
+        final boolean isPost = POST.equalsIgnoreCase(request.method);
         InputStream body = request.getBodyAsStream();
         if (style == ParameterStyle.BODY && !(isPost && body == null)) {
             style = ParameterStyle.QUERY_STRING;
         }
         String url = request.URL;
-        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
-        String contentType = request.getContentType();
+        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>
+                (request.getHeaders());
         switch (style) {
         case QUERY_STRING:
             url = OAuth.addParameters(url, request.getParameters());
             break;
-        case BODY:
-            body = new ByteArrayInputStream(OAuth.formEncode(
-                    request.getParameters()).getBytes(
-                    request.getContentCharset()));
-            contentType = OAuth.FORM_ENCODED;
+        case BODY: {
+            byte[] form = OAuth.formEncode(request.getParameters()).getBytes(
+                    request.getContentCharset());
+            headers.add(new OAuth.Parameter(OAuthMessage.CONTENT_TYPE, OAuth.FORM_ENCODED));
+            headers.add(new OAuth.Parameter(CONTENT_LENGTH, form.length + ""));
+            body = new ByteArrayInputStream(form);
             break;
+        }
         case AUTHORIZATION_HEADER:
             headers.add(new OAuth.Parameter("Authorization", request
                     .getAuthorizationHeader("")));
@@ -181,19 +182,16 @@ public abstract class OAuthClient {
                 }
                 // Place the non-OAuth parameters elsewhere in the request:
                 if (isPost && body == null) {
-                    body = new ByteArrayInputStream(OAuth.formEncode(others)
-                            .getBytes(request.getContentCharset()));
-                    contentType = OAuth.FORM_ENCODED;
+                    byte[] form = OAuth.formEncode(others).getBytes(
+                            request.getContentCharset());
+                    headers.add(new OAuth.Parameter(OAuthMessage.CONTENT_TYPE, OAuth.FORM_ENCODED));
+                    headers.add(new OAuth.Parameter(CONTENT_LENGTH, form.length + ""));
+                    body = new ByteArrayInputStream(form);
                 } else {
                     url = OAuth.addParameters(url, others);
                 }
             }
             break;
-        }
-        if (isPost || isPut) {
-            if (contentType != null) {
-                headers.add(new OAuth.Parameter("Content-Type", contentType));
-            }
         }
         return invoke(request.method, url, headers, body, request
                 .getContentCharset());
@@ -203,6 +201,11 @@ public abstract class OAuthClient {
     public enum ParameterStyle {
         AUTHORIZATION_HEADER, BODY, QUERY_STRING;
     };
+
+    protected static final String POST = "POST";
+    protected static final String PUT = "PUT";
+    protected static final String DELETE = "DELETE";
+    protected static final String CONTENT_LENGTH = "Content-Length";
 
     /**
      * Send an HTTP request and return the response.
@@ -225,9 +228,28 @@ public abstract class OAuthClient {
      *         was successful (status 200).
      */
     protected abstract OAuthMessage invoke(String method, String url,
-            Collection<? extends Map.Entry<String, String>> headers,
+            Collection<? extends Map.Entry<String, String>> addHeaders,
             InputStream body, String bodyEncoding) throws IOException,
             OAuthException;
+
+    /**
+     * Remove headers of the given name.  The name is case insensitive.
+     * 
+     * @return the value of the last header with that name, or null to indicate
+     *         there was no such header
+     */
+    protected static String remove(
+            Iterable<? extends Map.Entry<String, String>> headers, String name) {
+        String value = null; // unknown
+        for (Iterator h = headers.iterator(); h.hasNext();) {
+            Map.Entry<String, String> header = (Map.Entry<String, String>) h.next();
+            if (name.equalsIgnoreCase(header.getKey())) {
+                value = header.getValue();
+                h.remove();
+            }
+        }
+        return value;
+    }
 
     /** A decorator that retains a copy of the first few bytes of data. */
     protected static class ExcerptInputStream extends FilterInputStream {

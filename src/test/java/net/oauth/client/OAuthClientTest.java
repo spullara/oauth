@@ -29,7 +29,6 @@ import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 import net.oauth.client.OAuthClient.ExcerptInputStream;
 import net.oauth.client.OAuthClient.ParameterStyle;
-import net.oauth.client.httpclient3.OAuthHttpClient;
 import net.oauth.signature.Echo;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.Context;
@@ -70,22 +69,27 @@ public class OAuthClientTest extends TestCase {
         String parametersForm = "oauth_token=t&x=y";
         final Object[][] messages = new Object[][] {
                 { new OAuthMessage("GET", echo, parameters),
-                        "GET\n" + parametersForm + "\n", null },
-                { new OAuthMessage("POST", echo, parameters),
-                        "POST\n" + parametersForm + "\n", OAuth.FORM_ENCODED },
+                        "GET\n" + parametersForm + "\n" + "null\n", null },
+                {
+                        new OAuthMessage("POST", echo, parameters),
+                        "POST\n" + parametersForm + "\n"
+                                + parametersForm.length() + "\n",
+                        OAuth.FORM_ENCODED },
                 {
                         new MessageWithBody("PUT", echo, parameters,
                                 "text/OAuthClientTest; charset=\"UTF-8\"", utf8),
-                        "PUT\n" + parametersForm + "\n" + data,
+                        "PUT\n" + parametersForm + "\n"
+                                + utf8.length + "\n" + data,
                         "text/OAuthClientTest; charset=UTF-8" },
                 {
                         new MessageWithBody("PUT", echo, parameters,
                                 "application/octet-stream", utf8),
                         "PUT\n" + parametersForm + "\n"
+                                + utf8.length + "\n"
                                 + new String(utf8, "ISO-8859-1"),
                         "application/octet-stream" },
                 { new OAuthMessage("DELETE", echo, parameters),
-                        "DELETE\n" + parametersForm + "\n", null } };
+                        "DELETE\n" + parametersForm + "\n" + "null\n", null } };
         final ParameterStyle[] styles = new ParameterStyle[] {
                 ParameterStyle.BODY, ParameterStyle.AUTHORIZATION_HEADER };
         for (OAuthClient client : clients) {
@@ -97,14 +101,22 @@ public class OAuthClientTest extends TestCase {
                     OAuthMessage response = null;
                     try {
                         response = client.invoke(request, style);
-                    } catch (OAuthProblemException e) {
-                        fail(id + ": " + e + "\n"
-                                + e.getParameters().toString());
+                    } catch (Exception e) {
+                        AssertionError failure = new AssertionError(id);
+                        failure.initCause(e);
+                        throw failure;
                     }
                     // System.out.println(response.getDump()
                     // .get(OAuthMessage.HTTP_REQUEST));
-                    assertEquals(id, testCase[1], OAuthMessage.readAll(response
-                            .getBodyAsStream(), response.getContentCharset()));
+                    String expectedBody = (String) testCase[1];
+                    if ("POST".equalsIgnoreCase(request.method)
+                            && style == ParameterStyle.AUTHORIZATION_HEADER) {
+                        // Only the non-oauth parameters will go in the body.
+                        expectedBody = expectedBody.replace("\n"
+                                + parametersForm.length() + "\n", "\n3\n");
+                    }
+                    assertEquals(id, expectedBody, OAuthMessage.readAll(
+                            response.getBodyAsStream(), response.getContentCharset()));
                     assertEquals(id, testCase[2], response.getContentType());
                 }
             }
@@ -156,8 +168,8 @@ public class OAuthClientTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        clients = new OAuthClient[] { new OAuthHttpClient(),
-                new OAuthURLConnectionClient(),
+        clients = new OAuthClient[] { new OAuthURLConnectionClient(),
+                new net.oauth.client.httpclient3.OAuthHttpClient(),
                 new net.oauth.client.httpclient4.OAuthHttpClient() };
         { // Get an ephemeral local port number:
             Socket s = new Socket();
@@ -201,6 +213,23 @@ public class OAuthClientTest extends TestCase {
         @Override
         public String getContentType() {
             return contentType;
+        }
+
+        @Override
+        public String getHeader(String name) {
+            if (OAuthClient.CONTENT_LENGTH.equalsIgnoreCase(name)) {
+                return (body == null) ? null : String.valueOf(body.length);
+            }
+            return super.getHeader(name);
+        }
+
+        @Override
+        public List<Map.Entry<String, String>> getHeaders() {
+            List<Map.Entry<String, String>> headers = super.getHeaders();
+            if (body != null) {
+                headers.add(new OAuth.Parameter(OAuthClient.CONTENT_LENGTH, String.valueOf(body.length)));
+            }
+            return headers;
         }
 
     }

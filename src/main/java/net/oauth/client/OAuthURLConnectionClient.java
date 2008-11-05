@@ -69,9 +69,19 @@ public class OAuthURLConnectionClient extends OAuthClient {
                 }
             }
         }
+        String contentLength = null;
         for (Map.Entry<String, String> header : addHeaders) {
-            connection.setRequestProperty(header.getKey(), header.getValue());
-            headers.append(header.getKey()).append(": ").append(header.getValue());
+            String key = header.getKey();
+            if (CONTENT_LENGTH.equalsIgnoreCase(key) && connection instanceof HttpURLConnection) {
+                contentLength = header.getValue();
+            } else {
+                connection.setRequestProperty(key, header.getValue());
+            }
+            headers.append(key).append(": ").append(header.getValue()).append(EOL);
+        }
+        if (contentLength != null) {
+            ((HttpURLConnection) connection)
+                .setFixedLengthStreamingMode(Integer.parseInt(contentLength));
         }
         final ExcerptInputStream input = new ExcerptInputStream(body);
         if (body != null) {

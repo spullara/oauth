@@ -66,6 +66,24 @@ public class URLConnectionResponse extends OAuthResponseMessage {
     }
 
     @Override
+    public String getHeader(String name) {
+        return connection.getHeaderField(name);
+    }
+
+    @Override
+    public List<Map.Entry<String, String>> getHeaders() {
+        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+        String value;
+        for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
+            String name = connection.getHeaderFieldKey(i);
+            if (name != null) {
+                headers.add(new OAuth.Parameter(name, value));
+            }
+        }
+        return headers;
+    }
+
+    @Override
     public InputStream getBodyAsStream() throws IOException {
         if (bodyAsString == null) {
             try {

@@ -60,6 +60,29 @@ public class HttpRequestMessage extends OAuthMessage {
         return request.getContentType();
     }
 
+    @Override
+    public String getHeader(String name) {
+        return request.getHeader(name);
+    }
+
+    @Override
+    public List<Map.Entry<String, String>> getHeaders() {
+        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+        Enumeration<String> names = request.getHeaderNames();
+        if (names != null) {
+            while (names.hasMoreElements()) {
+                String name = names.nextElement();
+                Enumeration<String> values = request.getHeaders(name);
+                if (values != null) {
+                    while (values.hasMoreElements()) {
+                        headers.add(new OAuth.Parameter(name, values.nextElement()));
+                    }
+                }
+            }
+        }
+        return headers;
+    }
+
     public static List<OAuth.Parameter> getParameters(HttpServletRequest request) {
         List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
         for (Enumeration<String> headers = request.getHeaders("Authorization"); headers != null

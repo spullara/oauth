@@ -108,6 +108,7 @@ public class Echo extends HttpServlet {
             out.write('\n');
         }
         if (!"false".equalsIgnoreCase(msg.getParameter("echoBody"))) {
+            out.print(request.getHeader("Content-Length") + "\n");
             InputStream in = msg.getBodyAsStream();
             final byte[] buffer = new byte[1024];
             for (int n; 0 < (n = in.read(buffer));) {

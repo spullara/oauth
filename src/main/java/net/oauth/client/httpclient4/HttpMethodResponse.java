@@ -26,6 +26,7 @@ import net.oauth.OAuthProblemException;
 import net.oauth.client.OAuthResponseMessage;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.util.EntityUtils;
@@ -56,7 +57,7 @@ public class HttpMethodResponse extends OAuthResponseMessage {
         for (Header header : response.getHeaders("WWW-Authenticate")) {
             decodeWWWAuthenticate(header.getValue());
         }
-        Header[] headers = response.getHeaders("Content-Type");
+        Header[] headers = response.getHeaders(CONTENT_TYPE);
         contentType = (headers == null || headers.length <= 0) ? null
                 : headers[headers.length - 1].getValue();
     }
@@ -71,6 +72,28 @@ public class HttpMethodResponse extends OAuthResponseMessage {
     @Override
     public String getContentType() {
         return contentType;
+    }
+
+    @Override
+    public String getHeader(String name) {
+        Header[] headers = httpResponse.getHeaders(name);
+        if (headers != null && headers.length > 0) {
+            return headers[headers.length - 1].getValue();
+        }
+        return null; // no such header
+    }
+
+    @Override
+    public List<Map.Entry<String, String>> getHeaders() {
+        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+        Header[] allHeaders = httpResponse.getAllHeaders();
+        if (allHeaders != null) {
+            for (Header header : allHeaders) {
+                headers.add(new OAuth.Parameter(header.getName(), header
+                        .getValue()));
+            }
+        }
+        return headers;
     }
 
     @Override
@@ -94,7 +117,7 @@ public class HttpMethodResponse extends OAuthResponseMessage {
 
     @Override
     protected void completeParameters() throws IOException {
-        Header contentType = httpResponse.getFirstHeader("Content-Type");
+        Header contentType = httpResponse.getLastHeader(CONTENT_TYPE);
         if (contentType == null || isDecodable(contentType.getValue())) {
             super.completeParameters();
         }
@@ -115,6 +138,13 @@ public class HttpMethodResponse extends OAuthResponseMessage {
             for (Header header : httpRequest.getAllHeaders()) {
                 request.append(header.getName()).append(": ").append(
                         header.getValue()).append(EOL);
+            }
+            if (httpRequest instanceof HttpEntityEnclosingRequest) {
+                HttpEntityEnclosingRequest r = (HttpEntityEnclosingRequest) httpRequest;
+                long contentLength = r.getEntity().getContentLength();
+                if (contentLength >= 0) {
+                    request.append("Content-Length: ").append(contentLength).append(EOL);
+                }
             }
             into.put(HTTP_REQUEST_HEADERS, request.toString());
             request.append(EOL);
