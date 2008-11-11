@@ -17,12 +17,10 @@
 package net.oauth.client;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -34,6 +32,9 @@ import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
+import net.oauth.http.HttpMessage;
+import net.oauth.http.HttpMessageDecoder;
+import net.oauth.http.HttpResponseMessage;
 
 /**
  * Methods for an OAuth consumer to request tokens from a service provider.
@@ -113,8 +114,15 @@ public abstract class OAuthClient {
         String ps = (String) accessor.consumer.getProperty(PARAMETER_STYLE);
         ParameterStyle style = (ps == null) ? ParameterStyle.BODY : Enum
                 .valueOf(ParameterStyle.class, ps);
-        return invoke(accessor.newRequestMessage(httpMethod, url, parameters),
-                style);
+        OAuthMessage request = accessor.newRequestMessage(httpMethod, url,
+                parameters);
+        Object accepted = accessor.consumer.getProperty(ACCEPT_ENCODING);
+        if (accepted != null) {
+            request.getHeaders().add(
+                    new OAuth.Parameter(HttpMessage.ACCEPT_ENCODING, accepted
+                            .toString()));
+        }
+        return invoke(request, style);
     }
 
     /**
@@ -122,6 +130,12 @@ public abstract class OAuthClient {
      * to be used by invoke.
      */
     public static final String PARAMETER_STYLE = "parameterStyle";
+
+    /**
+     * The name of the OAuthConsumer property whose value is the Accept-Encoding
+     * header in HTTP requests.
+     */
+    public static final String ACCEPT_ENCODING = "HTTP.header." + HttpMessage.ACCEPT_ENCODING;
 
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
             Collection<? extends Map.Entry> parameters) throws IOException,
@@ -153,16 +167,17 @@ public abstract class OAuthClient {
             style = ParameterStyle.QUERY_STRING;
         }
         String url = request.URL;
-        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>
-                (request.getHeaders());
+        final List<Map.Entry<String, String>> headers =
+            new ArrayList<Map.Entry<String, String>>(request.getHeaders());
         switch (style) {
         case QUERY_STRING:
             url = OAuth.addParameters(url, request.getParameters());
             break;
         case BODY: {
             byte[] form = OAuth.formEncode(request.getParameters()).getBytes(
-                    request.getContentCharset());
-            headers.add(new OAuth.Parameter(OAuthMessage.CONTENT_TYPE, OAuth.FORM_ENCODED));
+                    request.getBodyEncoding());
+            headers.add(new OAuth.Parameter(HttpMessage.CONTENT_TYPE,
+                    OAuth.FORM_ENCODED));
             headers.add(new OAuth.Parameter(CONTENT_LENGTH, form.length + ""));
             body = new ByteArrayInputStream(form);
             break;
@@ -183,9 +198,11 @@ public abstract class OAuthClient {
                 // Place the non-OAuth parameters elsewhere in the request:
                 if (isPost && body == null) {
                     byte[] form = OAuth.formEncode(others).getBytes(
-                            request.getContentCharset());
-                    headers.add(new OAuth.Parameter(OAuthMessage.CONTENT_TYPE, OAuth.FORM_ENCODED));
-                    headers.add(new OAuth.Parameter(CONTENT_LENGTH, form.length + ""));
+                            request.getBodyEncoding());
+                    headers.add(new OAuth.Parameter(HttpMessage.CONTENT_TYPE,
+                            OAuth.FORM_ENCODED));
+                    headers.add(new OAuth.Parameter(CONTENT_LENGTH, form.length
+                            + ""));
                     body = new ByteArrayInputStream(form);
                 } else {
                     url = OAuth.addParameters(url, others);
@@ -193,8 +210,17 @@ public abstract class OAuthClient {
             }
             break;
         }
-        return invoke(request.method, url, headers, body, request
-                .getContentCharset());
+        HttpMessage httpRequest = new HttpMessage(request.method, new URL(url), body);
+        httpRequest.headers.addAll(headers);
+        HttpResponseMessage httpResponse = invoke(httpRequest);
+        OAuthResponseMessage response = new OAuthResponseMessage(
+                HttpMessageDecoder.decode(httpResponse));
+        if (httpResponse.getStatusCode() != HttpResponseMessage.STATUS_OK) {
+            OAuthProblemException problem = new OAuthProblemException();
+            problem.getParameters().putAll(response.getDump());
+            throw problem;
+        }
+        return response;
     }
 
     /** Where to place parameters in an HTTP message. */
@@ -202,10 +228,10 @@ public abstract class OAuthClient {
         AUTHORIZATION_HEADER, BODY, QUERY_STRING;
     };
 
-    protected static final String POST = "POST";
-    protected static final String PUT = "PUT";
-    protected static final String DELETE = "DELETE";
-    protected static final String CONTENT_LENGTH = "Content-Length";
+    protected static final String PUT = OAuthMessage.PUT;
+    protected static final String POST = OAuthMessage.POST;
+    protected static final String DELETE = OAuthMessage.DELETE;
+    protected static final String CONTENT_LENGTH = HttpMessage.CONTENT_LENGTH;
 
     /**
      * Send an HTTP request and return the response.
@@ -227,92 +253,7 @@ public abstract class OAuthClient {
      * @return the HTTP response, including the OAuth parameters if the response
      *         was successful (status 200).
      */
-    protected abstract OAuthMessage invoke(String method, String url,
-            Collection<? extends Map.Entry<String, String>> addHeaders,
-            InputStream body, String bodyEncoding) throws IOException,
-            OAuthException;
-
-    /**
-     * Remove headers of the given name.  The name is case insensitive.
-     * 
-     * @return the value of the last header with that name, or null to indicate
-     *         there was no such header
-     */
-    protected static String remove(
-            Iterable<? extends Map.Entry<String, String>> headers, String name) {
-        String value = null; // unknown
-        for (Iterator h = headers.iterator(); h.hasNext();) {
-            Map.Entry<String, String> header = (Map.Entry<String, String>) h.next();
-            if (name.equalsIgnoreCase(header.getKey())) {
-                value = header.getValue();
-                h.remove();
-            }
-        }
-        return value;
-    }
-
-    /** A decorator that retains a copy of the first few bytes of data. */
-    protected static class ExcerptInputStream extends FilterInputStream {
-
-        /**
-         * A marker that's appended to the excerpt if it's less than the
-         * complete stream.
-         */
-        public static final byte[] ELLIPSIS = " ...".getBytes();
-
-        public ExcerptInputStream(InputStream in) {
-            super(in);
-        }
-
-        private static final int maxSize = 1024;
-        private final ByteArrayOutputStream excerpt = new ByteArrayOutputStream();
-
-        /** Copy all the data from this stream to the given output stream. */
-        public void copyAll(OutputStream into) throws IOException {
-            byte[] b = new byte[1024];
-            for (int n; 0 < (n = read(b));) {
-                into.write(b, 0, n);
-            }
-        }
-
-        /**
-         * The first few bytes of data that have been read so far, plus ELLIPSIS
-         * if this is less than all the bytes that have been read.
-         */
-        public byte[] getExcerpt() {
-            return excerpt.toByteArray();
-        }
-
-        @Override
-        public int read() throws IOException {
-            byte[] b = new byte[1];
-            return (read(b) <= 0) ? -1 : unsigned(b[0]);
-        }
-
-        private static int unsigned(byte b) {
-            return (b >= 0) ? b : ((int) b) + 256;
-        }
-
-        @Override
-        public int read(byte[] b) throws IOException {
-            return read(b, 0, b.length);
-        }
-
-        @Override
-        public int read(byte[] b, int offset, int length) throws IOException {
-            final int n = super.read(b, offset, length);
-            if (n > 0) {
-                final int e = Math.min(n, maxSize - excerpt.size());
-                if (e >= 0) {
-                    excerpt.write(b, offset, e);
-                    if (e < n) {
-                        excerpt.write(ELLIPSIS);
-                    }
-                }
-            }
-            return n;
-        }
-
-    }
+    protected abstract HttpResponseMessage invoke(HttpMessage request)
+            throws IOException;
 
 }

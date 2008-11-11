@@ -42,12 +42,20 @@ public class Echo extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
+        final String contentType = request.getContentType();
+        if (contentType != null) {
+            response.setContentType(contentType);
+        }
         doGet(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
+        final String contentType = request.getContentType();
+        if (contentType != null) {
+            response.setContentType(contentType);
+        }
         doGet(request, response);
     }
 
@@ -62,8 +70,9 @@ public class Echo extends HttpServlet {
             HttpServletResponse response) throws IOException {
         response.setHeader("Cache-Control", "no-cache");
         final OAuthMessage msg = OAuthServlet.getMessage(request, null);
-        response.setContentType(msg.getContentType());
-        response.setCharacterEncoding(msg.getContentCharset());
+        System.out.print(Thread.currentThread().getName() + " " + msg.method + " ...");
+        System.out.flush();
+        response.setCharacterEncoding(msg.getBodyEncoding());
         final ServletOutputStream out = response.getOutputStream();
         out.print(msg.method + "\n");
         out.print(OAuthSignatureMethod.normalizeParameters(msg.getParameters())
@@ -115,6 +124,8 @@ public class Echo extends HttpServlet {
                 out.write(buffer, 0, n);
             }
         }
+        // out.close();
+        System.out.println(" done");
     }
 
     private static final byte[] DATA = getData();

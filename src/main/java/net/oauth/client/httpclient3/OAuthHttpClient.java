@@ -19,15 +19,13 @@ package net.oauth.client.httpclient3;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Collection;
 import java.util.Map;
-import net.oauth.OAuthException;
-import net.oauth.OAuthMessage;
-import net.oauth.OAuthProblemException;
+import net.oauth.client.ExcerptInputStream;
 import net.oauth.client.OAuthClient;
+import net.oauth.http.HttpMessage;
+import net.oauth.http.HttpResponseMessage;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -61,23 +59,25 @@ public class OAuthHttpClient extends OAuthClient {
     private final HttpClientPool clientPool;
 
     @Override
-    protected OAuthMessage invoke(String method, String url,
-            Collection<? extends Map.Entry<String, String>> headers,
-            InputStream body, String bodyEncoding) throws IOException,
-            OAuthException {
+    protected HttpResponseMessage invoke(HttpMessage request) throws IOException {
+        final String method = request.method;
+        final String url = request.url.toExternalForm();
+        final InputStream body = request.getBody();
         final boolean isDelete = DELETE.equalsIgnoreCase(method);
         final boolean isPost = POST.equalsIgnoreCase(method);
         final boolean isPut = PUT.equalsIgnoreCase(method);
-        final ExcerptInputStream input = new ExcerptInputStream(body);
+        byte[] excerpt = null;
         HttpMethod httpMethod;
         if (isPost || isPut) {
             EntityEnclosingMethod entityEnclosingMethod =
                 isPost ? new PostMethod(url) : new PutMethod(url);
             if (body != null) {
-                String contentLength = remove(headers, CONTENT_LENGTH);
-                entityEnclosingMethod.setRequestEntity((contentLength == null)
-                        ? new InputStreamRequestEntity(input)
-                        : new InputStreamRequestEntity(input, Long.parseLong(contentLength)));
+                ExcerptInputStream e = new ExcerptInputStream(body);
+                String length = request.removeHeaders(CONTENT_LENGTH);
+                entityEnclosingMethod.setRequestEntity((length == null)
+                        ? new InputStreamRequestEntity(e)
+                        : new InputStreamRequestEntity(e, Long.parseLong(length)));
+                excerpt = e.getExcerpt();
             }
             httpMethod = entityEnclosingMethod;
         } else if (isDelete) {
@@ -86,21 +86,13 @@ public class OAuthHttpClient extends OAuthClient {
             httpMethod = new GetMethod(url);
         }
         httpMethod.setFollowRedirects(false);
-        for (Map.Entry<String, String> header : headers) {
+        for (Map.Entry<String, String> header : request.headers) {
             httpMethod.addRequestHeader(header.getKey(), header.getValue());
         }
         HttpClient client = clientPool.getHttpClient(new URL(httpMethod
                 .getURI().toString()));
         client.executeMethod(httpMethod);
-        final OAuthMessage response = new HttpMethodResponse(httpMethod, input
-                .getExcerpt(), bodyEncoding);
-        int statusCode = httpMethod.getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
-            OAuthProblemException problem = new OAuthProblemException();
-            problem.getParameters().putAll(response.getDump());
-            throw problem;
-        }
-        return response;
+        return new HttpMethodResponse(httpMethod, excerpt, request.getContentCharset());
     }
 
 }

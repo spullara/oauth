@@ -24,146 +24,111 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
-import net.oauth.OAuthProblemException;
+import net.oauth.http.HttpMessage;
+import net.oauth.http.HttpResponseMessage;
 
 /**
  * The response part of a URLConnection, encapsulated as an OAuthMessage.
  * 
  * @author John Kristian
  */
-public class URLConnectionResponse extends OAuthResponseMessage {
+public class URLConnectionResponse extends HttpResponseMessage {
 
     /**
      * Construct an OAuthMessage from the HTTP response, including parameters
      * from OAuth WWW-Authenticate headers and the body. The header parameters
      * come first, followed by the ones from the response body.
      */
-    public URLConnectionResponse(String method, String url,
-            String requestHeaders, byte[] requestBody, String requestEncoding,
-            URLConnection connection) throws IOException {
-        super(method, url);
+    public URLConnectionResponse(HttpMessage request, String requestHeaders,
+            byte[] requestExcerpt, URLConnection connection) throws IOException {
+        super(request.method, request.url);
         this.requestHeaders = requestHeaders;
-        this.requestBody = requestBody;
-        this.requestEncoding = requestEncoding;
+        this.requestExcerpt = requestExcerpt;
+        this.requestEncoding = request.getContentCharset();
         this.connection = connection;
-        List<String> wwwAuthHeaders = connection.getHeaderFields().get("WWW-Authenticate");
-        if (wwwAuthHeaders != null) {
-            for (String header : wwwAuthHeaders) {
-                this.decodeWWWAuthenticate(header);
-            }
-        }
+        this.headers.addAll(getHeaders());
     }
 
     private final String requestHeaders;
-    private final byte[] requestBody;
+    private final byte[] requestExcerpt;
     private final String requestEncoding;
     private final URLConnection connection;
-    private String bodyAsString = null;
 
     @Override
-    public String getContentType() {
-        return connection.getContentType();
+    public int getStatusCode() throws IOException {
+        if (connection instanceof HttpURLConnection) {
+            return ((HttpURLConnection) connection).getResponseCode();
+        }
+        return STATUS_OK;
     }
 
     @Override
-    public String getHeader(String name) {
-        return connection.getHeaderField(name);
+    public InputStream openBody() {
+        try {
+            return connection.getInputStream();
+        } catch (IOException ohWell) {
+        }
+        return null;
     }
 
-    @Override
-    public List<Map.Entry<String, String>> getHeaders() {
+    private List<Map.Entry<String, String>> getHeaders() {
         List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+        boolean foundContentType = false;
         String value;
         for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
             String name = connection.getHeaderFieldKey(i);
             if (name != null) {
                 headers.add(new OAuth.Parameter(name, value));
+                if (CONTENT_TYPE.equalsIgnoreCase(name)) {
+                    foundContentType = true;
+                }
             }
+        }
+        if (!foundContentType) {
+            headers.add(new OAuth.Parameter(CONTENT_TYPE, connection
+                    .getContentType()));
         }
         return headers;
     }
-
-    @Override
-    public InputStream getBodyAsStream() throws IOException {
-        if (bodyAsString == null) {
-            try {
-                return connection.getInputStream();
-            } catch(IOException ohWell) {
-                return null;
-            }
-        }
-        return super.getBodyAsStream();
-    }
-
-    @Override
-    public String getBodyAsString() throws IOException {
-        if (bodyAsString == null) {
-            InputStream input = getBodyAsStream();
-            if (input != null) try {
-                bodyAsString = readAll(input, getContentCharset());
-            } finally {
-                input.close();
-            }
-        }
-        return bodyAsString;
-    }
-
-    @Override
-    protected void completeParameters() throws IOException {
-        if (isDecodable(connection.getContentType())) {
-            super.completeParameters();
-        }
-    }
-
     /** Return a complete description of the HTTP exchange. */
     @Override
-    protected void dump(Map<String, Object> into) throws IOException {
+    public void dump(Map<String, Object> into) throws IOException {
         super.dump(into);
-        into.put(HTTP_REQUEST_HEADERS, requestHeaders);
         {
             StringBuilder request = new StringBuilder(requestHeaders);
             request.append(EOL);
-            if (requestBody != null) {
-                request.append(new String(requestBody, requestEncoding));
+            if (requestExcerpt != null) {
+                request.append(new String(requestExcerpt, requestEncoding));
             }
-            into.put(HTTP_REQUEST, request.toString());
+            into.put(REQUEST, request.toString());
         }
         {
             HttpURLConnection http = (connection instanceof HttpURLConnection) ? (HttpURLConnection) connection
                     : null;
-            Integer statusCode = null;
-            if (http != null) {
-                statusCode = Integer.valueOf(http.getResponseCode());
-                into.put(OAuthProblemException.HTTP_STATUS_CODE, statusCode);
-            }
             StringBuilder response = new StringBuilder();
-            List<OAuth.Parameter> responseHeaders = new ArrayList<OAuth.Parameter>();
             String value;
             for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
                 String name = connection.getHeaderFieldKey(i);
                 if (i == 0 && name != null && http != null) {
-                    String firstLine = "HTTP " + statusCode;
+                    String firstLine = "HTTP " + getStatusCode();
                     String message = http.getResponseMessage();
                     if (message != null) {
                         firstLine += (" " + message);
                     }
                     response.append(firstLine).append(EOL);
-                    responseHeaders.add(new OAuth.Parameter(null, firstLine));
                 }
                 if (name != null) {
                     response.append(name).append(": ");
                     name = name.toLowerCase();
                 }
                 response.append(value).append(EOL);
-                responseHeaders.add(new OAuth.Parameter(name, value));
             }
-            into.put(OAuthProblemException.RESPONSE_HEADERS, responseHeaders);
             response.append(EOL);
-            String body = getBodyAsString();
             if (body != null) {
-                response.append(body);
+                response.append(new String(((ExcerptInputStream) body)
+                        .getExcerpt(), getContentCharset()));
             }
-            into.put(HTTP_RESPONSE, response.toString());
+            into.put(HttpMessage.RESPONSE, response.toString());
         }
     }
 

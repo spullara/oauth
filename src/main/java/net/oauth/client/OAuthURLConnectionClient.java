@@ -25,9 +25,8 @@ import java.net.URLConnection;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import net.oauth.OAuthException;
-import net.oauth.OAuthMessage;
-import net.oauth.OAuthProblemException;
+import net.oauth.http.HttpMessage;
+import net.oauth.http.HttpResponseMessage;
 
 /**
  * Utility methods for an OAuth client based on HttpURLConnection.
@@ -41,11 +40,10 @@ public class OAuthURLConnectionClient extends OAuthClient {
 
     /** Send a message to the service provider and get the response. */
     @Override
-    protected OAuthMessage invoke(String httpMethod, String urlString,
-            Collection<? extends Map.Entry<String, String>> addHeaders,
-            InputStream body, String bodyEncoding) throws IOException,
-            OAuthException {
-        final URL url = new URL(urlString);
+    protected HttpResponseMessage invoke(HttpMessage request) throws IOException {
+        final String httpMethod = request.method;
+        final Collection<Map.Entry<String, String>> addHeaders = request.headers;
+        final URL url = request.url;
         final URLConnection connection = url.openConnection();
         connection.setDoInput(true);
         if (connection instanceof HttpURLConnection) {
@@ -79,34 +77,24 @@ public class OAuthURLConnectionClient extends OAuthClient {
             }
             headers.append(key).append(": ").append(header.getValue()).append(EOL);
         }
-        if (contentLength != null) {
-            ((HttpURLConnection) connection)
-                .setFixedLengthStreamingMode(Integer.parseInt(contentLength));
-        }
-        final ExcerptInputStream input = new ExcerptInputStream(body);
+        byte[] excerpt = null;
+        final InputStream body = request.getBody();
         if (body != null) {
+            if (contentLength != null) {
+                ((HttpURLConnection) connection)
+                    .setFixedLengthStreamingMode(Integer.parseInt(contentLength));
+            }
             connection.setDoOutput(true);
             OutputStream output = connection.getOutputStream();
             try {
-                input.copyAll(output);
+                excerpt = ExcerptInputStream.copyAll(body, output);
             } finally {
                 output.close();
             }
         }
-        final OAuthMessage response = new URLConnectionResponse(httpMethod,
-                urlString, headers.toString(), input.getExcerpt(), bodyEncoding, connection);
-        if (connection instanceof HttpURLConnection) {
-            HttpURLConnection http = (HttpURLConnection) connection;
-            int statusCode = http.getResponseCode();
-            if (statusCode != HttpURLConnection.HTTP_OK) {
-                OAuthProblemException problem = new OAuthProblemException();
-                problem.getParameters().putAll(response.getDump());
-                throw problem;
-            }
-        }
-        return response;
+        return new URLConnectionResponse(request, headers.toString(), excerpt, connection);
     }
 
-    private static final String EOL = OAuthResponseMessage.EOL;
+    private static final String EOL = HttpResponseMessage.EOL;
 
 }

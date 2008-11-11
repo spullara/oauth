@@ -18,6 +18,7 @@ package net.oauth;
 
 import java.util.HashMap;
 import java.util.Map;
+import net.oauth.http.HttpResponseMessage;
 
 /**
  * Describes an OAuth-related problem, using a set of named parameters. One
@@ -35,18 +36,11 @@ public class OAuthProblemException extends OAuthException {
     /**
      * The key of a parameter whose value is an Integer representing the HTTP
      * response status code; for example Integer.valueOf(200).
+     * 
+     * @deprecated use HttpResponseMessage.STATUS_CODE instead.
      */
-    public static final String HTTP_STATUS_CODE = "HTTP status";
+    public static final String HTTP_STATUS_CODE = HttpResponseMessage.STATUS_CODE;
  
-    /**
-     * The key of a parameter whose value is a List<OAuth.Parameter>
-     * representing the headers from a response message. The header names are
-     * lower case, in this list. For an HTTP response, the first header has a
-     * null name, and its value is the first line from the HTTP message; for
-     * example "HTTP/1.1 200 OK".
-     */
-    public static final String RESPONSE_HEADERS = "response headers";
-
     public OAuthProblemException() {
     }
 

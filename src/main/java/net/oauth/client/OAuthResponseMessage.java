@@ -17,25 +17,32 @@
 package net.oauth.client;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
-import net.oauth.OAuthMessage;
+import net.oauth.OAuthMessageFromHttp;
+import net.oauth.http.HttpMessage;
+import net.oauth.http.HttpResponseMessage;
 
 /**
  * An HTTP response, encapsulated as an OAuthMessage.
  * 
  * @author John Kristian
  */
-public abstract class OAuthResponseMessage extends OAuthMessage {
+public final class OAuthResponseMessage extends OAuthMessageFromHttp
+{
 
-    protected OAuthResponseMessage(String method, String URL)
-            throws IOException {
-        super(method, URL, NO_PARAMETERS);
+    protected OAuthResponseMessage(HttpResponseMessage http) throws IOException
+    {
+        super(http);
+        for (Map.Entry<String, String> header : http.headers) {
+            if ("WWW-Authenticate".equalsIgnoreCase(header.getKey())) {
+                decodeWWWAuthenticate(header.getValue());
+            }
+        }
     }
 
-    protected void decodeWWWAuthenticate(String header) {
+    private void decodeWWWAuthenticate(String header)
+    {
         for (OAuth.Parameter parameter : decodeAuthorization(header)) {
             if (!"realm".equalsIgnoreCase(parameter.getKey())) {
                 addParameter(parameter);
@@ -44,19 +51,23 @@ public abstract class OAuthResponseMessage extends OAuthMessage {
     }
 
     @Override
-    protected void completeParameters() throws IOException {
-        addParameters(OAuth.decodeForm(getBodyAsString()));
+    protected void completeParameters() throws IOException
+    {
+        super.completeParameters();
+        if (isDecodable(http.getHeader(HttpMessage.CONTENT_TYPE))) {
+            addParameters(OAuth.decodeForm(readBodyAsString()));
+        }
     }
 
     /**
-     * Decide whether a message with the given Content-Type can be decoded as
-     * OAuth parameters.
+     * Decide whether a message body with the given Content-Type can be decoded
+     * as OAuth parameters.
      */
-    protected boolean isDecodable(String contentType) {
+    protected static boolean isDecodable(String contentType)
+    {
         if (contentType != null) {
             int sep = contentType.indexOf(';');
-            String mimeType = (sep < 0) ? contentType : contentType.substring(
-                    0, sep);
+            String mimeType = (sep < 0) ? contentType : contentType.substring(0, sep);
             mimeType = mimeType.trim();
             if ("text/html".equalsIgnoreCase(mimeType)) {
                 return false;
@@ -64,13 +75,5 @@ public abstract class OAuthResponseMessage extends OAuthMessage {
         }
         return true;
     }
-
-    /** The name of a dump entry whose value is the HTTP request headers. */
-    protected static final String HTTP_REQUEST_HEADERS = "HTTP request headers";
-
-    /** The standard end-of-line marker in an HTTP message. */
-    protected static final String EOL = "\r\n";
-
-    private static final List<Map.Entry> NO_PARAMETERS = Collections.emptyList();
 
 }

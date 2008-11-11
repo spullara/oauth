@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Netflix, Inc.
+ * Copyright 2007, 2008 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package net.oauth;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.oauth.http.HttpMessage;
 import net.oauth.signature.OAuthSignatureMethod;
 
 /**
@@ -52,25 +52,22 @@ public class OAuthMessage {
         if (parameters == null) {
             this.parameters = new ArrayList<Map.Entry<String, String>>();
         } else {
-            this.parameters = new ArrayList<Map.Entry<String, String>>(
-                    parameters.size());
-            for (Map.Entry entry : parameters) {
+            this.parameters = new ArrayList<Map.Entry<String, String>>(parameters.size());
+            for (Map.Entry p : parameters) {
                 this.parameters.add(new OAuth.Parameter(
-                        toString(entry.getKey()), toString(entry.getValue())));
+                        toString(p.getKey()), toString(p.getValue())));
             }
         }
     }
 
     public String method;
-
     public String URL;
 
     private final List<Map.Entry<String, String>> parameters;
-
     private Map<String, String> parameterMap;
-
     private boolean parametersAreComplete = false;
-
+    private final List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+    
     public String toString() {
         return "OAuthMessage(" + method + ", " + URL + ", " + parameters + ")";
     }
@@ -143,31 +140,18 @@ public class OAuthMessage {
      * 
      * @return the MIME type, or null to indicate the type is unknown.
      */
-    public String getContentType() {
-        return null; // stub
+    public String getBodyType() {
+        return getHeader(HttpMessage.CONTENT_TYPE);
     }
 
     /**
-     * The charset of the body of this message.
+     * The character encoding of the body of this message.
      * 
      * @return the name of an encoding, or "ISO-8859-1" if no charset has been
      *         specified.
      */
-    public String getContentCharset() {
-        String contentType = getContentType();
-        if (contentType != null) {
-            Matcher m = CHARSET.matcher(contentType);
-            if (m.find()) {
-                String charset = m.group(1);
-                if (charset.length() >= 2 && charset.charAt(0) == '"'
-                        && charset.charAt(charset.length() - 1) == '"') {
-                    charset = charset.substring(1, charset.length() - 1);
-                    charset = charset.replace("\\\"", "\"");
-                }
-                return charset;
-            }
-        }
-        return DEFAULT_CHARSET;
+    public String getBodyEncoding() {
+        return HttpMessage.DEFAULT_CHARSET;
     }
 
     /**
@@ -177,53 +161,61 @@ public class OAuthMessage {
      * @return the value of the last header, or null to indicate that there is
      *         no such header in this message.
      */
-    public String getHeader(String name) {
-        if (CONTENT_TYPE.equalsIgnoreCase(name)) {
-            return getContentType();
+    public final String getHeader(String name) {
+        String value = null; // no such header
+        for (Map.Entry<String, String> header : getHeaders()) {
+            if (name.equalsIgnoreCase(header.getKey())) {
+                value = header.getValue();
+            }
         }
-        return null; // no such header
+        return value;
     }
 
     /** All HTTP headers. */
-    public List<Map.Entry<String, String>> getHeaders() {
-        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
-        String contentType = getContentType();
-        if (contentType != null) {
-            headers.add(new OAuth.Parameter(CONTENT_TYPE, contentType));
-        }
+    public final List<Map.Entry<String, String>> getHeaders() {
         return headers;
     }
 
     /**
-     * Get the body of the HTTP request or response.
+     * Read the body of the HTTP request or response and convert it to a String.
+     * This method isn't repeatable, since it consumes getBodyAsStream.
      * 
      * @return the body, or null to indicate there is no body.
      */
-    public String getBodyAsString() throws IOException {
-        return null; // stub
+    public final String readBodyAsString() throws IOException
+    {
+        InputStream body = getBodyAsStream();
+        if (body == null) {
+            return null;
+        }
+        return readAll(body, getBodyEncoding());
     }
 
     /**
      * Get a stream from which to read the body of the HTTP request or response.
-     * This is designed to support efficient streaming of a large message. If
-     * you call this method before calling getBodyAsString, then subsequent
-     * calls to either method may propagate an exception.
+     * This is designed to support efficient streaming of a large message.
      * 
      * @return a stream from which to read the body, or null to indicate there
      *         is no body.
      */
     public InputStream getBodyAsStream() throws IOException {
-        String body = getBodyAsString();
-        return (body == null) ? null :
-            new ByteArrayInputStream(body.getBytes(getContentCharset()));
+        return null;
     }
 
-    /** The name of a dump entry whose value is the HTTP request. */
-    public static final String HTTP_REQUEST = "HTTP request";
+    /**
+     * The name of a dump entry whose value is the HTTP request.
+     * 
+     * @deprecated use HttpMessage.REQUEST instead
+     */
+    public static final String HTTP_REQUEST = HttpMessage.REQUEST;
 
-    /** The name of a dump entry whose value is the HTTP response. */
-    public static final String HTTP_RESPONSE = "HTTP response";
-
+    /**
+     * The name of a dump entry whose value is the HTTP response.
+     * 
+     * @deprecated use HttpMessage.RESPONSE instead
+     */
+    public static final String HTTP_RESPONSE = HttpMessage.RESPONSE;
+    
     /** Construct a verbose description of this message and its origins. */
     public Map<String, Object> getDump() throws IOException {
         Map<String, Object> into = new HashMap<String, Object>();
@@ -233,9 +225,11 @@ public class OAuthMessage {
 
     protected void dump(Map<String, Object> into) throws IOException {
         into.put("URL", URL);
-        try {
-            into.putAll(getParameterMap());
-        } catch (Exception ignored) {
+        if (parametersAreComplete) {
+            try {
+                into.putAll(getParameterMap());
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -366,8 +360,9 @@ public class OAuthMessage {
         return into.toString();
     }
 
-    public static String readAll(InputStream from, String encoding)
-            throws IOException {
+    /** Read all the data from the given stream and convert it to a String. */
+    public static String readAll(InputStream from, String encoding) throws IOException
+    {
         StringBuilder into = new StringBuilder();
         if (from != null) {
             try {
@@ -409,12 +404,17 @@ public class OAuthMessage {
     }
 
     public static final String AUTH_SCHEME = "OAuth";
-    public static final String CONTENT_TYPE = "Content-Type";
-    protected static final String DEFAULT_CHARSET = "ISO-8859-1";
+
+    /** @deprecated use HttpMessage.CONTENT_TYPE instead */
+    public static final String CONTENT_TYPE = HttpMessage.CONTENT_TYPE;
+
+    public static final String GET = "GET";
+    public static final String POST = "POST";
+    public static final String PUT = "PUT";
+    public static final String DELETE = "DELETE";
 
     private static final Pattern AUTHORIZATION = Pattern.compile("\\s*(\\w*)\\s+(.*)");
     private static final Pattern NVP = Pattern.compile("(\\S*)\\s*\\=\\s*\"([^\"]*)\"");
-    private static final Pattern CHARSET = Pattern.compile("; *charset *= *([^;\"]*|\"([^\"]|\\\\\")*\")(;|$)");
 
     private static final String toString(Object from) {
         return (from == null) ? null : from.toString();

@@ -19,6 +19,7 @@ package net.oauth.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -36,38 +37,26 @@ public class HttpRequestMessage extends OAuthMessage {
     public HttpRequestMessage(HttpServletRequest request, String URL) {
         super(request.getMethod(), URL, getParameters(request));
         this.request = request;
+        copyHeaders(request, getHeaders());
     }
 
     private final HttpServletRequest request;
 
     @Override
     public InputStream getBodyAsStream() throws IOException {
-        return request.getInputStream();
+        InputStream body = super.getBodyAsStream();
+        if (body == null) {
+            body = request.getInputStream();
+        }
+        return body;
     }
 
     @Override
-    public String getBodyAsString() throws IOException {
-        return readAll(getBodyAsStream(), getContentCharset());
-    }
-
-    @Override
-    public String getContentCharset() {
+    public String getBodyEncoding() {
         return request.getCharacterEncoding();
     }
 
-    @Override
-    public String getContentType() {
-        return request.getContentType();
-    }
-
-    @Override
-    public String getHeader(String name) {
-        return request.getHeader(name);
-    }
-
-    @Override
-    public List<Map.Entry<String, String>> getHeaders() {
-        List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+    private static void copyHeaders(HttpServletRequest request, Collection<Map.Entry<String, String>> into) {
         Enumeration<String> names = request.getHeaderNames();
         if (names != null) {
             while (names.hasMoreElements()) {
@@ -75,12 +64,11 @@ public class HttpRequestMessage extends OAuthMessage {
                 Enumeration<String> values = request.getHeaders(name);
                 if (values != null) {
                     while (values.hasMoreElements()) {
-                        headers.add(new OAuth.Parameter(name, values.nextElement()));
+                        into.add(new OAuth.Parameter(name, values.nextElement()));
                     }
                 }
             }
         }
-        return headers;
     }
 
     public static List<OAuth.Parameter> getParameters(HttpServletRequest request) {

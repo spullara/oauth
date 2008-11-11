@@ -17,7 +17,6 @@
 package net.oauth.client;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.Collection;
@@ -27,12 +26,15 @@ import junit.framework.TestCase;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
-import net.oauth.client.OAuthClient.ExcerptInputStream;
 import net.oauth.client.OAuthClient.ParameterStyle;
+import net.oauth.http.HttpMessage;
+import net.oauth.http.HttpMessageDecoder;
+import net.oauth.http.HttpResponseMessage;
 import net.oauth.signature.Echo;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.ServletHolder;
+import org.mortbay.servlet.GzipFilter;
 
 public class OAuthClientTest extends TestCase {
 
@@ -48,13 +50,8 @@ public class OAuthClientTest extends TestCase {
                 fail("response: " + response);
             } catch (OAuthProblemException e) {
                 Map<String, Object> parameters = e.getParameters();
-                assertEquals("status", expectedStatus, parameters
-                        .get(OAuthProblemException.HTTP_STATUS_CODE));
-                Map<String, String> headers = OAuth
-                        .newMap(((List<OAuth.Parameter>) parameters
-                                .get(OAuthProblemException.RESPONSE_HEADERS)));
-                assertEquals("Location", expectedLocation, headers
-                        .get("location"));
+                assertEquals("status", expectedStatus, parameters.get(HttpResponseMessage.STATUS_CODE));
+                assertEquals("Location", expectedLocation, parameters.get(HttpResponseMessage.LOCATION));
             }
         }
     }
@@ -96,9 +93,9 @@ public class OAuthClientTest extends TestCase {
             for (Object[] testCase : messages) {
                 for (ParameterStyle style : styles) {
                     OAuthMessage request = (OAuthMessage) testCase[0];
-                    final String id = client + " " + request.method + " "
-                            + style;
+                    final String id = client + " " + request.method + " " + style;
                     OAuthMessage response = null;
+                    // System.out.println(id);
                     try {
                         response = client.invoke(request, style);
                     } catch (Exception e) {
@@ -108,57 +105,47 @@ public class OAuthClientTest extends TestCase {
                     }
                     // System.out.println(response.getDump()
                     // .get(OAuthMessage.HTTP_REQUEST));
-                    String expectedBody = (String) testCase[1];
-                    if ("POST".equalsIgnoreCase(request.method)
-                            && style == ParameterStyle.AUTHORIZATION_HEADER) {
-                        // Only the non-oauth parameters will go in the body.
-                        expectedBody = expectedBody.replace("\n"
-                                + parametersForm.length() + "\n", "\n3\n");
+                    if (!OAuthResponseMessage.isDecodable(response
+                            .getHeader(HttpMessage.CONTENT_TYPE))) {
+                        String expectedBody = (String) testCase[1];
+                        if ("POST".equalsIgnoreCase(request.method)
+                                && style == ParameterStyle.AUTHORIZATION_HEADER) {
+                            // Only the non-oauth parameters will go in the
+                            // body.
+                            expectedBody = expectedBody.replace("\n" + parametersForm.length()
+                                    + "\n", "\n3\n");
+                        }
+                        assertEquals(id, expectedBody, response.readBodyAsString());
                     }
-                    assertEquals(id, expectedBody, OAuthMessage.readAll(
-                            response.getBodyAsStream(), response.getContentCharset()));
-                    assertEquals(id, testCase[2], response.getContentType());
+                    assertEquals(id, testCase[2], response.getHeader(HttpMessage.CONTENT_TYPE));
                 }
             }
         }
     }
 
-    public void testExcerptInputStream() throws Exception {
-        ExcerptInputStream input = new ExcerptInputStream(
-                new ByteArrayInputStream("abcdef".getBytes()));
-        assertEquals('a', input.read());
-        byte[] actual = new byte[3];
-        assertEquals(3, input.read(actual));
-        assertEquals('b', actual[0]);
-        assertEquals('c', actual[1]);
-        assertEquals('d', actual[2]);
-        assertEquals(1, input.read(actual, 1, 1));
-        assertEquals('e', actual[1]);
-        assertEquals(1, input.read(actual, 1, 2));
-        assertEquals('f', actual[1]);
-        assertEquals(-1, input.read());
-        byte[] expected = new byte[] { -128, -1, 0, 1, 127 };
-        input = new ExcerptInputStream(new ByteArrayInputStream(expected));
-        actual = new byte[6];
-        actual[0] = (byte) input.read();
-        actual[1] = (byte) input.read();
-        assertEquals(3, input.read(actual, 2, 4));
-        for (int i = 0; i < expected.length; ++i) {
-            assertEquals(expected[i], actual[i]);
-        }
-        expected = new byte[1024 + ExcerptInputStream.ELLIPSIS.length];
-        for (int i = 0; i < 1024; ++i) {
-            expected[i] = (byte) i;
-        }
-        System.arraycopy(ExcerptInputStream.ELLIPSIS, 0, expected, 1024,
-                ExcerptInputStream.ELLIPSIS.length);
-        input = new ExcerptInputStream(new ByteArrayInputStream(expected));
-        while (input.read(actual) > 0)
-            ;
-        actual = input.getExcerpt();
-        assertEquals(expected.length, actual.length);
-        for (int i = 0; i < expected.length; ++i) {
-            assertEquals(expected[i], actual[i]);
+    public void testGzip() throws Exception {
+        final MessageWithBody request = new MessageWithBody("POST",
+                "http://localhost:" + port + "/Echo",
+                OAuth.newList("echoData", "21"), null, null);
+        final String expected = "POST\nechoData=21\nabcdefghi1abcdefghi2\n\n11\n";
+        for (OAuthClient client : clients) {
+            try {
+                OAuthMessage response = client.invoke(request, ParameterStyle.AUTHORIZATION_HEADER);
+                System.out.println(response.getDump().get(HttpMessage.REQUEST));
+                System.out.println(response.getDump().get(HttpMessage.RESPONSE));
+                assertEquals(client.getClass().getName(), expected, response.readBodyAsString());
+                // assertEqual(client.getClass().getName(), OAuth.decodeForm(expected), response.getParameters());
+            } catch (OAuthProblemException e) {
+                Map<String, Object> p = e.getParameters();
+                System.out.println(p.get(HttpMessage.REQUEST));
+                System.err.println(p.get(HttpMessage.RESPONSE));
+                throw e;
+            } catch(Exception e) {
+                AssertionError a = new AssertionError(client.getClass().getName());
+                a.initCause(e);
+                throw a;
+            }
+            System.out.println();
         }
     }
 
@@ -179,6 +166,7 @@ public class OAuthClientTest extends TestCase {
         }
         server = new Server(port);
         Context context = new Context(server, "/", Context.SESSIONS);
+        context.addFilter(GzipFilter.class, "/*", 1);
         context.addServlet(new ServletHolder(new Echo()), "/Echo/*");
         server.start();
     }
@@ -191,47 +179,26 @@ public class OAuthClientTest extends TestCase {
     private static class MessageWithBody extends OAuthMessage {
 
         public MessageWithBody(String method, String URL,
-                Collection<OAuth.Parameter> parameters, String contentType,
-                byte[] body) {
+                Collection<OAuth.Parameter> parameters,
+                String contentType, byte[] body) {
             super(method, URL, parameters);
             this.body = body;
-            this.contentType = contentType;
+            Collection<Map.Entry<String, String>> headers = getHeaders();
+            headers.add(new OAuth.Parameter(HttpMessage.ACCEPT_ENCODING, HttpMessageDecoder.ACCEPTED));
+            if (body != null) {
+                headers.add(new OAuth.Parameter(HttpMessage.CONTENT_LENGTH, String.valueOf(body.length)));
+            }
+            if (contentType != null) {
+                headers.add(new OAuth.Parameter(HttpMessage.CONTENT_TYPE, contentType));
+            }
         }
 
         private final byte[] body;
-        private final String contentType;
 
         @Override
-        public InputStream getBodyAsStream() throws IOException {
-            return new ByteArrayInputStream(body);
+        public InputStream getBodyAsStream() {
+            return (body == null) ? null : new ByteArrayInputStream(body);
         }
-
-        public String getBodyAsString() throws IOException {
-            return OAuthMessage.readAll(getBodyAsStream(), getContentCharset());
-        }
-
-        @Override
-        public String getContentType() {
-            return contentType;
-        }
-
-        @Override
-        public String getHeader(String name) {
-            if (OAuthClient.CONTENT_LENGTH.equalsIgnoreCase(name)) {
-                return (body == null) ? null : String.valueOf(body.length);
-            }
-            return super.getHeader(name);
-        }
-
-        @Override
-        public List<Map.Entry<String, String>> getHeaders() {
-            List<Map.Entry<String, String>> headers = super.getHeaders();
-            if (body != null) {
-                headers.add(new OAuth.Parameter(OAuthClient.CONTENT_LENGTH, String.valueOf(body.length)));
-            }
-            return headers;
-        }
-
     }
 
 }
