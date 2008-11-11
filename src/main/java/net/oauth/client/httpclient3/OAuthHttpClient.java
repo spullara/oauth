@@ -26,6 +26,7 @@ import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpResponseMessage;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -40,21 +41,13 @@ import org.apache.commons.httpclient.methods.PutMethod;
  */
 public class OAuthHttpClient extends OAuthClient {
 
+    public OAuthHttpClient() {
+        this(SHARED_CLIENT);
+    }
+
     public OAuthHttpClient(HttpClientPool clientPool) {
         this.clientPool = clientPool;
     }
-
-    public OAuthHttpClient() {
-        this(NOT_POOLED);
-    }
-
-    private static final HttpClientPool NOT_POOLED = new HttpClientPool() {
-        // This trivial 'pool' simply allocates a new client every time.
-        // More efficient implementations are possible.
-        public HttpClient getHttpClient(URL server) {
-            return new HttpClient();
-        }
-    };
 
     private final HttpClientPool clientPool;
 
@@ -93,6 +86,25 @@ public class OAuthHttpClient extends OAuthClient {
                 .getURI().toString()));
         client.executeMethod(httpMethod);
         return new HttpMethodResponse(httpMethod, excerpt, request.getContentCharset());
+    }
+
+    private static final HttpClientPool SHARED_CLIENT = new SingleClient();
+    
+    /** A pool that simply shares a single client. */
+    private static class SingleClient implements HttpClientPool
+    {
+        SingleClient()
+        {
+            client = new HttpClient();
+            client.setHttpConnectionManager(new MultiThreadedHttpConnectionManager());
+        }
+
+        private final HttpClient client;
+
+        public HttpClient getHttpClient(URL server)
+        {
+            return client;
+        }
     }
 
 }

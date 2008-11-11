@@ -33,8 +33,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.params.ClientPNames;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.HttpParams;
 
 /**
  * Utility methods for an OAuth client based on the <a
@@ -44,23 +47,15 @@ import org.apache.http.impl.client.DefaultHttpClient;
  */
 public class OAuthHttpClient extends OAuthClient {
 
-    private final HttpClientPool clientPool;
+    public OAuthHttpClient() {
+        this(SHARED_CLIENT);
+    }
 
     public OAuthHttpClient(HttpClientPool clientPool) {
         this.clientPool = clientPool;
     }
 
-    public OAuthHttpClient() {
-        this(NOT_POOLED);
-    }
-
-    private static final HttpClientPool NOT_POOLED = new HttpClientPool() {
-        // This trivial 'pool' simply allocates a new client every time.
-        // More efficient implementations are possible.
-        public HttpClient getHttpClient(URL server) {
-            return new DefaultHttpClient();
-        }
-    };
+    private final HttpClientPool clientPool;
 
     @Override
     protected HttpResponseMessage invoke(HttpMessage request) throws IOException {
@@ -95,6 +90,31 @@ public class OAuthHttpClient extends OAuthClient {
         client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
         HttpResponse httpResponse = client.execute(httpRequest);
         return new HttpMethodResponse(httpRequest, httpResponse, excerpt, request.getContentCharset());
+    }
+
+    private static final HttpClientPool SHARED_CLIENT = new SingleClient();
+    
+    /** A pool that simply shares a single client. */
+    private static class SingleClient implements HttpClientPool
+    {
+        SingleClient()
+        {
+            HttpClient client = new DefaultHttpClient();
+            ClientConnectionManager mgr = client.getConnectionManager();
+            if (!(mgr instanceof ThreadSafeClientConnManager)) {
+                HttpParams params = client.getParams();
+                client = new DefaultHttpClient(new ThreadSafeClientConnManager(params,
+                        mgr.getSchemeRegistry()), params);
+            }
+            this.client = client;
+        }
+
+        private final HttpClient client;
+
+        public HttpClient getHttpClient(URL server)
+        {
+            return client;
+        }
     }
 
 }
