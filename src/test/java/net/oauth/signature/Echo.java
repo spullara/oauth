@@ -70,8 +70,8 @@ public class Echo extends HttpServlet {
             HttpServletResponse response) throws IOException {
         response.setHeader("Cache-Control", "no-cache");
         final OAuthMessage msg = OAuthServlet.getMessage(request, null);
-        System.out.print(Thread.currentThread().getName() + " " + msg.method + " ...");
-        System.out.flush();
+        // System.out.print(Thread.currentThread().getName() + " " + msg.method + " ...");
+        // System.out.flush();
         response.setCharacterEncoding(msg.getBodyEncoding());
         final ServletOutputStream out = response.getOutputStream();
         out.print(msg.method + "\n");
@@ -87,12 +87,12 @@ public class Echo extends HttpServlet {
                 }
                 out.println(msg.method + " " + path);
             }
-            for (Enumeration names = request.getHeaderNames(); names
+            for (Enumeration<String> names = request.getHeaderNames(); names
                     .hasMoreElements();) {
-                final String name = names.nextElement().toString();
-                for (Enumeration values = request.getHeaders(name); values
+                final String name = names.nextElement();
+                for (Enumeration<String> values = request.getHeaders(name); values
                         .hasMoreElements();) {
-                    final Object value = values.nextElement();
+                    final String value = values.nextElement();
                     out.println(name + ": " + value);
                 }
             }
@@ -125,7 +125,7 @@ public class Echo extends HttpServlet {
             }
         }
         // out.close();
-        System.out.println(" done");
+        // System.out.println("... done");
     }
 
     private static final byte[] DATA = getData();
