@@ -35,6 +35,7 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.servlet.GzipFilter;
+import org.mortbay.thread.BoundedThreadPool;
 
 public class OAuthClientTest extends TestCase {
 
@@ -95,7 +96,7 @@ public class OAuthClientTest extends TestCase {
                     OAuthMessage request = (OAuthMessage) testCase[0];
                     final String id = client + " " + request.method + " " + style;
                     OAuthMessage response = null;
-                    // System.out.println(id);
+                    // System.out.println(id + " ...");
                     try {
                         response = client.invoke(request, style);
                     } catch (Exception e) {
@@ -105,18 +106,15 @@ public class OAuthClientTest extends TestCase {
                     }
                     // System.out.println(response.getDump()
                     // .get(OAuthMessage.HTTP_REQUEST));
-                    if (!OAuthResponseMessage.isDecodable(response
-                            .getHeader(HttpMessage.CONTENT_TYPE))) {
-                        String expectedBody = (String) testCase[1];
-                        if ("POST".equalsIgnoreCase(request.method)
-                                && style == ParameterStyle.AUTHORIZATION_HEADER) {
-                            // Only the non-oauth parameters will go in the
-                            // body.
-                            expectedBody = expectedBody.replace("\n" + parametersForm.length()
-                                    + "\n", "\n3\n");
-                        }
-                        assertEquals(id, expectedBody, response.readBodyAsString());
+                    String expectedBody = (String) testCase[1];
+                    if ("POST".equalsIgnoreCase(request.method)
+                            && style == ParameterStyle.AUTHORIZATION_HEADER) {
+                        // Only the non-oauth parameters went in the body.
+                        expectedBody = expectedBody.replace("\n" + parametersForm.length()
+                                + "\n", "\n3\n");
                     }
+                    String body = response.readBodyAsString();
+                    assertEquals(id, expectedBody, body);
                     assertEquals(id, testCase[2], response.getHeader(HttpMessage.CONTENT_TYPE));
                 }
             }
@@ -168,6 +166,9 @@ public class OAuthClientTest extends TestCase {
         Context context = new Context(server, "/", Context.SESSIONS);
         context.addFilter(GzipFilter.class, "/*", 1);
         context.addServlet(new ServletHolder(new Echo()), "/Echo/*");
+        BoundedThreadPool pool = new BoundedThreadPool();
+        pool.setMaxThreads(4);
+        server.setThreadPool(pool);
         server.start();
     }
 
