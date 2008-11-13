@@ -90,6 +90,7 @@ public class OAuthClientTest extends TestCase {
                         "DELETE\n" + parametersForm + "\n" + "null\n", null } };
         final ParameterStyle[] styles = new ParameterStyle[] {
                 ParameterStyle.BODY, ParameterStyle.AUTHORIZATION_HEADER };
+        final long startTime = System.nanoTime();
         for (OAuthClient client : clients) {
             for (Object[] testCase : messages) {
                 for (ParameterStyle style : styles) {
@@ -118,6 +119,14 @@ public class OAuthClientTest extends TestCase {
                     assertEquals(id, testCase[2], response.getHeader(HttpMessage.CONTENT_TYPE));
                 }
             }
+        }
+        final long endTime = System.nanoTime();
+        final float elapsedSec = ((float) (endTime - startTime)) / 1000000000L;
+        if (elapsedSec > 10) {
+            fail("elapsed time = " + elapsedSec + " sec");
+            // This often means the client isn't re-using TCP connections,
+            // and consequently all the Jetty server threads are occupied
+            // waiting for data on the wasted connections.
         }
     }
 
