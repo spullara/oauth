@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;
 import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
+import net.oauth.OAuthConsumer;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 import net.oauth.client.OAuthClient.ParameterStyle;
@@ -130,21 +132,30 @@ public class OAuthClientTest extends TestCase {
         }
     }
 
-    public void testGzip() throws Exception {
-        final MessageWithBody request = new MessageWithBody("POST",
-                "http://localhost:" + port + "/Echo",
-                OAuth.newList("echoData", "21"), null, null);
-        final String expected = "POST\nechoData=21\nabcdefghi1abcdefghi2\n\n11\n";
+    public void testGzip() throws Exception
+    {
+        final OAuthConsumer consumer = new OAuthConsumer(null, null, null, null);
+        consumer.setProperty(OAuthClient.ACCEPT_ENCODING, HttpMessageDecoder.ACCEPTED);
+        consumer.setProperty(OAuth.OAUTH_SIGNATURE_METHOD, "PLAINTEXT");
+        final OAuthAccessor accessor = new OAuthAccessor(consumer);
+        final String url = "http://localhost:" + port + "/Echo";
+        final List<OAuth.Parameter> parameters = OAuth.newList("echoData", "21",
+                OAuth.OAUTH_NONCE, "n", OAuth.OAUTH_TIMESTAMP, "1");
+        final String expected = "POST\n"
+                + "echoData=21&oauth_consumer_key=&oauth_nonce=n&oauth_signature_method=PLAINTEXT&oauth_timestamp=1&oauth_version=1.0\n"
+                + "abcdefghi1abcdefghi2\n\n" // 21 bytes of data
+                + "134\n" // content-length
+                ;
         for (OAuthClient client : clients) {
             try {
-                OAuthMessage response = client.invoke(request, ParameterStyle.AUTHORIZATION_HEADER);
+                OAuthMessage response = client.invoke(accessor, "POST", url, parameters);
                 System.out.println(response.getDump().get(HttpMessage.REQUEST));
                 System.out.println(response.getDump().get(HttpMessage.RESPONSE));
                 String id = client.getClass().getName();
-                assertEquals(id, expected, response.readBodyAsString());
                 assertNull(id, response.getHeader(HttpMessage.CONTENT_ENCODING));
                 assertNull(id, response.getHeader(HttpMessage.CONTENT_LENGTH));
-                // assertEqual(client.getClass().getName(), OAuth.decodeForm(expected), response.getParameters());
+                assertEquals(id, expected, response.readBodyAsString());
+                // assertEqual(id, OAuth.decodeForm(expected), response.getParameters());
             } catch (OAuthProblemException e) {
                 Map<String, Object> p = e.getParameters();
                 System.out.println(p.get(HttpMessage.REQUEST));
