@@ -55,7 +55,10 @@ public final class OAuthResponseMessage extends OAuthMessageFromHttp
     {
         super.completeParameters();
         if (isDecodable(http.getHeader(HttpMessage.CONTENT_TYPE))) {
-            addParameters(OAuth.decodeForm(readBodyAsString().trim()));
+            String body = readBodyAsString();
+            if (body != null) {
+                addParameters(OAuth.decodeForm(body.trim()));
+            }
         }
     }
 
