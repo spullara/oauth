@@ -185,9 +185,6 @@ public class OAuthMessage {
     public final String readBodyAsString() throws IOException
     {
         InputStream body = getBodyAsStream();
-        if (body == null) {
-            return null;
-        }
         return readAll(body, getBodyEncoding());
     }
 
@@ -363,19 +360,20 @@ public class OAuthMessage {
     /** Read all the data from the given stream and convert it to a String. */
     public static String readAll(InputStream from, String encoding) throws IOException
     {
-        StringBuilder into = new StringBuilder();
-        if (from != null) {
-            try {
-                Reader r = new InputStreamReader(from, encoding);
-                char[] s = new char[512];
-                for (int n; 0 < (n = r.read(s));) {
-                    into.append(s, 0, n);
-                }
-            } finally {
-                from.close();
-            }
+        if (from == null) {
+            return null;
         }
-        return into.toString();
+        try {
+            StringBuilder into = new StringBuilder();
+            Reader r = new InputStreamReader(from, encoding);
+            char[] s = new char[512];
+            for (int n; 0 < (n = r.read(s));) {
+                into.append(s, 0, n);
+            }
+            return into.toString();
+        } finally {
+            from.close();
+        }
     }
 
     /**
