@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.oauth</groupId>
     <artifactId>oauth-parent</artifactId>
-    <version>20081105</version>
+    <version>20081112</version>
   </parent>
   <artifactId>core</artifactId>
   <packaging>jar</packaging>
