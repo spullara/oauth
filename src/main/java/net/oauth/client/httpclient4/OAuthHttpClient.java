@@ -94,7 +94,13 @@ public class OAuthHttpClient extends OAuthClient {
 
     private static final HttpClientPool SHARED_CLIENT = new SingleClient();
     
-    /** A pool that simply shares a single client. */
+    /**
+     * A pool that simply shares a single HttpClient. An HttpClient owns a pool
+     * of TCP connections. So, callers that share an HttpClient will share
+     * connections. Sharing improves performance (by avoiding the overhead of
+     * creating connections) and uses fewer resources in the client and its
+     * servers.
+     */
     private static class SingleClient implements HttpClientPool
     {
         SingleClient()
