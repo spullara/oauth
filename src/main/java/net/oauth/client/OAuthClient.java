@@ -210,14 +210,24 @@ public abstract class OAuthClient {
             }
             break;
         }
-        HttpMessage httpRequest = new HttpMessage(request.method, new URL(url), body);
+        final HttpMessage httpRequest = new HttpMessage(request.method, new URL(url), body);
         httpRequest.headers.addAll(headers);
         HttpResponseMessage httpResponse = invoke(httpRequest);
-        OAuthResponseMessage response = new OAuthResponseMessage(
-                HttpMessageDecoder.decode(httpResponse));
-        if (httpResponse.getStatusCode() != HttpResponseMessage.STATUS_OK) {
+        final boolean succeeded = (httpResponse.getStatusCode() == HttpResponseMessage.STATUS_OK);
+        if (succeeded) {
+            httpResponse = HttpMessageDecoder.decode(httpResponse);
+        }
+        OAuthResponseMessage response = new OAuthResponseMessage(httpResponse);
+        if (!succeeded) {
             OAuthProblemException problem = new OAuthProblemException();
             problem.getParameters().putAll(response.getDump());
+            try {
+                InputStream b = response.getBodyAsStream();
+                if (b != null) {
+                    b.close();
+                }
+            } catch (IOException ignored) {
+            }
             throw problem;
         }
         return response;
