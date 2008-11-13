@@ -3,7 +3,6 @@ package net.oauth.client;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /** A decorator that retains a copy of the first few bytes of data. */
 public class ExcerptInputStream extends FilterInputStream
@@ -20,20 +19,15 @@ public class ExcerptInputStream extends FilterInputStream
     }
 
     private static final int LIMIT = 1024;
-
     private byte[] excerpt = new byte[LIMIT + ELLIPSIS.length];
-
     private int taken = 0; // bytes received from in
-
     private int given = Integer.MAX_VALUE; // bytes delivered to callers
 
     @Override
     public void close() throws IOException
     {
         super.close();
-        byte[] complete = new byte[taken];
-        System.arraycopy(excerpt, 0, complete, 0, taken);
-        excerpt = complete;
+        trimExcerpt();
     }
 
     /** The first few bytes of data, plus ELLIPSIS if there are more bytes. */
@@ -53,22 +47,19 @@ public class ExcerptInputStream extends FilterInputStream
     @Override
     public int read(byte[] b, int offset, int length) throws IOException
     {
-        int total = 0;
         if (given < taken) {
             final int e = Math.min(length, taken - given);
-            System.arraycopy(excerpt, given, b, offset, e);
-            total += e;
-            given += e;
-            if (given < taken) {
-                return total;
+            if (e > 0) {
+                System.arraycopy(excerpt, given, b, offset, e);
+                given += e;
+                if (given >= taken) {
+                    given = Integer.MAX_VALUE;
+                }
             }
-            given = Integer.MAX_VALUE;
-            offset += e;
-            length -= e;
+            return e;
         }
         final int r = super.read(b, offset, length);
         if (r > 0) {
-            total += r;
             final int e = Math.min(r, LIMIT - taken);
             if (e >= 0) {
                 System.arraycopy(b, offset, excerpt, taken, e);
@@ -78,12 +69,11 @@ public class ExcerptInputStream extends FilterInputStream
                     taken = excerpt.length;
                 }
             }
-        } else if (taken < excerpt.length) {
-            byte[] complete = new byte[taken];
-            System.arraycopy(excerpt, 0, complete, 0, taken);
-            excerpt = complete;
+        } else if (length > 0) {
+            // There's no more data to take.
+            trimExcerpt();
         }
-        return (total > 0) ? total : r;
+        return r;
     }
 
     @Override
@@ -99,20 +89,12 @@ public class ExcerptInputStream extends FilterInputStream
         return (read(b) <= 0) ? -1 : unsigned(b[0]);
     }
 
-    /** @return an excerpt from the data copied. */
-    public static byte[] copyAll(InputStream from, OutputStream into) throws IOException
+    private void trimExcerpt()
     {
-        final ExcerptInputStream ex = new ExcerptInputStream(from);
-        ex.copyAll(into);
-        return ex.getExcerpt();
-    }
-
-    /** Copy all the data from this stream to the given output stream. */
-    private void copyAll(OutputStream into) throws IOException
-    {
-        byte[] b = new byte[1024];
-        for (int n; 0 < (n = read(b));) {
-            into.write(b, 0, n);
+        if (taken < excerpt.length) {
+            byte[] complete = new byte[taken];
+            System.arraycopy(excerpt, 0, complete, 0, taken);
+            excerpt = complete;
         }
     }
 
