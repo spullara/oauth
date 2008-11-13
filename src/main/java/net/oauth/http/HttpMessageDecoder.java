@@ -48,6 +48,7 @@ public class HttpMessageDecoder extends HttpResponseMessage {
         super(in.method, in.url);
         this.headers.addAll(in.headers);
         removeHeaders(CONTENT_ENCODING); // handled here
+        removeHeaders(CONTENT_LENGTH); // unpredictable
         InputStream body = in.getBody();
         if (body != null) {
             if (encoding == GZIP) {
