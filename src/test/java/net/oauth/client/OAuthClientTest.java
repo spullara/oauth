@@ -140,7 +140,10 @@ public class OAuthClientTest extends TestCase {
                 OAuthMessage response = client.invoke(request, ParameterStyle.AUTHORIZATION_HEADER);
                 System.out.println(response.getDump().get(HttpMessage.REQUEST));
                 System.out.println(response.getDump().get(HttpMessage.RESPONSE));
-                assertEquals(client.getClass().getName(), expected, response.readBodyAsString());
+                String id = client.getClass().getName();
+                assertEquals(id, expected, response.readBodyAsString());
+                assertNull(id, response.getHeader(HttpMessage.CONTENT_ENCODING));
+                assertNull(id, response.getHeader(HttpMessage.CONTENT_LENGTH));
                 // assertEqual(client.getClass().getName(), OAuth.decodeForm(expected), response.getParameters());
             } catch (OAuthProblemException e) {
                 Map<String, Object> p = e.getParameters();
