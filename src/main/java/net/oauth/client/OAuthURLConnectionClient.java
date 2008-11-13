@@ -80,16 +80,25 @@ public class OAuthURLConnectionClient extends OAuthClient {
         byte[] excerpt = null;
         final InputStream body = request.getBody();
         if (body != null) {
-            if (contentLength != null) {
-                ((HttpURLConnection) connection)
-                    .setFixedLengthStreamingMode(Integer.parseInt(contentLength));
-            }
-            connection.setDoOutput(true);
-            OutputStream output = connection.getOutputStream();
             try {
-                excerpt = ExcerptInputStream.copyAll(body, output);
+                if (contentLength != null) {
+                    ((HttpURLConnection) connection)
+                    .setFixedLengthStreamingMode(Integer.parseInt(contentLength));
+                }
+                connection.setDoOutput(true);
+                OutputStream output = connection.getOutputStream();
+                try {
+                    final ExcerptInputStream ex = new ExcerptInputStream(body);
+                    byte[] b = new byte[1024];
+                    for (int n; 0 < (n = ex.read(b));) {
+                        output.write(b, 0, n);
+                    }
+                    excerpt = ex.getExcerpt();
+                } finally {
+                    output.close();
+                }
             } finally {
-                output.close();
+                body.close();
             }
         }
         return new URLConnectionResponse(request, headers.toString(), excerpt, connection);
