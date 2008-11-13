@@ -178,7 +178,7 @@ public class OAuthMessage {
 
     /**
      * Read the body of the HTTP request or response and convert it to a String.
-     * This method isn't repeatable, since it consumes getBodyAsStream.
+     * This method isn't repeatable, since it consumes and closes getBodyAsStream.
      * 
      * @return the body, or null to indicate there is no body.
      */
@@ -191,6 +191,8 @@ public class OAuthMessage {
     /**
      * Get a stream from which to read the body of the HTTP request or response.
      * This is designed to support efficient streaming of a large message.
+     * The caller must close the returned stream, to release the underlying
+     * resources such as the TCP connection for an HTTP response.
      * 
      * @return a stream from which to read the body, or null to indicate there
      *         is no body.
@@ -357,7 +359,12 @@ public class OAuthMessage {
         return into.toString();
     }
 
-    /** Read all the data from the given stream and convert it to a String. */
+    /**
+     * Read all the data from the given stream, and close it.
+     * 
+     * @return null if from is null, or the data from the stream converted to a
+     *         String
+     */
     public static String readAll(InputStream from, String encoding) throws IOException
     {
         if (from == null) {
