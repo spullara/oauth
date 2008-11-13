@@ -213,13 +213,11 @@ public abstract class OAuthClient {
         final HttpMessage httpRequest = new HttpMessage(request.method, new URL(url), body);
         httpRequest.headers.addAll(headers);
         HttpResponseMessage httpResponse = invoke(httpRequest);
-        final boolean succeeded = (httpResponse.getStatusCode() == HttpResponseMessage.STATUS_OK);
-        if (succeeded) {
-            httpResponse = HttpMessageDecoder.decode(httpResponse);
-        }
+        httpResponse = HttpMessageDecoder.decode(httpResponse);
         OAuthResponseMessage response = new OAuthResponseMessage(httpResponse);
-        if (!succeeded) {
+        if (httpResponse.getStatusCode() != HttpResponseMessage.STATUS_OK) {
             OAuthProblemException problem = new OAuthProblemException();
+            response.getParameters(); // decode the response body
             problem.getParameters().putAll(response.getDump());
             try {
                 InputStream b = response.getBodyAsStream();
