@@ -43,14 +43,21 @@ import net.oauth.http.HttpResponseMessage;
  * cases. But not in all cases. For example, this class can't handle arbitrary
  * HTTP headers.
  * <p>
+ * Methods of this class return a response as an OAuthMessage, from which you
+ * can get a body or parameters but not both. Calling a getParameter method will
+ * read and close the body (like readBodyAsString), so you can't read it later.
+ * If you read or close the body first, then getParameter can't read it. The
+ * response headers should tell you whether the response contains encoded
+ * parameters, that is whether you should call getParameter or not.
+ * <p>
  * Methods of this class don't follow redirects. When they receive a redirect
  * response, they throw an OAuthProblemException, with properties
- * HTTP_STATUS_CODE = the redirect code and the redirect URL(s) contained in
- * RESPONSE_HEADERS named 'Location'. Such a redirect can't be handled at the
- * HTTP level, if the second request must carry another OAuth signature (with
- * different parameters). For example, Google's Service Provider routinely
- * redirects requests for access to protected resources, and requires the
- * redirected request to be signed.
+ * HttpResponseMessage.STATUS_CODE = the redirect code
+ * HttpResponseMessage.LOCATION = the redirect URL. Such a redirect can't be
+ * handled at the HTTP level, if the second request must carry another OAuth
+ * signature (with different parameters). For example, Google's Service Provider
+ * routinely redirects requests for access to protected resources, and requires
+ * the redirected request to be signed.
  * 
  * @author John Kristian
  */
@@ -107,10 +114,13 @@ public abstract class OAuthClient {
      * 
      * @return the response
      * @throws URISyntaxException
+     *                 the given url isn't valid syntactically
+     * @throws OAuthProblemException
+     *                 the HTTP response status code was not OK
      */
     public OAuthMessage invoke(OAuthAccessor accessor, String httpMethod,
             String url, Collection<? extends Map.Entry> parameters)
-            throws IOException, OAuthException, URISyntaxException {
+    throws IOException, OAuthException, URISyntaxException {
         String ps = (String) accessor.consumer.getProperty(PARAMETER_STYLE);
         ParameterStyle style = (ps == null) ? ParameterStyle.BODY : Enum
                 .valueOf(ParameterStyle.class, ps);
@@ -137,6 +147,16 @@ public abstract class OAuthClient {
      */
     public static final String ACCEPT_ENCODING = "HTTP.header." + HttpMessage.ACCEPT_ENCODING;
 
+    /**
+     * Construct a request message, send it to the service provider and get the
+     * response.
+     * 
+     * @return the response
+     * @throws URISyntaxException
+     *                 the given url isn't valid syntactically
+     * @throws OAuthProblemException
+     *                 the HTTP response status code was not OK
+     */
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
             Collection<? extends Map.Entry> parameters) throws IOException,
             OAuthException, URISyntaxException {
@@ -156,7 +176,7 @@ public abstract class OAuthClient {
      * @throws IOException
      *                 failed to communicate with the service provider
      * @throws OAuthProblemException
-     *                 a problematic response was received
+     *                 the HTTP response status code was not OK
      */
     /** Send a message to the service provider and get the response. */
     public OAuthMessage invoke(OAuthMessage request, ParameterStyle style)
@@ -214,15 +234,18 @@ public abstract class OAuthClient {
         httpRequest.headers.addAll(headers);
         HttpResponseMessage httpResponse = invoke(httpRequest);
         httpResponse = HttpMessageDecoder.decode(httpResponse);
-        OAuthResponseMessage response = new OAuthResponseMessage(httpResponse);
+        OAuthMessage response = new OAuthResponseMessage(httpResponse);
         if (httpResponse.getStatusCode() != HttpResponseMessage.STATUS_OK) {
             OAuthProblemException problem = new OAuthProblemException();
-            response.getParameters(); // decode the response body
+            try {
+                response.getParameters(); // decode the response body
+            } catch (IOException ignored) {
+            }
             problem.getParameters().putAll(response.getDump());
             try {
                 InputStream b = response.getBodyAsStream();
                 if (b != null) {
-                    b.close();
+                    b.close(); // release resources
                 }
             } catch (IOException ignored) {
             }
