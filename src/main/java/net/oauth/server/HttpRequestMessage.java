@@ -44,11 +44,7 @@ public class HttpRequestMessage extends OAuthMessage {
 
     @Override
     public InputStream getBodyAsStream() throws IOException {
-        InputStream body = super.getBodyAsStream();
-        if (body == null) {
-            body = request.getInputStream();
-        }
-        return body;
+        return request.getInputStream();
     }
 
     @Override

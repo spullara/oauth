@@ -24,7 +24,6 @@ import net.oauth.OAuthMessage;
 
 public class StreamTest extends TestCase
 {
-
     public void testExcerptInputStream() throws Exception
     {
         ExcerptInputStream input = new ExcerptInputStream(new ByteArrayInputStream("abcdef"
@@ -119,9 +118,7 @@ public class StreamTest extends TestCase
         @Override
         public InputStream getBodyAsStream() throws IOException
         {
-            InputStream body = super.getBodyAsStream();
-            return (body != null) ? body : shot;
+            return shot;
         }
     }
-
 }
