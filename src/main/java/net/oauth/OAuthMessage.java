@@ -171,7 +171,7 @@ public class OAuthMessage {
         return value;
     }
 
-    /** All HTTP headers. */
+    /** All HTTP headers.  You can add headers to this list. */
     public final List<Map.Entry<String, String>> getHeaders() {
         return headers;
     }
