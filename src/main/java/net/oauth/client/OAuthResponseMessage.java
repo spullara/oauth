@@ -17,9 +17,11 @@
 package net.oauth.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import net.oauth.OAuth;
-import net.oauth.OAuthMessageFromHttp;
+import net.oauth.OAuthMessage;
+import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpResponseMessage;
 
 /**
@@ -27,11 +29,13 @@ import net.oauth.http.HttpResponseMessage;
  * 
  * @author John Kristian
  */
-public final class OAuthResponseMessage extends OAuthMessageFromHttp
+final class OAuthResponseMessage extends OAuthMessage
 {
-    protected OAuthResponseMessage(HttpResponseMessage http) throws IOException
+    OAuthResponseMessage(HttpResponseMessage http) throws IOException
     {
-        super(http);
+        super(http.method, http.url.toExternalForm(), null);
+        this.http = http;
+        getHeaders().addAll(http.headers);
         for (Map.Entry<String, String> header : http.headers) {
             if ("WWW-Authenticate".equalsIgnoreCase(header.getKey())) {
                 for (OAuth.Parameter parameter : decodeAuthorization(header.getValue())) {
@@ -43,6 +47,20 @@ public final class OAuthResponseMessage extends OAuthMessageFromHttp
         }
     }
 
+    private final HttpMessage http;
+
+    @Override
+    public InputStream getBodyAsStream() throws IOException
+    {
+        return http.getBody();
+    }
+
+    @Override
+    public String getBodyEncoding()
+    {
+        return http.getContentCharset();
+    }
+
     @Override
     protected void completeParameters() throws IOException
     {
@@ -51,5 +69,12 @@ public final class OAuthResponseMessage extends OAuthMessageFromHttp
         if (body != null) {
             addParameters(OAuth.decodeForm(body.trim()));
         }
+    }
+
+    @Override
+    protected void dump(Map<String, Object> into) throws IOException
+    {
+        super.dump(into);
+        http.dump(into);
     }
 }
