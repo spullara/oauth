@@ -176,9 +176,9 @@ public class OAuthClientTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        clients = new OAuthClient[] { new OAuthURLConnectionClient(),
-                new net.oauth.client.httpclient3.OAuthHttpClient(),
-                new net.oauth.client.httpclient4.OAuthHttpClient() };
+        clients = new OAuthClient[] { new OAuthClient(new URLConnectionClient()),
+                new OAuthClient(new net.oauth.client.httpclient3.HttpClient3()),
+                new OAuthClient(new net.oauth.client.httpclient4.HttpClient4()) };
         { // Get an ephemeral local port number:
             Socket s = new Socket();
             s.bind(null);

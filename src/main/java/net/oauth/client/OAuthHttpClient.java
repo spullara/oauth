@@ -17,7 +17,7 @@
 package net.oauth.client;
 
 /**
- * @deprecated use {@link net.oauth.client.httpclient3.OAuthHttpClient} instead
+ * @deprecated use OAuthClient({@link net.oauth.client.httpclient3.HttpClient3}) instead
  */
 @Deprecated
 public class OAuthHttpClient extends

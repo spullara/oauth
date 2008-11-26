@@ -32,6 +32,7 @@ import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
+import net.oauth.http.HttpClient;
 import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpMessageDecoder;
 import net.oauth.http.HttpResponseMessage;
@@ -61,7 +62,14 @@ import net.oauth.http.HttpResponseMessage;
  * 
  * @author John Kristian
  */
-public abstract class OAuthClient {
+public class OAuthClient {
+
+    public OAuthClient(HttpClient http)
+    {
+        this.http = http;
+    }
+
+    private final HttpClient http;
 
     /** Get a fresh request token from the service provider. */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod)
@@ -232,7 +240,7 @@ public abstract class OAuthClient {
         }
         final HttpMessage httpRequest = new HttpMessage(request.method, new URL(url), body);
         httpRequest.headers.addAll(headers);
-        HttpResponseMessage httpResponse = invoke(httpRequest);
+        HttpResponseMessage httpResponse = http.execute(httpRequest);
         httpResponse = HttpMessageDecoder.decode(httpResponse);
         OAuthMessage response = new OAuthResponseMessage(httpResponse);
         if (httpResponse.getStatusCode() != HttpResponseMessage.STATUS_OK) {
@@ -263,28 +271,5 @@ public abstract class OAuthClient {
     protected static final String POST = OAuthMessage.POST;
     protected static final String DELETE = OAuthMessage.DELETE;
     protected static final String CONTENT_LENGTH = HttpMessage.CONTENT_LENGTH;
-
-    /**
-     * Send an HTTP request and return the response.
-     * 
-     * @param method
-     *                the HTTP request method; e.g. "GET" or "POST"
-     * @param url
-     *                identifies the HTTP server and resource
-     * @param headers
-     *                HTTP request headers, in addition to the standard headers.
-     *                May be empty, to indicate that no additional headers are
-     *                needed
-     * @param body
-     *                HTTP request body, or null to indicate that a body should
-     *                not be transmitted
-     * @param bodyEncoding
-     *                the character encoding of the request body
-     * 
-     * @return the HTTP response, including the OAuth parameters if the response
-     *         was successful (status 200).
-     */
-    protected abstract HttpResponseMessage invoke(HttpMessage request)
-            throws IOException;
 
 }

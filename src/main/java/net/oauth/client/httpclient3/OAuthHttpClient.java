@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Netflix, Inc.
+ * Copyright 2008 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,102 +16,17 @@
 
 package net.oauth.client.httpclient3;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Map;
-import net.oauth.client.ExcerptInputStream;
 import net.oauth.client.OAuthClient;
-import net.oauth.http.HttpMessage;
-import net.oauth.http.HttpResponseMessage;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
 
 /**
- * Utility methods for an OAuth client based on the Jakarta Commons HTTP client.
- * 
+ * @deprecated use OAuthClient(new HttpClient3()) instead
  * @author John Kristian
  */
 public class OAuthHttpClient extends OAuthClient {
-
     public OAuthHttpClient() {
-        this(SHARED_CLIENT);
+        super(new HttpClient3());
     }
-
-    public OAuthHttpClient(HttpClientPool clientPool) {
-        this.clientPool = clientPool;
+    protected OAuthHttpClient(HttpClientPool clientPool) {
+        super(new HttpClient3(clientPool));
     }
-
-    private final HttpClientPool clientPool;
-
-    @Override
-    protected HttpResponseMessage invoke(HttpMessage request) throws IOException {
-        final String method = request.method;
-        final String url = request.url.toExternalForm();
-        final InputStream body = request.getBody();
-        final boolean isDelete = DELETE.equalsIgnoreCase(method);
-        final boolean isPost = POST.equalsIgnoreCase(method);
-        final boolean isPut = PUT.equalsIgnoreCase(method);
-        byte[] excerpt = null;
-        HttpMethod httpMethod;
-        if (isPost || isPut) {
-            EntityEnclosingMethod entityEnclosingMethod =
-                isPost ? new PostMethod(url) : new PutMethod(url);
-            if (body != null) {
-                ExcerptInputStream e = new ExcerptInputStream(body);
-                String length = request.removeHeaders(CONTENT_LENGTH);
-                entityEnclosingMethod.setRequestEntity((length == null)
-                        ? new InputStreamRequestEntity(e)
-                        : new InputStreamRequestEntity(e, Long.parseLong(length)));
-                excerpt = e.getExcerpt();
-            }
-            httpMethod = entityEnclosingMethod;
-        } else if (isDelete) {
-            httpMethod = new DeleteMethod(url);
-        } else {
-            httpMethod = new GetMethod(url);
-        }
-        httpMethod.setFollowRedirects(false);
-        for (Map.Entry<String, String> header : request.headers) {
-            httpMethod.addRequestHeader(header.getKey(), header.getValue());
-        }
-        HttpClient client = clientPool.getHttpClient(new URL(httpMethod
-                .getURI().toString()));
-        client.executeMethod(httpMethod);
-        return new HttpMethodResponse(httpMethod, excerpt, request.getContentCharset());
-    }
-
-    private static final HttpClientPool SHARED_CLIENT = new SingleClient();
-    
-    /**
-     * A pool that simply shares a single HttpClient, as recommended <a
-     * href="http://hc.apache.org/httpclient-3.x/performance.html">here</a>. An
-     * HttpClient owns a pool of TCP connections. So, callers that share an
-     * HttpClient will share connections. Sharing improves performance (by
-     * avoiding the overhead of creating connections) and uses fewer resources
-     * in the client and its servers.
-     */
-    private static class SingleClient implements HttpClientPool
-    {
-        SingleClient()
-        {
-            client = new HttpClient();
-            client.setHttpConnectionManager(new MultiThreadedHttpConnectionManager());
-        }
-
-        private final HttpClient client;
-
-        public HttpClient getHttpClient(URL server)
-        {
-            return client;
-        }
-    }
-
 }

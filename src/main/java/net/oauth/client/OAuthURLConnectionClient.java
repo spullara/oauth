@@ -16,94 +16,12 @@
 
 package net.oauth.client;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import net.oauth.http.HttpMessage;
-import net.oauth.http.HttpResponseMessage;
-
 /**
- * Utility methods for an OAuth client based on HttpURLConnection.
- * <p>
- * httpclient3.OAuthHttpClient or httpclient4.OAuthHttpClient perform better
- * than this class, as a rule; since they do things like connection pooling.
- * 
+ * @deprecated use OAuthClient(new URLConnectionClient()) instead
  * @author John Kristian
  */
 public class OAuthURLConnectionClient extends OAuthClient {
-
-    /** Send a message to the service provider and get the response. */
-    @Override
-    protected HttpResponseMessage invoke(HttpMessage request) throws IOException {
-        final String httpMethod = request.method;
-        final Collection<Map.Entry<String, String>> addHeaders = request.headers;
-        final URL url = request.url;
-        final URLConnection connection = url.openConnection();
-        connection.setDoInput(true);
-        if (connection instanceof HttpURLConnection) {
-            HttpURLConnection http = (HttpURLConnection) connection;
-            http.setRequestMethod(httpMethod);
-            http.setInstanceFollowRedirects(false);
-        }
-        StringBuilder headers = new StringBuilder(httpMethod);
-        {
-            headers.append(" ").append(url.getPath());
-            String query = url.getQuery();
-            if (query != null && query.length() > 0) {
-                headers.append("?").append(query);
-            }
-            headers.append(EOL);
-            for (Map.Entry<String, List<String>> header : connection
-                    .getRequestProperties().entrySet()) {
-                String key = header.getKey();
-                for (String value : header.getValue()) {
-                    headers.append(key).append(": ").append(value).append(EOL);
-                }
-            }
-        }
-        String contentLength = null;
-        for (Map.Entry<String, String> header : addHeaders) {
-            String key = header.getKey();
-            if (CONTENT_LENGTH.equalsIgnoreCase(key) && connection instanceof HttpURLConnection) {
-                contentLength = header.getValue();
-            } else {
-                connection.setRequestProperty(key, header.getValue());
-            }
-            headers.append(key).append(": ").append(header.getValue()).append(EOL);
-        }
-        byte[] excerpt = null;
-        final InputStream body = request.getBody();
-        if (body != null) {
-            try {
-                if (contentLength != null) {
-                    ((HttpURLConnection) connection)
-                    .setFixedLengthStreamingMode(Integer.parseInt(contentLength));
-                }
-                connection.setDoOutput(true);
-                OutputStream output = connection.getOutputStream();
-                try {
-                    final ExcerptInputStream ex = new ExcerptInputStream(body);
-                    byte[] b = new byte[1024];
-                    for (int n; 0 < (n = ex.read(b));) {
-                        output.write(b, 0, n);
-                    }
-                    excerpt = ex.getExcerpt();
-                } finally {
-                    output.close();
-                }
-            } finally {
-                body.close();
-            }
-        }
-        return new URLConnectionResponse(request, headers.toString(), excerpt, connection);
+    public OAuthURLConnectionClient() {
+        super(new URLConnectionClient());
     }
-
-    private static final String EOL = HttpResponseMessage.EOL;
-
 }

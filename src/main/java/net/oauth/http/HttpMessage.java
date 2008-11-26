@@ -1,3 +1,19 @@
+/*
+ * Copyright 2008 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.oauth.http;
 
 import java.io.IOException;
@@ -11,17 +27,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.oauth.client.ExcerptInputStream;
 
-public class HttpMessage {
+/**
+ * An HTTP request or response.
+ * 
+ * @author John Kristian
+ */
+public class HttpMessage
+{
 
-    public HttpMessage() {
+    public HttpMessage()
+    {
         this(null, null);
     }
 
-    public HttpMessage(String method, URL url) {
+    public HttpMessage(String method, URL url)
+    {
         this(method, url, null);
     }
 
-    public HttpMessage(String method, URL url, InputStream body) {
+    public HttpMessage(String method, URL url, InputStream body)
+    {
         this.method = method;
         this.url = url;
         this.body = body;
@@ -36,7 +61,8 @@ public class HttpMessage {
      * Get the value of the last header of the given name. The name is
      * case-insensitive.
      */
-    public final String getHeader(String name) {
+    public final String getHeader(String name)
+    {
         String value = null;
         for (Map.Entry<String, String> header : headers) {
             if (equalsIgnoreCase(name, header.getKey())) {
@@ -52,10 +78,10 @@ public class HttpMessage {
      * @return the value of the last header with that name, or null to indicate
      *         there was no such header
      */
-    public String removeHeaders(String name) {
+    public String removeHeaders(String name)
+    {
         String value = null;
-        for (Iterator<Map.Entry<String, String>> i = headers.iterator(); i
-                .hasNext();) {
+        for (Iterator<Map.Entry<String, String>> i = headers.iterator(); i.hasNext();) {
             Map.Entry<String, String> header = i.next();
             if (equalsIgnoreCase(name, header.getKey())) {
                 value = header.getValue();
@@ -65,11 +91,13 @@ public class HttpMessage {
         return value;
     }
 
-    public final String getContentCharset() {
+    public final String getContentCharset()
+    {
         return getCharset(getHeader(CONTENT_TYPE));
     }
 
-    public final InputStream getBody() throws IOException {
+    public final InputStream getBody() throws IOException
+    {
         if (body == null) {
             InputStream raw = openBody();
             if (raw != null) {
@@ -79,22 +107,26 @@ public class HttpMessage {
         return body;
     }
 
-    protected InputStream openBody() throws IOException {
+    protected InputStream openBody() throws IOException
+    {
         return null;
     }
 
     /** Put a description of this message and its origins into the given Map. */
-    public void dump(Map<String, Object> into) throws IOException {
+    public void dump(Map<String, Object> into) throws IOException
+    {
     }
 
-    private static boolean equalsIgnoreCase(String x, String y) {
+    private static boolean equalsIgnoreCase(String x, String y)
+    {
         if (x == null)
             return y == null;
         else
             return x.equalsIgnoreCase(y);
     }
 
-    private static final String getCharset(String mimeType) {
+    private static final String getCharset(String mimeType)
+    {
         if (mimeType != null) {
             Matcher m = CHARSET.matcher(mimeType);
             if (m.find()) {
