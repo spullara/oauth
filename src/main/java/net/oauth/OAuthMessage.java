@@ -341,22 +341,23 @@ public class OAuthMessage {
      * the given realm plus all the parameters whose names begin with "oauth_".
      */
     public String getAuthorizationHeader(String realm) throws IOException {
-        StringBuilder into = new StringBuilder(AUTH_SCHEME);
-        into.append(" realm=\"").append(OAuth.percentEncode(realm)).append('"');
+        StringBuilder into = new StringBuilder();
+        if (realm != null) {
+            into.append(" realm=\"").append(OAuth.percentEncode(realm)).append('"');
+        }
         beforeGetParameter();
         if (parameters != null) {
             for (Map.Entry parameter : parameters) {
                 String name = toString(parameter.getKey());
                 if (name.startsWith("oauth_")) {
-                    into.append(", ");
-                    into.append(OAuth.percentEncode(name)).append("=\"")
-                            .append(
-                                    OAuth.percentEncode(toString(parameter
-                                            .getValue()))).append('"');
+                    if (into.length() > 0) into.append(",");
+                    into.append(" ");
+                    into.append(OAuth.percentEncode(name)).append("=\"");
+                    into.append(OAuth.percentEncode(toString(parameter.getValue()))).append('"');
                 }
             }
         }
-        return into.toString();
+        return AUTH_SCHEME + into.toString();
     }
 
     /**

@@ -211,8 +211,7 @@ public class OAuthClient {
             break;
         }
         case AUTHORIZATION_HEADER:
-            headers.add(new OAuth.Parameter("Authorization", request
-                    .getAuthorizationHeader("")));
+            headers.add(new OAuth.Parameter("Authorization", request.getAuthorizationHeader(null)));
             // Find the non-OAuth parameters:
             List<Map.Entry<String, String>> others = request.getParameters();
             if (others != null && !others.isEmpty()) {
