@@ -19,6 +19,8 @@ package net.oauth.client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+
 import junit.framework.TestCase;
 import net.oauth.OAuthMessage;
 
@@ -66,6 +68,24 @@ public class StreamTest extends TestCase
             ;
         actual = input.getExcerpt();
         assertEqual(expected, actual);
+    }
+
+    public void testLongMessage() throws IOException {
+        byte[] original = new byte[2048];
+        ByteArrayInputStream bais = new ByteArrayInputStream(original);
+        ExcerptInputStream eis = new ExcerptInputStream(bais);
+        byte[] excerpt = eis.getExcerpt();
+        byte[] expected = new byte[1028];
+        System.arraycopy(ExcerptInputStream.ELLIPSIS, 0, expected, 1024, ExcerptInputStream.ELLIPSIS.length);
+        assertEqual(expected, excerpt);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = eis.read(buffer, 0, buffer.length)) != -1) {
+            baos.write(buffer, 0, read);
+        }
+        assertEqual(original, baos.toByteArray());
     }
 
     private void testExcerpt(byte[] expected, int offset) throws IOException
