@@ -206,6 +206,7 @@ public class OAuthMessage {
      * 
      * @deprecated use HttpMessage.REQUEST instead
      */
+    @Deprecated
     public static final String HTTP_REQUEST = HttpMessage.REQUEST;
 
     /**
@@ -213,6 +214,7 @@ public class OAuthMessage {
      * 
      * @deprecated use HttpMessage.RESPONSE instead
      */
+    @Deprecated
     public static final String HTTP_RESPONSE = HttpMessage.RESPONSE;
     
     /** Construct a verbose description of this message and its origins. */
@@ -331,6 +333,7 @@ public class OAuthMessage {
      *                 the signature is invalid
      * @deprecated use {@link OAuthMessage#validateMessage} instead.
      */
+    @Deprecated
     public void validateSignature(OAuthAccessor accessor)
             throws OAuthException, IOException, URISyntaxException {
         OAuthSignatureMethod.newSigner(this, accessor).validate(this);
@@ -412,6 +415,7 @@ public class OAuthMessage {
     public static final String AUTH_SCHEME = "OAuth";
 
     /** @deprecated use HttpMessage.CONTENT_TYPE instead */
+    @Deprecated
     public static final String CONTENT_TYPE = HttpMessage.CONTENT_TYPE;
 
     public static final String GET = "GET";

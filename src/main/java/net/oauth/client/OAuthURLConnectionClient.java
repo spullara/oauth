@@ -20,6 +20,7 @@ package net.oauth.client;
  * @deprecated use OAuthClient(new URLConnectionClient()) instead
  * @author John Kristian
  */
+@Deprecated
 public class OAuthURLConnectionClient extends OAuthClient {
     public OAuthURLConnectionClient() {
         super(new URLConnectionClient());

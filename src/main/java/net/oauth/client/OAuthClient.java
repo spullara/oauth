@@ -172,6 +172,7 @@ public class OAuthClient {
     }
 
     /** @deprecated Use invoke(OAuthMessage, ParameterStyle) instead. */
+    @Deprecated
     public OAuthMessage invoke(OAuthMessage request) throws IOException,
             OAuthException {
         return invoke(request, ParameterStyle.BODY);

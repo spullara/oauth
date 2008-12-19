@@ -39,6 +39,7 @@ public class OAuthProblemException extends OAuthException {
      * 
      * @deprecated use HttpResponseMessage.STATUS_CODE instead.
      */
+    @Deprecated
     public static final String HTTP_STATUS_CODE = HttpResponseMessage.STATUS_CODE;
  
     public OAuthProblemException() {

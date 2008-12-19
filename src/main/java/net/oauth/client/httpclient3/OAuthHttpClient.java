@@ -22,6 +22,7 @@ import net.oauth.client.OAuthClient;
  * @deprecated use OAuthClient(new HttpClient3()) instead
  * @author John Kristian
  */
+@Deprecated
 public class OAuthHttpClient extends OAuthClient {
     public OAuthHttpClient() {
         super(new HttpClient3());
