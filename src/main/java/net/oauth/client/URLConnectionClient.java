@@ -32,7 +32,7 @@ import net.oauth.http.HttpResponseMessage;
 /**
  * An HttpClient based on HttpURLConnection.
  * <p>
- * HttpClient3 or HttpClient3 perform better than this class, as a rule; since
+ * HttpClient3 or HttpClient4 perform better than this class, as a rule; since
  * they do things like connection pooling.
  * 
  * @author John Kristian
