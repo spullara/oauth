@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.Map;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
 import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpResponseMessage;
 
@@ -77,4 +78,15 @@ final class OAuthResponseMessage extends OAuthMessage
         super.dump(into);
         http.dump(into);
     }
+
+    @Override
+    public void requireParameters(String... names) throws OAuthProblemException, IOException {
+        try {
+            super.requireParameters(names);
+        } catch (OAuthProblemException problem) {
+            problem.getParameters().putAll(getDump());
+            throw problem;
+        }
+    }
+
 }

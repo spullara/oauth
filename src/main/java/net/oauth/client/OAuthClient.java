@@ -100,20 +100,37 @@ public class OAuthClient {
         }
         OAuthMessage response = invoke(accessor, httpMethod,
                 accessor.consumer.serviceProvider.requestTokenURL, parameters);
-        accessor.requestToken = response.getParameter("oauth_token");
-        accessor.tokenSecret = response.getParameter("oauth_token_secret");
-        if (accessor.requestToken == null) {
-            OAuthProblemException problem = new OAuthProblemException(
-                    "parameter_absent");
-            problem.setParameter("oauth_parameters_absent", "oauth_token");
-            problem.getParameters().putAll(response.getDump());
-            throw problem;
-        }
+        accessor.requestToken = response.getParameter(OAuth.OAUTH_TOKEN);
+        accessor.tokenSecret = response.getParameter(OAuth.OAUTH_TOKEN_SECRET);
+        response.requireParameters(OAuth.OAUTH_TOKEN, OAuth.OAUTH_TOKEN_SECRET);
     }
 
     public void getRequestToken(OAuthAccessor accessor) throws IOException,
             OAuthException, URISyntaxException {
         getRequestToken(accessor, null);
+    }
+
+    /**
+     * Get an access token from the service provider (in exchange for an
+     * authorized request token).
+     */
+    public OAuthMessage getAccessToken(OAuthAccessor accessor, String httpMethod,
+            Collection<? extends Map.Entry> parameters) throws IOException, OAuthException, URISyntaxException {
+        if (accessor.requestToken != null) {
+            if (parameters == null) {
+                parameters = OAuth.newList(OAuth.OAUTH_TOKEN, accessor.requestToken);
+            } else if (!OAuth.newMap(parameters).containsKey(OAuth.OAUTH_TOKEN)) {
+                List<Map.Entry> p = new ArrayList<Map.Entry>(parameters);
+                p.add(new OAuth.Parameter(OAuth.OAUTH_TOKEN, accessor.requestToken));
+                parameters = p;
+            }
+        }
+        OAuthMessage response = invoke(accessor, httpMethod,
+                accessor.consumer.serviceProvider.accessTokenURL, parameters);
+        response.requireParameters(OAuth.OAUTH_TOKEN, OAuth.OAUTH_TOKEN_SECRET);
+        accessor.accessToken = response.getParameter(OAuth.OAUTH_TOKEN);
+        accessor.tokenSecret = response.getParameter(OAuth.OAUTH_TOKEN_SECRET);
+        return response;
     }
 
     /**
