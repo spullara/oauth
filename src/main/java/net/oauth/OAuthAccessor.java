@@ -63,7 +63,7 @@ public class OAuthAccessor implements Serializable {
             if (method == null) {
                 method = (String) this.consumer.getProperty("httpMethod");
                 if (method == null) {
-                    method = "GET";
+                    method = OAuthMessage.GET;
                 }
             }
         }
