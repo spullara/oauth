@@ -18,6 +18,7 @@ package net.oauth;
 
 import java.util.HashMap;
 import java.util.Map;
+import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpResponseMessage;
 
 /**
@@ -25,7 +26,8 @@ import net.oauth.http.HttpResponseMessage;
  * parameter identifies the basic problem, and the others provide supplementary
  * diagnostic information. This can be used to capture information from a
  * response that conforms to the OAuth <a
- * href="http://wiki.oauth.net/ProblemReporting">Problem Reporting extension</a>.
+ * href="http://wiki.oauth.net/ProblemReporting">Problem Reporting
+ * extension</a>.
  * 
  * @author John Kristian
  */
@@ -41,7 +43,7 @@ public class OAuthProblemException extends OAuthException {
      */
     @Deprecated
     public static final String HTTP_STATUS_CODE = HttpResponseMessage.STATUS_CODE;
- 
+
     public OAuthProblemException() {
     }
 
@@ -53,6 +55,36 @@ public class OAuthProblemException extends OAuthException {
     }
 
     private final Map<String, Object> parameters = new HashMap<String, Object>();
+
+    @Override
+    public String getMessage() {
+        String msg = super.getMessage();
+        if (msg != null)
+            return msg;
+        msg = getProblem();
+        if (msg != null)
+            return msg;
+        Object response = getParameters().get(HttpMessage.RESPONSE);
+        if (response != null) {
+            msg = response.toString();
+            int eol = msg.indexOf("\n");
+            if (eol < 0) {
+                eol = msg.indexOf("\r");
+            }
+            if (eol >= 0) {
+                msg = msg.substring(0, eol);
+            }
+            msg = msg.trim();
+            if (msg.length() > 0) {
+                return msg;
+            }
+        }
+        response = getHttpStatusCode();
+        if (response != null) {
+            return HttpResponseMessage.STATUS_CODE + " " + response;
+        }
+        return null;
+    }
 
     public void setParameter(String name, Object value) {
         getParameters().put(name, value);
