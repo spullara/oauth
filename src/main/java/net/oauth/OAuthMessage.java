@@ -112,19 +112,19 @@ public class OAuthMessage {
     }
 
     public String getConsumerKey() throws IOException {
-        return getParameter("oauth_consumer_key");
+        return getParameter(OAuth.OAUTH_CONSUMER_KEY);
     }
 
     public String getToken() throws IOException {
-        return getParameter("oauth_token");
+        return getParameter(OAuth.OAUTH_TOKEN);
     }
 
     public String getSignatureMethod() throws IOException {
-        return getParameter("oauth_signature_method");
+        return getParameter(OAuth.OAUTH_SIGNATURE_METHOD);
     }
 
     public String getSignature() throws IOException {
-        return getParameter("oauth_signature");
+        return getParameter(OAuth.OAUTH_SIGNATURE);
     }
 
     protected Map<String, String> getParameterMap() throws IOException {
@@ -252,10 +252,8 @@ public class OAuthMessage {
             }
         }
         if (!absent.isEmpty()) {
-            OAuthProblemException problem = new OAuthProblemException(
-                    "parameter_absent");
-            problem.setParameter("oauth_parameters_absent", OAuth
-                    .percentEncode(absent));
+            OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.PARAMETER_ABSENT);
+            problem.setParameter(OAuth.Problems.OAUTH_PARAMETERS_ABSENT, OAuth.percentEncode(absent));
             throw problem;
         }
     }
@@ -270,31 +268,29 @@ public class OAuthMessage {
     public void addRequiredParameters(OAuthAccessor accessor)
             throws OAuthException, IOException, URISyntaxException {
         final Map<String, String> pMap = OAuth.newMap(parameters);
-        if (pMap.get("oauth_token") == null && accessor.accessToken != null) {
-            addParameter("oauth_token", accessor.accessToken);
+        if (pMap.get(OAuth.OAUTH_TOKEN) == null && accessor.accessToken != null) {
+            addParameter(OAuth.OAUTH_TOKEN, accessor.accessToken);
         }
         final OAuthConsumer consumer = accessor.consumer;
-        if (pMap.get("oauth_consumer_key") == null) {
-            addParameter("oauth_consumer_key", consumer.consumerKey);
+        if (pMap.get(OAuth.OAUTH_CONSUMER_KEY) == null) {
+            addParameter(OAuth.OAUTH_CONSUMER_KEY, consumer.consumerKey);
         }
-        String signatureMethod = pMap.get("oauth_signature_method");
+        String signatureMethod = pMap.get(OAuth.OAUTH_SIGNATURE_METHOD);
         if (signatureMethod == null) {
-            signatureMethod = (String) consumer
-                    .getProperty("oauth_signature_method");
+            signatureMethod = (String) consumer.getProperty(OAuth.OAUTH_SIGNATURE_METHOD);
             if (signatureMethod == null) {
-                signatureMethod = "HMAC-SHA1";
+                signatureMethod = OAuth.HMAC_SHA1;
             }
-            addParameter("oauth_signature_method", signatureMethod);
+            addParameter(OAuth.OAUTH_SIGNATURE_METHOD, signatureMethod);
         }
-        if (pMap.get("oauth_timestamp") == null) {
-            addParameter("oauth_timestamp", (System.currentTimeMillis() / 1000)
-                    + "");
+        if (pMap.get(OAuth.OAUTH_TIMESTAMP) == null) {
+            addParameter(OAuth.OAUTH_TIMESTAMP, (System.currentTimeMillis() / 1000) + "");
         }
-        if (pMap.get("oauth_nonce") == null) {
-            addParameter("oauth_nonce", System.nanoTime() + "");
+        if (pMap.get(OAuth.OAUTH_NONCE) == null) {
+            addParameter(OAuth.OAUTH_NONCE, System.nanoTime() + "");
         }
-        if (pMap.get("oauth_version") == null) {
-        	addParameter("oauth_version", "1.0");
+        if (pMap.get(OAuth.OAUTH_VERSION) == null) {
+        	addParameter(OAuth.OAUTH_VERSION, OAuth.VERSION_1_0);
         }
         this.sign(accessor);
     }
