@@ -33,7 +33,9 @@ import net.oauth.http.HttpResponseMessage;
  * An HttpClient based on HttpURLConnection.
  * <p>
  * HttpClient3 or HttpClient4 perform better than this class, as a rule; since
- * they do things like connection pooling.
+ * they do things like connection pooling.  They also support reading the body
+ * of an HTTP response whose status code isn't 200 (OK), which can enable your
+ * application to handle problems better.
  * 
  * @author John Kristian
  */
