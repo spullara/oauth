@@ -55,6 +55,11 @@ public class OAuthAccessor implements Serializable {
         properties.put(name, value);
     }
 
+    /**
+     * Construct a request message containing the given parameters but no body.
+     * Don't send the message, merely construct it. The caller will ordinarily
+     * send it, for example by calling OAuthClient.invoke.
+     */
     public OAuthMessage newRequestMessage(String method, String url,
             Collection<? extends Map.Entry> parameters)
     throws OAuthException, IOException, URISyntaxException {
