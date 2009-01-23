@@ -35,15 +35,6 @@ public class OAuthProblemException extends OAuthException {
 
     public static final String OAUTH_PROBLEM = "oauth_problem";
 
-    /**
-     * The key of a parameter whose value is an Integer representing the HTTP
-     * response status code; for example Integer.valueOf(200).
-     * 
-     * @deprecated use HttpResponseMessage.STATUS_CODE instead.
-     */
-    @Deprecated
-    public static final String HTTP_STATUS_CODE = HttpResponseMessage.STATUS_CODE;
-
     public OAuthProblemException() {
     }
 
@@ -99,7 +90,7 @@ public class OAuthProblemException extends OAuthException {
     }
 
     public int getHttpStatusCode() {
-        Object code = getParameters().get(HTTP_STATUS_CODE);
+        Object code = getParameters().get(HttpResponseMessage.STATUS_CODE);
         if (code == null) {
             return 200;
         } else if (code instanceof Number) { // the usual case

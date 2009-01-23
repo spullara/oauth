@@ -188,13 +188,6 @@ public class OAuthClient {
         return invoke(accessor, null, url, parameters);
     }
 
-    /** @deprecated Use invoke(OAuthMessage, ParameterStyle) instead. */
-    @Deprecated
-    public OAuthMessage invoke(OAuthMessage request) throws IOException,
-            OAuthException {
-        return invoke(request, ParameterStyle.BODY);
-    }
-
     /**
      * Send a request message to the service provider and get the response.
      * 

@@ -17,7 +17,9 @@
 package net.oauth.signature;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -29,11 +31,11 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Random;
-
 import junit.framework.TestCase;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
+import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 import net.oauth.OAuthServiceProvider;
@@ -168,7 +170,12 @@ public class RSA_SHA1SignatureTest extends TestCase {
         return message;
     }
 
-    @SuppressWarnings("deprecation")
+    private static void validateSignature(OAuthMessage message, OAuthAccessor accessor)
+        throws IOException, OAuthException, URISyntaxException
+    {
+        OAuthSignatureMethod.newSigner(message, accessor).validate(message);
+    }
+
     private static void doTests(OAuthMessage message,
                                 OAuthAccessor clientAccessor,
                                 OAuthAccessor serverAccessor) throws Exception {
@@ -176,7 +183,7 @@ public class RSA_SHA1SignatureTest extends TestCase {
         message.sign(clientAccessor);
 
         try {
-            message.validateSignature(serverAccessor);
+            validateSignature(message, serverAccessor);
         } catch(Exception e) {
             fail("message should have verified, but didn't");
         }
@@ -190,7 +197,7 @@ public class RSA_SHA1SignatureTest extends TestCase {
         }
 
         try {
-            message.validateSignature(clientAccessor);
+            validateSignature(message, clientAccessor);
             fail("shouldn't be able to verify message without public key, " +
             	 "but did");
         } catch(IllegalStateException e) {
@@ -199,7 +206,7 @@ public class RSA_SHA1SignatureTest extends TestCase {
 
         message.addParameter("foo", "bar");
         try {
-            message.validateSignature (serverAccessor);
+            validateSignature(message, serverAccessor);
             fail("modified message signature should not have validated, " +
             	 "but did");
         } catch(OAuthProblemException e) {

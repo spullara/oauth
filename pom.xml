@@ -7,7 +7,7 @@
     <version>20090105</version>
   </parent>
   <artifactId>oauth-core</artifactId>
-  <version>20090108</version>
+  <version>20090121</version>
   <packaging>jar</packaging>
   <name>OAuth::Core</name>
   <dependencies>

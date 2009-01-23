@@ -201,22 +201,6 @@ public class OAuthMessage {
         return null;
     }
 
-    /**
-     * The name of a dump entry whose value is the HTTP request.
-     * 
-     * @deprecated use HttpMessage.REQUEST instead
-     */
-    @Deprecated
-    public static final String HTTP_REQUEST = HttpMessage.REQUEST;
-
-    /**
-     * The name of a dump entry whose value is the HTTP response.
-     * 
-     * @deprecated use HttpMessage.RESPONSE instead
-     */
-    @Deprecated
-    public static final String HTTP_RESPONSE = HttpMessage.RESPONSE;
-    
     /** Construct a verbose description of this message and its origins. */
     public Map<String, Object> getDump() throws IOException {
         Map<String, Object> into = new HashMap<String, Object>();
@@ -320,22 +304,6 @@ public class OAuthMessage {
     }
 
     /**
-     * Check that the message has a valid signature.
-     * 
-     * @throws IOException
-     * @throws URISyntaxException
-     * 
-     * @throws OAuthProblemException
-     *                 the signature is invalid
-     * @deprecated use {@link OAuthMessage#validateMessage} instead.
-     */
-    @Deprecated
-    public void validateSignature(OAuthAccessor accessor)
-            throws OAuthException, IOException, URISyntaxException {
-        OAuthSignatureMethod.newSigner(this, accessor).validate(this);
-    }
-
-    /**
      * Construct a WWW-Authenticate or Authentication header value, containing
      * the given realm plus all the parameters whose names begin with "oauth_".
      */
@@ -409,10 +377,6 @@ public class OAuthMessage {
     }
 
     public static final String AUTH_SCHEME = "OAuth";
-
-    /** @deprecated use HttpMessage.CONTENT_TYPE instead */
-    @Deprecated
-    public static final String CONTENT_TYPE = HttpMessage.CONTENT_TYPE;
 
     public static final String GET = "GET";
     public static final String POST = "POST";
