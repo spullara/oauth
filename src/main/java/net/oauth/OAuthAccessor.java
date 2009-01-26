@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import net.oauth.http.HttpMessage;
 
 /**
  * Properties of one User of an OAuthConsumer. Properties may be added freely,
@@ -80,6 +81,10 @@ public class OAuthAccessor implements Serializable {
         }
         OAuthMessage message = new OAuthMessage(method, url, parameters);
         message.addRequiredParameters(this);
+        Object accepted = consumer.getProperty(OAuthConsumer.ACCEPT_ENCODING);
+        if (accepted != null) {
+            message.getHeaders().add(new OAuth.Parameter(HttpMessage.ACCEPT_ENCODING, accepted.toString()));
+        }
         return message;
     }
 

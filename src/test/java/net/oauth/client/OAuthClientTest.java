@@ -135,7 +135,7 @@ public class OAuthClientTest extends TestCase {
     public void testGzip() throws Exception
     {
         final OAuthConsumer consumer = new OAuthConsumer(null, null, null, null);
-        consumer.setProperty(OAuthClient.ACCEPT_ENCODING, HttpMessageDecoder.ACCEPTED);
+        consumer.setProperty(OAuthConsumer.ACCEPT_ENCODING, HttpMessageDecoder.ACCEPTED);
         consumer.setProperty(OAuth.OAUTH_SIGNATURE_METHOD, "PLAINTEXT");
         final OAuthAccessor accessor = new OAuthAccessor(consumer);
         final String url = "http://localhost:" + port + "/Echo";

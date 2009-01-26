@@ -210,12 +210,6 @@ public class OAuthClient {
                 .valueOf(ParameterStyle.class, ps);
         OAuthMessage request = accessor.newRequestMessage(httpMethod, url,
                 parameters);
-        Object accepted = accessor.consumer.getProperty(ACCEPT_ENCODING);
-        if (accepted != null) {
-            request.getHeaders().add(
-                    new OAuth.Parameter(HttpMessage.ACCEPT_ENCODING, accepted
-                            .toString()));
-        }
         return invoke(request, style);
     }
 
@@ -228,8 +222,10 @@ public class OAuthClient {
     /**
      * The name of the OAuthConsumer property whose value is the Accept-Encoding
      * header in HTTP requests.
+     * @deprecated use {@link OAuthConsumer#ACCEPT_ENCODING} instead
      */
-    public static final String ACCEPT_ENCODING = "HTTP.header." + HttpMessage.ACCEPT_ENCODING;
+    @Deprecated
+    public static final String ACCEPT_ENCODING = OAuthConsumer.ACCEPT_ENCODING;
 
     /**
      * Construct a request message, send it to the service provider and get the
