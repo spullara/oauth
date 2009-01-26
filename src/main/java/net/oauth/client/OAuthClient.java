@@ -194,9 +194,11 @@ public class OAuthClient {
      * Construct a request message, send it to the service provider and get the
      * response.
      * 
+     * @param httpMethod
+     *            the HTTP request method, or null to use the default method
      * @return the response
      * @throws URISyntaxException
-     *                 the given url isn't valid syntactically
+     *             the given url isn't valid syntactically
      * @throws OAuthProblemException
      *             the HTTP response status code was not 200 (OK)
      */

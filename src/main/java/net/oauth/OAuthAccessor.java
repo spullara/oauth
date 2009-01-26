@@ -59,6 +59,12 @@ public class OAuthAccessor implements Serializable {
      * Construct a request message containing the given parameters but no body.
      * Don't send the message, merely construct it. The caller will ordinarily
      * send it, for example by calling OAuthClient.invoke.
+     * 
+     * @param method
+     *            the HTTP request method. If this is null, use the default
+     *            method; that is getProperty("httpMethod") or (if that's null)
+     *            consumer.getProperty("httpMethod") or (if that's null)
+     *            OAuthMessage.GET.
      */
     public OAuthMessage newRequestMessage(String method, String url,
             Collection<? extends Map.Entry> parameters)
