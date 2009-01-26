@@ -71,13 +71,60 @@ public class OAuthClient {
 
     private final HttpClient http;
 
-    /** Get a fresh request token from the service provider. */
+    /**
+     * Get a fresh request token from the service provider.
+     * 
+     * @param accessor
+     *            should contain a consumer that contains a non-null consumerKey
+     *            and consumerSecret. Also,
+     *            accessor.consumer.serviceProvider.requestTokenURL should be
+     *            the URL (determined by the service provider) for getting a
+     *            request token.
+     * @throws OAuthProblemException
+     *             the HTTP response status code was not 200 (OK)
+     */
+    public void getRequestToken(OAuthAccessor accessor) throws IOException,
+            OAuthException, URISyntaxException {
+        getRequestToken(accessor, null);
+    }
+
+    /**
+     * Get a fresh request token from the service provider.
+     * 
+     * @param accessor
+     *            should contain a consumer that contains a non-null consumerKey
+     *            and consumerSecret. Also,
+     *            accessor.consumer.serviceProvider.requestTokenURL should be
+     *            the URL (determined by the service provider) for getting a
+     *            request token.
+     * @param httpMethod
+     *            typically OAuthMessage.POST or OAuthMessage.GET, or null to
+     *            use the default method.
+     * @throws OAuthProblemException
+     *             the HTTP response status code was not 200 (OK)
+     */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod)
             throws IOException, OAuthException, URISyntaxException {
         getRequestToken(accessor, httpMethod, null);
     }
 
-    /** Get a fresh request token from the service provider. */
+    /** Get a fresh request token from the service provider.
+     * 
+     * @param accessor
+     *            should contain a consumer that contains a non-null consumerKey
+     *            and consumerSecret. Also,
+     *            accessor.consumer.serviceProvider.requestTokenURL should be
+     *            the URL (determined by the service provider) for getting a
+     *            request token.
+     * @param httpMethod
+     *            typically OAuthMessage.POST or OAuthMessage.GET, or null to
+     *            use the default method.
+     * @param parameters
+     *            additional parameters for this request, or null to indicate
+     *            that there are no additional parameters.
+     * @throws OAuthProblemException
+     *             the HTTP response status code was not 200 (OK)
+     */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod,
             Collection<? extends Map.Entry> parameters) throws IOException,
             OAuthException, URISyntaxException {
@@ -105,14 +152,24 @@ public class OAuthClient {
         response.requireParameters(OAuth.OAUTH_TOKEN, OAuth.OAUTH_TOKEN_SECRET);
     }
 
-    public void getRequestToken(OAuthAccessor accessor) throws IOException,
-            OAuthException, URISyntaxException {
-        getRequestToken(accessor, null);
-    }
-
     /**
-     * Get an access token from the service provider (in exchange for an
-     * authorized request token).
+     * Get an access token from the service provider, in exchange for an
+     * authorized request token.
+     * 
+     * @param accessor
+     *            should contain a non-null requestToken and tokenSecret, and a
+     *            consumer that contains a consumerKey and consumerSecret. Also,
+     *            accessor.consumer.serviceProvider.accessTokenURL should be the
+     *            URL (determined by the service provider) for getting an access
+     *            token.
+     * @param httpMethod
+     *            typically OAuthMessage.POST or OAuthMessage.GET, or null to
+     *            use the default method.
+     * @param parameters
+     *            additional parameters for this request, or null to indicate
+     *            that there are no additional parameters.
+     * @throws OAuthProblemException
+     *             the HTTP response status code was not 200 (OK)
      */
     public OAuthMessage getAccessToken(OAuthAccessor accessor, String httpMethod,
             Collection<? extends Map.Entry> parameters) throws IOException, OAuthException, URISyntaxException {
@@ -141,7 +198,7 @@ public class OAuthClient {
      * @throws URISyntaxException
      *                 the given url isn't valid syntactically
      * @throws OAuthProblemException
-     *                 the HTTP response status code was not OK
+     *             the HTTP response status code was not 200 (OK)
      */
     public OAuthMessage invoke(OAuthAccessor accessor, String httpMethod,
             String url, Collection<? extends Map.Entry> parameters)
@@ -180,7 +237,7 @@ public class OAuthClient {
      * @throws URISyntaxException
      *                 the given url isn't valid syntactically
      * @throws OAuthProblemException
-     *                 the HTTP response status code was not OK
+     *                 the HTTP response status code was not 200 (OK)
      */
     public OAuthMessage invoke(OAuthAccessor accessor, String url,
             Collection<? extends Map.Entry> parameters) throws IOException,
@@ -195,9 +252,8 @@ public class OAuthClient {
      * @throws IOException
      *                 failed to communicate with the service provider
      * @throws OAuthProblemException
-     *                 the HTTP response status code was not OK
+     *             the HTTP response status code was not 200 (OK)
      */
-    /** Send a message to the service provider and get the response. */
     public OAuthMessage invoke(OAuthMessage request, ParameterStyle style)
             throws IOException, OAuthException {
         final boolean isPost = POST.equalsIgnoreCase(request.method);
