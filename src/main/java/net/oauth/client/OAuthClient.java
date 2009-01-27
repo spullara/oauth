@@ -69,7 +69,15 @@ public class OAuthClient {
         this.http = http;
     }
 
-    private final HttpClient http;
+    private HttpClient http;
+
+    public void setHttpClient(HttpClient http) {
+        this.http = http;
+    }
+
+    public HttpClient getHttpClient() {
+        return http;
+    }
 
     /**
      * Get a fresh request token from the service provider.
