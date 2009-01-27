@@ -102,11 +102,19 @@ public class StreamTest extends TestCase
         assertEqual(expected, actual);
     }
 
-    private void assertEqual(byte[] expected, byte[] actual)
+    private static void assertEqual(byte[] expected, byte[] actual)
     {
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < expected.length; ++i) {
-            assertEquals(expected[i], actual[i]);
+            assertEquals("[" + i + "]", expected[i], actual[i]);
+        }
+    }
+
+    static void assertEqual(String message, byte[] expected, byte[] actual)
+    {
+        assertEquals(message, expected.length, actual.length);
+        for (int i = 0; i < expected.length; ++i) {
+            assertEquals(message + "[" + i + "]", expected[i], actual[i]);
         }
     }
 

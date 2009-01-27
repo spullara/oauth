@@ -16,6 +16,7 @@
 
 package net.oauth.signature;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -119,13 +120,21 @@ public class Echo extends HttpServlet {
         if (!"false".equalsIgnoreCase(msg.getParameter("echoBody"))) {
             out.print(request.getHeader("Content-Length") + "\n");
             InputStream in = msg.getBodyAsStream();
-            final byte[] buffer = new byte[1024];
-            for (int n; 0 < (n = in.read(buffer));) {
-                out.write(buffer, 0, n);
-            }
+            byte[] body = readAll(in);
+            out.write(body);
         }
         // out.close();
         // System.out.println("... done");
+    }
+
+    private static byte[] readAll(InputStream from) throws IOException {
+        ByteArrayOutputStream into = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        for (int n; 0 < (n = from.read(buf));) {
+            into.write(buf, 0, n);
+        }
+        into.close();
+        return into.toByteArray();
     }
 
     private static final byte[] DATA = getData();
