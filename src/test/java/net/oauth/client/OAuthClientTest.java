@@ -18,7 +18,6 @@ package net.oauth.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -30,7 +29,6 @@ import junit.framework.TestCase;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
-import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 import net.oauth.client.OAuthClient.ParameterStyle;
@@ -176,38 +174,46 @@ public class OAuthClientTest extends TestCase {
         }
     }
 
-    public void testUpload() throws IOException {
+    public void testUpload() throws IOException, OAuthProblemException {
         final String echo = "http://localhost:" + port + "/Echo";
         final Class myClass = getClass();
         final String sourceName = "/" + myClass.getPackage().getName().replace('.', '/') + "/flower.jpg";
         final URL source = myClass.getResource(sourceName);
         assertNotNull(sourceName, source);
         for (OAuthClient client : clients) {
-            final String id = client.toString();
-            OAuthMessage response = null;
-            InputStream input = source.openStream();
-            try {
-                OAuthMessage request = new InputStreamMessage(OAuthMessage.POST, echo, input);
-                request.addParameter(new OAuth.Parameter("oauth_token", "t"));
-                request.getHeaders().add(new OAuth.Parameter("Content-Type", "image/jpeg"));
-                response = client.invoke(request, ParameterStyle.AUTHORIZATION_HEADER);
-            } catch (Exception e) {
-                AssertionError failure = new AssertionError();
-                failure.initCause(e);
-                throw failure;
-            } finally {
-                input.close();
+            for (ParameterStyle style : new ParameterStyle[] { ParameterStyle.AUTHORIZATION_HEADER, ParameterStyle.QUERY_STRING }) {
+                final String id = client + " POST " + style;
+                OAuthMessage response = null;
+                InputStream input = source.openStream();
+                try {
+                    OAuthMessage request = new InputStreamMessage(OAuthMessage.PUT, echo, input);
+                    request.addParameter(new OAuth.Parameter("oauth_token", "t"));
+                    request.getHeaders().add(new OAuth.Parameter("Content-Type", "image/jpeg"));
+                    response = client.invoke(request, style);
+                } catch (OAuthProblemException e) {
+                    System.err.println(e.getParameters().get(HttpMessage.REQUEST));
+                    System.err.println(e.getParameters().get(HttpMessage.RESPONSE));
+                    throw e;
+                } catch (Exception e) {
+                    AssertionError failure = new AssertionError();
+                    failure.initCause(e);
+                    throw failure;
+                } finally {
+                    input.close();
+                }
+                assertEquals(id, "image/jpeg", response.getHeader("Content-Type"));
+                byte[] data = readAll(source.openStream());
+                Integer contentLength = (client.getHttpClient() instanceof HttpClient4) ? null : new Integer(
+                        data.length);
+                byte[] expected = concatenate((OAuthMessage.PUT + "\noauth_token=t\n" + contentLength + "\n")
+                        .getBytes(), data);
+                byte[] actual = readAll(response.getBodyAsStream());
+                StreamTest.assertEqual(id, expected, actual);
             }
-            assertEquals(id, "image/jpeg", response.getHeader("Content-Type"));
-            byte[] data = readAll(source.openStream());
-            Integer contentLength = (client.getHttpClient() instanceof HttpClient4) ? null : new Integer(data.length);
-            byte[] expected = concatenate((OAuthMessage.POST + "\noauth_token=t\n" + contentLength + "\n").getBytes(), data);
-            byte[] actual = readAll(response.getBodyAsStream());
-            StreamTest.assertEqual(id, expected, actual);
         }
     }
 
-    private static byte[] readAll(InputStream from) throws IOException {
+    static byte[] readAll(InputStream from) throws IOException {
         ByteArrayOutputStream into = new ByteArrayOutputStream();
         try {
             byte[] buf = new byte[1024];
@@ -221,7 +227,7 @@ public class OAuthClientTest extends TestCase {
         return into.toByteArray();
     }
 
-    private static byte[] concatenate(byte[] x, byte[] y) {
+    static byte[] concatenate(byte[] x, byte[] y) {
         byte[] z = new byte[x.length + y.length];
         System.arraycopy(x, 0, z, 0, x.length);
         System.arraycopy(y, 0, z, x.length, y.length);
@@ -283,7 +289,7 @@ public class OAuthClientTest extends TestCase {
         }
     }
 
-    private static class InputStreamMessage extends OAuthMessage
+    static class InputStreamMessage extends OAuthMessage
     {
         InputStreamMessage(String method, String url, InputStream body) {
             super(method, url, null);
