@@ -32,7 +32,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 
 /**
- * An HttpResponse, encapsulated as an OAuthMessage.
+ * An HttpResponse, encapsulated as an HttpMessage.
  * 
  * This class relies on <a href="http://hc.apache.org">Apache HttpClient</a>
  * version 4.

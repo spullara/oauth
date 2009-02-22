@@ -59,7 +59,7 @@ public class OAuthAccessor implements Serializable {
     /**
      * Construct a request message containing the given parameters but no body.
      * Don't send the message, merely construct it. The caller will ordinarily
-     * send it, for example by calling OAuthClient.invoke.
+     * send it, for example by calling OAuthClient.invoke or access.
      * 
      * @param method
      *            the HTTP request method. If this is null, use the default
@@ -81,10 +81,6 @@ public class OAuthAccessor implements Serializable {
         }
         OAuthMessage message = new OAuthMessage(method, url, parameters);
         message.addRequiredParameters(this);
-        Object accepted = consumer.getProperty(OAuthConsumer.ACCEPT_ENCODING);
-        if (accepted != null) {
-            message.getHeaders().add(new OAuth.Parameter(HttpMessage.ACCEPT_ENCODING, accepted.toString()));
-        }
         return message;
     }
 

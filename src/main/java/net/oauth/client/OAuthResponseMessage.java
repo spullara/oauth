@@ -22,7 +22,6 @@ import java.util.Map;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
-import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpResponseMessage;
 
 /**
@@ -30,7 +29,7 @@ import net.oauth.http.HttpResponseMessage;
  * 
  * @author John Kristian
  */
-final class OAuthResponseMessage extends OAuthMessage
+public class OAuthResponseMessage extends OAuthMessage
 {
     OAuthResponseMessage(HttpResponseMessage http) throws IOException
     {
@@ -48,7 +47,11 @@ final class OAuthResponseMessage extends OAuthMessage
         }
     }
 
-    private final HttpMessage http;
+    private final HttpResponseMessage http;
+
+    public HttpResponseMessage getHttpResponse() {
+        return http;
+    }
 
     @Override
     public InputStream getBodyAsStream() throws IOException
@@ -60,6 +63,37 @@ final class OAuthResponseMessage extends OAuthMessage
     public String getBodyEncoding()
     {
         return http.getContentCharset();
+    }
+
+    @Override
+    public void requireParameters(String... names) throws OAuthProblemException, IOException {
+        try {
+            super.requireParameters(names);
+        } catch (OAuthProblemException problem) {
+            problem.getParameters().putAll(getDump());
+            throw problem;
+        }
+    }
+
+    /**
+     * Encapsulate this message as an exception. Read and close the body of this
+     * message.
+     */
+    public OAuthProblemException toOAuthProblemException() throws IOException {
+        OAuthProblemException problem = new OAuthProblemException();
+        try {
+            getParameters(); // decode the response body
+        } catch (IOException ignored) {
+        }
+        problem.getParameters().putAll(getDump());
+        try {
+            InputStream b = getBodyAsStream();
+            if (b != null) {
+                b.close(); // release resources
+            }
+        } catch (IOException ignored) {
+        }
+        return problem;
     }
 
     @Override
@@ -77,16 +111,6 @@ final class OAuthResponseMessage extends OAuthMessage
     {
         super.dump(into);
         http.dump(into);
-    }
-
-    @Override
-    public void requireParameters(String... names) throws OAuthProblemException, IOException {
-        try {
-            super.requireParameters(names);
-        } catch (OAuthProblemException problem) {
-            problem.getParameters().putAll(getDump());
-            throw problem;
-        }
     }
 
 }

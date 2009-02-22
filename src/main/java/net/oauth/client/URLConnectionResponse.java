@@ -28,7 +28,7 @@ import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpResponseMessage;
 
 /**
- * The response part of a URLConnection, encapsulated as an OAuthMessage.
+ * The response part of a URLConnection, encapsulated as an HttpMessage.
  * 
  * @author John Kristian
  */

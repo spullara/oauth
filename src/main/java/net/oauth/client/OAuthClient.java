@@ -16,14 +16,11 @@
 
 package net.oauth.client;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
@@ -213,11 +210,14 @@ public class OAuthClient {
     public OAuthMessage invoke(OAuthAccessor accessor, String httpMethod,
             String url, Collection<? extends Map.Entry> parameters)
     throws IOException, OAuthException, URISyntaxException {
-        String ps = (String) accessor.consumer.getProperty(PARAMETER_STYLE);
-        ParameterStyle style = (ps == null) ? ParameterStyle.BODY : Enum
-                .valueOf(ParameterStyle.class, ps);
-        OAuthMessage request = accessor.newRequestMessage(httpMethod, url,
-                parameters);
+        OAuthMessage request = accessor.newRequestMessage(httpMethod, url, parameters);
+        Object accepted = accessor.consumer.getProperty(OAuthConsumer.ACCEPT_ENCODING);
+        if (accepted != null) {
+            request.getHeaders().add(new OAuth.Parameter(HttpMessage.ACCEPT_ENCODING, accepted.toString()));
+        }
+        Object ps = accessor.consumer.getProperty(PARAMETER_STYLE);
+        ParameterStyle style = (ps == null) ? ParameterStyle.BODY
+                : Enum.valueOf(ParameterStyle.class, ps.toString());
         return invoke(request, style);
     }
 
@@ -262,76 +262,22 @@ public class OAuthClient {
      */
     public OAuthMessage invoke(OAuthMessage request, ParameterStyle style)
             throws IOException, OAuthException {
-        final boolean isPost = POST.equalsIgnoreCase(request.method);
-        InputStream body = request.getBodyAsStream();
-        if (style == ParameterStyle.BODY && !(isPost && body == null)) {
-            style = ParameterStyle.QUERY_STRING;
-        }
-        String url = request.URL;
-        final List<Map.Entry<String, String>> headers =
-            new ArrayList<Map.Entry<String, String>>(request.getHeaders());
-        switch (style) {
-        case QUERY_STRING:
-            url = OAuth.addParameters(url, request.getParameters());
-            break;
-        case BODY: {
-            byte[] form = OAuth.formEncode(request.getParameters()).getBytes(
-                    request.getBodyEncoding());
-            headers.add(new OAuth.Parameter(HttpMessage.CONTENT_TYPE,
-                    OAuth.FORM_ENCODED));
-            headers.add(new OAuth.Parameter(CONTENT_LENGTH, form.length + ""));
-            body = new ByteArrayInputStream(form);
-            break;
-        }
-        case AUTHORIZATION_HEADER:
-            headers.add(new OAuth.Parameter("Authorization", request.getAuthorizationHeader(null)));
-            // Find the non-OAuth parameters:
-            List<Map.Entry<String, String>> others = request.getParameters();
-            if (others != null && !others.isEmpty()) {
-                others = new ArrayList<Map.Entry<String, String>>(others);
-                for (Iterator<Map.Entry<String, String>> p = others.iterator(); p
-                        .hasNext();) {
-                    if (p.next().getKey().startsWith("oauth_")) {
-                        p.remove();
-                    }
-                }
-                // Place the non-OAuth parameters elsewhere in the request:
-                if (isPost && body == null) {
-                    byte[] form = OAuth.formEncode(others).getBytes(
-                            request.getBodyEncoding());
-                    headers.add(new OAuth.Parameter(HttpMessage.CONTENT_TYPE,
-                            OAuth.FORM_ENCODED));
-                    headers.add(new OAuth.Parameter(CONTENT_LENGTH, form.length
-                            + ""));
-                    body = new ByteArrayInputStream(form);
-                } else {
-                    url = OAuth.addParameters(url, others);
-                }
-            }
-            break;
-        }
-        final HttpMessage httpRequest = new HttpMessage(request.method, new URL(url), body);
-        httpRequest.headers.addAll(headers);
-        HttpResponseMessage httpResponse = http.execute(httpRequest);
-        httpResponse = HttpMessageDecoder.decode(httpResponse);
-        OAuthMessage response = new OAuthResponseMessage(httpResponse);
-        if (httpResponse.getStatusCode() != HttpResponseMessage.STATUS_OK) {
-            OAuthProblemException problem = new OAuthProblemException();
-            try {
-                response.getParameters(); // decode the response body
-            } catch (IOException ignored) {
-            }
-            problem.getParameters().putAll(response.getDump());
-            try {
-                InputStream b = response.getBodyAsStream();
-                if (b != null) {
-                    b.close(); // release resources
-                }
-            } catch (IOException ignored) {
-            }
-            throw problem;
+        OAuthResponseMessage response = access(request, style);
+        if (response.getHttpResponse().getStatusCode() != HttpResponseMessage.STATUS_OK) {
+            throw response.toOAuthProblemException();
         }
         return response;
+    }
+
+    /**
+     * Send a request and return the response. Don't try to decide whether the
+     * response indicates success; merely return it.
+     */
+    public OAuthResponseMessage access(OAuthMessage request, ParameterStyle style) throws IOException {
+        HttpMessage httpRequest = request.toHttpRequest(style);
+        HttpResponseMessage httpResponse = http.execute(httpRequest);
+        httpResponse = HttpMessageDecoder.decode(httpResponse);
+        return new OAuthResponseMessage(httpResponse);
     }
 
     /** Where to place parameters in an HTTP message. */
