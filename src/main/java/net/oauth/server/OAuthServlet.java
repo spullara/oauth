@@ -130,7 +130,6 @@ public class OAuthServlet {
         PROBLEM_TO_HTTP_CODE.put("token_not_authorized", SC_UNAUTHORIZED);
 
         PROBLEM_TO_HTTP_CODE.put(Problems.CONSUMER_KEY_REFUSED, SC_SERVICE_UNAVAILABLE);
-        PROBLEM_TO_HTTP_CODE.put(Problems.USER_REFUSED, SC_SERVICE_UNAVAILABLE);
     }
 
     /** Send the given parameters as a form-encoded response body. */
