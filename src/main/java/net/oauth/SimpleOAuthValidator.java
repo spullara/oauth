@@ -74,8 +74,8 @@ public class SimpleOAuthValidator implements OAuthValidator {
         if (versionString != null) {
             double version = Double.parseDouble(versionString);
             if (version < minVersion || maxVersion < version) {
-                OAuthProblemException problem = new OAuthProblemException("version_rejected");
-                problem.setParameter("oauth_acceptable_versions", minVersion + "-" + maxVersion);
+                OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.VERSION_REJECTED);
+                problem.setParameter(OAuth.Problems.OAUTH_ACCEPTABLE_VERSIONS, minVersion + "-" + maxVersion);
                 throw problem;
             }
         }
@@ -90,8 +90,8 @@ public class SimpleOAuthValidator implements OAuthValidator {
         long min = now - timestampWindow;
         long max = now + timestampWindow;
         if (timestamp < min || max < timestamp) {
-            OAuthProblemException problem = new OAuthProblemException("timestamp_refused");
-            problem.setParameter("oauth_acceptable_timestamps", min + "-" + max);
+            OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.TIMESTAMP_REFUSED);
+            problem.setParameter(OAuth.Problems.OAUTH_ACCEPTABLE_TIMESTAMPS, min + "-" + max);
             throw problem;
         }
     }

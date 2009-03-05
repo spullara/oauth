@@ -219,8 +219,7 @@ public abstract class OAuthSignatureMethod {
                 method.initialize(name, accessor);
                 return method;
             }
-            OAuthProblemException problem = new OAuthProblemException(
-            "signature_method_rejected");
+            OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.SIGNATURE_METHOD_REJECTED);
             String acceptable = OAuth.percentEncode(NAME_TO_CLASS.keySet());
             if (acceptable.length() > 0) {
                 problem.setParameter("oauth_acceptable_signature_methods",
