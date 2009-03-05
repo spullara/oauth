@@ -35,6 +35,19 @@ public class OAuthValidatorTest extends TestCase {
         };
     }
 
+    public void testDuplicateParameters() throws Exception {
+        validator.checkSingleParameters(new OAuthMessage("", "", OAuth.decodeForm("x=y&x=y")));
+        String parameters = "oauth_version=1.0&oauth_version=1.0";
+        OAuthMessage msg = new OAuthMessage("", "", OAuth.decodeForm(parameters));
+        try {
+            validator.checkSingleParameters(msg);
+            fail("repeated parameter");
+        } catch (OAuthProblemException expected) {
+            assertEquals(OAuth.Problems.PARAMETER_REJECTED, expected.getProblem());
+            assertEquals(parameters, expected.getParameters().get(OAuth.Problems.OAUTH_PARAMETERS_REJECTED));
+        }
+    }
+
     public void testSimpleOAuthValidator() throws Exception {
         final long window = SimpleOAuthValidator.DEFAULT_TIMESTAMP_WINDOW;
         tryTimestamp(currentTime - window - 500); // round up

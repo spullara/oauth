@@ -15,9 +15,18 @@
  */
 package net.oauth;
 
+import java.util.HashSet;
+
+import java.util.Collections;
+
+import java.util.Set;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import net.oauth.signature.OAuthSignatureMethod;
 
 /**
@@ -29,8 +38,25 @@ import net.oauth.signature.OAuthSignatureMethod;
  */
 public class SimpleOAuthValidator implements OAuthValidator {
 
-    // default window for timestamps is 5 minutes
+    /** The default window for timestamps is 5 minutes. */
     public static final long DEFAULT_TIMESTAMP_WINDOW = 5 * 60 * 1000L;
+
+    /**
+     * Names of parameters that may not appear twice in a valid message.
+     * This limitation is specified by OAuth Core <a
+     * href="http://oauth.net/core/1.0#anchor7">section 5</a>.
+     */
+    public static final Set<String> SINGLE_PARAMETERS = constructSingleParameters();
+
+    private static Set<String> constructSingleParameters() {
+        Set<String> s = new HashSet<String>();
+        for (String p : new String[] { OAuth.OAUTH_CONSUMER_KEY, OAuth.OAUTH_TOKEN, OAuth.OAUTH_TOKEN_SECRET,
+                OAuth.OAUTH_CALLBACK, OAuth.OAUTH_SIGNATURE_METHOD, OAuth.OAUTH_SIGNATURE, OAuth.OAUTH_TIMESTAMP,
+                OAuth.OAUTH_NONCE, OAuth.OAUTH_VERSION }) {
+            s.add(p);
+        }
+        return Collections.unmodifiableSet(s);
+    }
 
     /**
      * Construct a validator that rejects messages more than five minutes out
@@ -63,9 +89,45 @@ public class SimpleOAuthValidator implements OAuthValidator {
      * @throws URISyntaxException */
     public void validateMessage(OAuthMessage message, OAuthAccessor accessor)
     throws OAuthException, IOException, URISyntaxException {
+        checkSingleParameters(message);
         validateVersion(message);
         validateTimestampAndNonce(message);
         validateSignature(message, accessor);
+    }
+
+    /** Throw an exception if any SINGLE_PARAMETERS occur repeatedly. */
+    protected void checkSingleParameters(OAuthMessage message) throws IOException, OAuthException {
+        // Check for repeated oauth_ parameters:
+        boolean repeated = false;
+        Map<String, Collection<String>> nameToValues = new HashMap<String, Collection<String>>();
+        for (Map.Entry<String, String> parameter : message.getParameters()) {
+            String name = parameter.getKey();
+            if (SINGLE_PARAMETERS.contains(name)) {
+                Collection<String> values = nameToValues.get(name);
+                if (values == null) {
+                    values = new ArrayList<String>();
+                    nameToValues.put(name, values);
+                } else {
+                    repeated = true;
+                }
+                values.add(parameter.getValue());
+            }
+        }
+        if (repeated) {
+            Collection<OAuth.Parameter> rejected = new ArrayList<OAuth.Parameter>();
+            for (Map.Entry<String, Collection<String>> p : nameToValues.entrySet()) {
+                String name = p.getKey();
+                Collection<String> values = p.getValue();
+                if (values.size() > 1) {
+                    for (String value : values) {
+                        rejected.add(new OAuth.Parameter(name, value));
+                    }
+                }
+            }
+            OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.PARAMETER_REJECTED);
+            problem.setParameter(OAuth.Problems.OAUTH_PARAMETERS_REJECTED, OAuth.formEncode(rejected));
+            throw problem;
+        }
     }
 
     protected void validateVersion(OAuthMessage message)
