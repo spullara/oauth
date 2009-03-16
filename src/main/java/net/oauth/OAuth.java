@@ -58,25 +58,29 @@ public class OAuth {
      * reporting</a>.
      */
     public static class Problems {
+        public static final String VERSION_REJECTED = "version_rejected";
+        public static final String PARAMETER_ABSENT = "parameter_absent";
+        public static final String PARAMETER_REJECTED = "parameter_rejected";
+        public static final String TIMESTAMP_REFUSED = "timestamp_refused";
         public static final String NONCE_USED = "nonce_used";
+        public static final String SIGNATURE_METHOD_REJECTED = "signature_method_rejected";
         public static final String SIGNATURE_INVALID = "signature_invalid";
+        public static final String CONSUMER_KEY_UNKNOWN = "consumer_key_unknown";
+        public static final String CONSUMER_KEY_REJECTED = "consumer_key_rejected";
+        public static final String CONSUMER_KEY_REFUSED = "consumer_key_refused";
         public static final String TOKEN_USED = "token_used";
         public static final String TOKEN_EXPIRED = "token_expired";
         public static final String TOKEN_REVOKED = "token_revoked";
         public static final String TOKEN_REJECTED = "token_rejected";
-        public static final String CONSUMER_KEY_UNKNOWN = "consumer_key_unknown";
-        public static final String CONSUMER_KEY_REFUSED = "consumer_key_refused";
-        public static final String CONSUMER_KEY_REJECTED = "consumer_key_rejected";
-        public static final String TIMESTAMP_REFUSED = "timestamp_refused";
-        public static final String PARAMETER_REJECTED = "parameter_rejected";
-        public static final String PARAMETER_ABSENT = "parameter_absent";
-        public static final String VERSION_REJECTED = "version_rejected";
-        public static final String SIGNATURE_METHOD_REJECTED = "signature_method_rejected";
-        
+        public static final String ADDITIONAL_AUTHORIZATION_REQUIRED = "additional_authorization_required";
+        public static final String PERMISSION_UNKNOWN = "permission_unknown";
+        public static final String PERMISSION_DENIED = "permission_denied";
+        public static final String USER_REFUSED = "user_refused";
+
+        public static final String OAUTH_ACCEPTABLE_VERSIONS = "oauth_acceptable_versions";
+        public static final String OAUTH_ACCEPTABLE_TIMESTAMPS = "oauth_acceptable_timestamps";
         public static final String OAUTH_PARAMETERS_ABSENT = "oauth_parameters_absent";
         public static final String OAUTH_PARAMETERS_REJECTED = "oauth_parameters_rejected";
-        public static final String OAUTH_ACCEPTABLE_TIMESTAMPS = "oauth_acceptable_timestamps";
-        public static final String OAUTH_ACCEPTABLE_VERSIONS = "oauth_acceptable_versions";
         public static final String OAUTH_PROBLEM_ADVICE = "oauth_problem_advice";
     }
     
