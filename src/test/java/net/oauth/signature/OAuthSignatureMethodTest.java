@@ -36,6 +36,7 @@ public class OAuthSignatureMethodTest extends TestCase {
             , { "two parameters", "a=b&c=d", "a=b&c=d" } //
             , { "sort names", "x!y=a&x=a", "x=a&x%21y=a" } //
             , { "sort values", "a=x!y&a=x+y", "a=x%20y&a=x%21y" } //
+            , { "sort encoded", "a=b&a=B&a={}&a=.&a=/", "a=%2F&a=%7B%7D&a=.&a=B&a=b" } //
     };
 
     public void testNormalizeParameters() throws Exception {
