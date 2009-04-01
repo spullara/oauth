@@ -211,6 +211,10 @@ public class OAuthMessage {
         return bodyAsStream;
     }
 
+    public void setBodyAsStream(InputStream body) {
+        bodyAsStream = body;
+    }
+
     /** Construct a verbose description of this message and its origins. */
     public Map<String, Object> getDump() throws IOException {
         Map<String, Object> into = new HashMap<String, Object>();
