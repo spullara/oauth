@@ -22,7 +22,6 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import net.oauth.http.HttpMessage;
 
 /**
  * Properties of one User of an OAuthConsumer. Properties may be added freely,
