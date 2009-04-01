@@ -49,10 +49,15 @@ import net.oauth.signature.OAuthSignatureMethod;
  */
 public class OAuthMessage {
 
-    public OAuthMessage(String method, String URL,
-            Collection<? extends Map.Entry> parameters) {
+    public OAuthMessage(String method, String URL, Collection<? extends Map.Entry> parameters) {
+        this(method, URL, parameters, null);
+    }
+
+    public OAuthMessage(String method, String URL, Collection<? extends Map.Entry> parameters,
+            InputStream bodyAsStream) {
         this.method = method;
         this.URL = URL;
+        this.bodyAsStream = bodyAsStream;
         if (parameters == null) {
             this.parameters = new ArrayList<Map.Entry<String, String>>();
         } else {
@@ -71,6 +76,7 @@ public class OAuthMessage {
     private Map<String, String> parameterMap;
     private boolean parametersAreComplete = false;
     private final List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
+    private InputStream bodyAsStream = null;
     
     public String toString() {
         return "OAuthMessage(" + method + ", " + URL + ", " + parameters + ")";
@@ -202,7 +208,7 @@ public class OAuthMessage {
      *         is no body.
      */
     public InputStream getBodyAsStream() throws IOException {
-        return null;
+        return bodyAsStream;
     }
 
     /** Construct a verbose description of this message and its origins. */
