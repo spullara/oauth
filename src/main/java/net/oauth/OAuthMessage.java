@@ -76,7 +76,7 @@ public class OAuthMessage {
     private Map<String, String> parameterMap;
     private boolean parametersAreComplete = false;
     private final List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
-    private InputStream bodyAsStream = null;
+    private final InputStream bodyAsStream;
     
     public String toString() {
         return "OAuthMessage(" + method + ", " + URL + ", " + parameters + ")";
@@ -209,10 +209,6 @@ public class OAuthMessage {
      */
     public InputStream getBodyAsStream() throws IOException {
         return bodyAsStream;
-    }
-
-    public void setBodyAsStream(InputStream body) {
-        bodyAsStream = body;
     }
 
     /** Construct a verbose description of this message and its origins. */
