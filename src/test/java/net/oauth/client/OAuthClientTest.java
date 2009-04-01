@@ -186,7 +186,7 @@ public class OAuthClientTest extends TestCase {
                 OAuthMessage response = null;
                 InputStream input = source.openStream();
                 try {
-                    OAuthMessage request = new InputStreamMessage(OAuthMessage.PUT, echo, input);
+                    OAuthMessage request = new OAuthMessage(OAuthMessage.PUT, echo, null, input);
                     request.addParameter(new OAuth.Parameter("oauth_token", "t"));
                     request.getHeaders().add(new OAuth.Parameter("Content-Type", "image/jpeg"));
                     response = client.invoke(request, style);
@@ -286,21 +286,6 @@ public class OAuthClientTest extends TestCase {
         @Override
         public InputStream getBodyAsStream() {
             return (body == null) ? null : new ByteArrayInputStream(body);
-        }
-    }
-
-    static class InputStreamMessage extends OAuthMessage
-    {
-        InputStreamMessage(String method, String url, InputStream body) {
-            super(method, url, null);
-            this.body = body;
-        }
-
-        private final InputStream body;
-
-        @Override
-        public InputStream getBodyAsStream() throws IOException {
-            return body;
         }
     }
 
