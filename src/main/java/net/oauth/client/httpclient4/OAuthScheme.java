@@ -37,7 +37,7 @@ import org.apache.http.message.BasicHeader;
 class OAuthScheme extends RFC2617Scheme {
 
     private final String defaultRealm;
-    /** Whether the basic authentication process is complete */
+    /** Whether the authentication process is complete (for the current context) */
     private boolean complete;
 
     OAuthScheme(String defaultRealm) {
