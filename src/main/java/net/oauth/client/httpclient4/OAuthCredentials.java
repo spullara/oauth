@@ -20,6 +20,10 @@ import net.oauth.OAuthAccessor;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
 /**
+ * An OAuthAccessor, to be used as credentials for an AuthScheme based on OAuth.
+ * The OAuthAccessor is contained by reference, so you can change it to contain
+ * the OAuth tokens and secrets that you receive from a service provider.
+ * 
  * @author John Kristian
  */
 public class OAuthCredentials extends UsernamePasswordCredentials {
@@ -33,6 +37,18 @@ public class OAuthCredentials extends UsernamePasswordCredentials {
 
     public OAuthAccessor getAccessor() {
         return accessor;
+    }
+
+    /** Get the current consumer secret, to be used as a password. */
+    @Override
+    public String getPassword() {
+        return getAccessor().consumer.consumerSecret;
+    }
+
+    /** Get the current consumer key, to be used as a password. */
+    @Override
+    public String getUserName() {
+        return getAccessor().consumer.consumerKey;
     }
 
 }
