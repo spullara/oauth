@@ -30,7 +30,7 @@ import java.util.Map;
  * 
  * @author John Kristian
  */
-public class OAuthAccessor implements Serializable {
+public class OAuthAccessor implements Cloneable, Serializable {
 
     private static final long serialVersionUID = 5590788443138352999L;
 
@@ -47,6 +47,15 @@ public class OAuthAccessor implements Serializable {
     }
 
     private final Map<String, Object> properties = new HashMap<String, Object>();
+
+    @Override
+    public OAuthAccessor clone() {
+        try {
+            return (OAuthAccessor) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public Object getProperty(String name) {
         return properties.get(name);
@@ -68,9 +77,7 @@ public class OAuthAccessor implements Serializable {
      *            OAuthMessage.GET.
      */
     public OAuthMessage newRequestMessage(String method, String url, Collection<? extends Map.Entry> parameters,
-            InputStream body)
-        throws OAuthException, IOException, URISyntaxException
-    {
+            InputStream body) throws OAuthException, IOException, URISyntaxException {
         if (method == null) {
             method = (String) this.getProperty("httpMethod");
             if (method == null) {
@@ -86,8 +93,7 @@ public class OAuthAccessor implements Serializable {
     }
 
     public OAuthMessage newRequestMessage(String method, String url, Collection<? extends Map.Entry> parameters)
-        throws OAuthException, IOException, URISyntaxException
-    {
+            throws OAuthException, IOException, URISyntaxException {
         return newRequestMessage(method, url, parameters, null);
     }
 

@@ -35,7 +35,9 @@ import net.unto.twitter.UtilProtos.Url.Parameter;
 /**
  * A java-twitter builder for OAuth. Use this in place of java-twitter's
  * Api.Builder; for example
- * <code>Api twitter = new OAuthBuilder(accessor, client).build()</code>.
+ * <code>Api twitter = new OAuthBuilder.accessor(accessor).client(client).build()</code>
+ * . Note that the username and password methods are ineffective; OAuth doesn't
+ * use these parameters.
  */
 public class OAuthBuilder extends Api.Builder {
 
@@ -43,8 +45,35 @@ public class OAuthBuilder extends Api.Builder {
             "http://twitter.com/oauth/request_token", "http://twitter.com/oauth/authorize",
             "http://twitter.com/oauth/access_token");
 
-    public OAuthBuilder(OAuthAccessor accessor, OAuthClient client) {
-        httpManager(new OAuthHttpManager(accessor, client));
+    private boolean httpManagerIsStale = false;
+    private OAuthAccessor accessor;
+    private OAuthClient client;
+
+    public OAuthBuilder accessor(OAuthAccessor accessor) {
+        this.accessor = accessor;
+        httpManagerIsStale = true;
+        return this;
+    }
+
+    public OAuthBuilder client(OAuthClient client) {
+        this.client = client;
+        httpManagerIsStale = true;
+        return this;
+    }
+
+    @Override
+    public Api build() {
+        if (httpManagerIsStale) {
+            httpManager(new OAuthHttpManager(accessor.clone(), client));
+        }
+        return super.build();
+    }
+
+    @Override
+    public OAuthBuilder httpManager(HttpManager httpManager) {
+        httpManagerIsStale = false;
+        super.httpManager(httpManager);
+        return this;
     }
 
     private static class OAuthHttpManager implements HttpManager {
@@ -80,7 +109,7 @@ public class OAuthBuilder extends Api.Builder {
 
         private String execute(String httpMethod, Url url) {
             try {
-                List<OAuth.Parameter> parameters = new ArrayList<OAuth.Parameter>();
+                List<OAuth.Parameter> parameters = new ArrayList<OAuth.Parameter>(url.getParametersCount());
                 for (Parameter p : url.getParametersList()) {
                     parameters.add(new OAuth.Parameter(p.getName(), p.getValue()));
                 }
