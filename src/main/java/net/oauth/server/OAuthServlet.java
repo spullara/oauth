@@ -17,6 +17,7 @@
 package net.oauth.server;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletException;
@@ -34,6 +35,13 @@ import net.oauth.http.HttpResponseMessage;
  * @author John Kristian
  */
 public class OAuthServlet {
+
+    /**
+     * A map from an <a
+     * href="http://wiki.oauth.net/ProblemReporting">oauth_problem</a> value to
+     * the appropriate HTTP response code.
+     */
+    public static final Map<String, Integer> PROBLEM_TO_HTTP_CODE = mapProblemToHttpCode();
 
     /**
      * Extract the parts of the given request that are relevant to OAuth.
@@ -111,25 +119,34 @@ public class OAuthServlet {
     private static final Integer SC_FORBIDDEN = new Integer(
             HttpServletResponse.SC_FORBIDDEN);
 
-    private static final Map<String, Integer> PROBLEM_TO_HTTP_CODE = new HashMap<String, Integer>();
-    static {
-        Integer SC_BAD_REQUEST = new Integer(HttpServletResponse.SC_BAD_REQUEST);
-        Integer SC_SERVICE_UNAVAILABLE = new Integer(
-                HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        Integer SC_UNAUTHORIZED = new Integer(
-                HttpServletResponse.SC_UNAUTHORIZED);
-        PROBLEM_TO_HTTP_CODE.put(Problems.VERSION_REJECTED, SC_BAD_REQUEST);
-        PROBLEM_TO_HTTP_CODE.put(Problems.PARAMETER_ABSENT, SC_BAD_REQUEST);
-        PROBLEM_TO_HTTP_CODE.put(Problems.PARAMETER_REJECTED, SC_BAD_REQUEST);
-        PROBLEM_TO_HTTP_CODE.put(Problems.TIMESTAMP_REFUSED, SC_BAD_REQUEST);
-        PROBLEM_TO_HTTP_CODE.put(Problems.SIGNATURE_METHOD_REJECTED, SC_BAD_REQUEST);
+    private static Map<String, Integer> mapProblemToHttpCode() {
+        Integer badRequest = new Integer(HttpServletResponse.SC_BAD_REQUEST);
+        Integer unauthorized = new Integer(HttpServletResponse.SC_UNAUTHORIZED);
+        Integer serviceUnavailable = new Integer(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        Map<String, Integer> map = new HashMap<String, Integer>();
 
-        PROBLEM_TO_HTTP_CODE.put(Problems.TOKEN_EXPIRED, SC_UNAUTHORIZED);
-        PROBLEM_TO_HTTP_CODE.put(Problems.SIGNATURE_INVALID, SC_UNAUTHORIZED);
-        PROBLEM_TO_HTTP_CODE.put(Problems.NONCE_USED, SC_UNAUTHORIZED);
-        PROBLEM_TO_HTTP_CODE.put("token_not_authorized", SC_UNAUTHORIZED);
+        map.put(Problems.VERSION_REJECTED, badRequest);
+        map.put(Problems.PARAMETER_ABSENT, badRequest);
+        map.put(Problems.PARAMETER_REJECTED, badRequest);
+        map.put(Problems.TIMESTAMP_REFUSED, badRequest);
+        map.put(Problems.SIGNATURE_METHOD_REJECTED, badRequest);
 
-        PROBLEM_TO_HTTP_CODE.put(Problems.CONSUMER_KEY_REFUSED, SC_SERVICE_UNAVAILABLE);
+        map.put(Problems.NONCE_USED, unauthorized);
+        map.put(Problems.TOKEN_USED, unauthorized);
+        map.put(Problems.TOKEN_EXPIRED, unauthorized);
+        map.put(Problems.TOKEN_REVOKED, unauthorized);
+        map.put(Problems.TOKEN_REJECTED, unauthorized);
+        map.put("token_not_authorized", unauthorized);
+        map.put(Problems.SIGNATURE_INVALID, unauthorized);
+        map.put(Problems.CONSUMER_KEY_UNKNOWN, unauthorized);
+        map.put(Problems.CONSUMER_KEY_REJECTED, unauthorized);
+        map.put(Problems.ADDITIONAL_AUTHORIZATION_REQUIRED, unauthorized);
+        map.put(Problems.PERMISSION_UNKNOWN, unauthorized);
+        map.put(Problems.PERMISSION_DENIED, unauthorized);
+
+        map.put(Problems.USER_REFUSED, serviceUnavailable);
+        map.put(Problems.CONSUMER_KEY_REFUSED, serviceUnavailable);
+        return Collections.unmodifiableMap(map);
     }
 
     /** Send the given parameters as a form-encoded response body. */
