@@ -24,6 +24,7 @@ import net.oauth.OAuthMessage;
 import net.oauth.OAuthServiceProvider;
 import net.oauth.client.OAuthClient;
 import net.oauth.client.OAuthResponseMessage;
+import net.oauth.client.URLConnectionClient;
 import net.oauth.client.OAuthClient.ParameterStyle;
 import net.oauth.http.HttpResponseMessage;
 import net.unto.twitter.Api;
@@ -33,11 +34,10 @@ import net.unto.twitter.UtilProtos.Url;
 import net.unto.twitter.UtilProtos.Url.Parameter;
 
 /**
- * A java-twitter builder for OAuth. Use this in place of java-twitter's
- * Api.Builder; for example
- * <code>Api twitter = new OAuthBuilder().accessor(accessor).client(client).build()</code>
- * . The username and password parameters are unused, after setting the accessor
- * and/or client; OAuth doesn't use them.
+ * An Api builder for OAuth. Use this in place of java-twitter's Api.Builder;
+ * for example
+ * <code>Api twitter = new OAuthBuilder().accessor(accessor).build()</code> .
+ * The username and password are unused if the accessor is set.
  */
 public class OAuthBuilder extends Api.Builder {
 
@@ -45,9 +45,9 @@ public class OAuthBuilder extends Api.Builder {
             "http://twitter.com/oauth/request_token", "http://twitter.com/oauth/authorize",
             "http://twitter.com/oauth/access_token");
 
-    private boolean httpManagerIsStale = false;
     private OAuthAccessor accessor;
-    private OAuthClient client;
+    private OAuthClient client = new OAuthClient(new URLConnectionClient());
+    private boolean httpManagerIsStale = true;
 
     public OAuthBuilder accessor(OAuthAccessor accessor) {
         this.accessor = accessor;
@@ -120,7 +120,11 @@ public class OAuthBuilder extends Api.Builder {
                 OAuthResponseMessage response = client.access(request, getStyle(request));
                 int statusCode = response.getHttpResponse().getStatusCode();
                 if (statusCode != HttpResponseMessage.STATUS_OK) {
-                    throw new RuntimeException("Expected 200 OK. Received " + statusCode);
+                    String msg = "Expected 200 OK. Received " + statusCode;
+                    if (statusCode == 401) {
+                        throw new SecurityException(msg);
+                    }
+                    throw new RuntimeException(msg);
                 }
                 String responseBody = response.readBodyAsString();
                 if (responseBody == null) {
