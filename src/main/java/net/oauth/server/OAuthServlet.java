@@ -36,8 +36,6 @@ import net.oauth.http.HttpResponseMessage;
  */
 public class OAuthServlet {
 
-    public static final Map<String, Integer> PROBLEM_TO_HTTP_CODE = OAuth.Problems.TO_HTTP_CODE;
-
     /**
      * Extract the parts of the given request that are relevant to OAuth.
      * Parameters include OAuth Authorization headers and the usual request
@@ -113,6 +111,8 @@ public class OAuthServlet {
 
     private static final Integer SC_FORBIDDEN = new Integer(
             HttpServletResponse.SC_FORBIDDEN);
+
+    private static final Map<String, Integer> PROBLEM_TO_HTTP_CODE = OAuth.Problems.TO_HTTP_CODE;
 
     /** Send the given parameters as a form-encoded response body. */
     public static void sendForm(HttpServletResponse response,
