@@ -16,9 +16,6 @@
 
 package net.oauth;
 
-import java.util.Collections;
-import javax.servlet.http.HttpServletResponse;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,9 +92,9 @@ public class OAuth {
         public static final Map<String, Integer> TO_HTTP_CODE = mapToHttpCode();
 
         private static Map<String, Integer> mapToHttpCode() {
-            Integer badRequest = new Integer(HttpServletResponse.SC_BAD_REQUEST);
-            Integer unauthorized = new Integer(HttpServletResponse.SC_UNAUTHORIZED);
-            Integer serviceUnavailable = new Integer(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            Integer badRequest = new Integer(400);
+            Integer unauthorized = new Integer(401);
+            Integer serviceUnavailable = new Integer(503);
             Map<String, Integer> map = new HashMap<String, Integer>();
 
             map.put(Problems.VERSION_REJECTED, badRequest);
