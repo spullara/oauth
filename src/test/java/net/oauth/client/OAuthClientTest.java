@@ -54,7 +54,7 @@ public class OAuthClientTest extends TestCase {
             try {
                 OAuthMessage response = client.invoke(request,
                         OAuthClient.ParameterStyle.BODY);
-                fail("response: " + response);
+                fail(client.getHttpClient() + " response: " + response);
             } catch (OAuthProblemException e) {
                 Map<String, Object> parameters = e.getParameters();
                 assertEquals("status", expectedStatus, parameters.get(HttpResponseMessage.STATUS_CODE));
