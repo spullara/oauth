@@ -35,9 +35,9 @@ import net.unto.twitter.UtilProtos.Url.Parameter;
 /**
  * A java-twitter builder for OAuth. Use this in place of java-twitter's
  * Api.Builder; for example
- * <code>Api twitter = new OAuthBuilder.accessor(accessor).client(client).build()</code>
- * . Note that the username and password methods are ineffective; OAuth doesn't
- * use these parameters.
+ * <code>Api twitter = new OAuthBuilder().accessor(accessor).client(client).build()</code>
+ * . The username and password parameters are unused, after setting the accessor
+ * and/or client; OAuth doesn't use them.
  */
 public class OAuthBuilder extends Api.Builder {
 
