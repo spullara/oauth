@@ -19,27 +19,53 @@ package net.oauth.client.java_twitter;
 import junit.framework.TestCase;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
-import net.oauth.client.OAuthClient;
-import net.oauth.client.URLConnectionClient;
 import net.unto.twitter.Api;
 import net.unto.twitter.TwitterProtos.Status;
+import net.unto.twitter.methods.FriendsTimelineRequest;
 
 public class OAuthBuilderTest extends TestCase {
 
+    /** Get friends' and public timelines. */
     public void testTimeline() {
-        for (Status tweet : twitter.friendsTimeline().count(3).build().get()) {
+        Api api = builder.build();
+        for (Status tweet : api.friendsTimeline().count(3).build().get()) {
             System.out.println(tweet.getCreatedAt() + " " + tweet.getUser().getName() + ": " + tweet.getText());
         }
         System.out.println("-----------------------");
         int i = 0;
-        for (Status tweet : twitter.publicTimeline().build().get()) {
+        for (Status tweet : api.publicTimeline().build().get()) {
             System.out.println(tweet.getCreatedAt() + " " + tweet.getUser().getName() + ": " + tweet.getText());
             if (++i >= 3)
                 break;
         }
     }
 
-    private Api twitter;
+    /** Use the wrong secret to sign a request. */
+    public void testWrongSecret() {
+        accessor.tokenSecret += "-";
+        Api api = builder.build();
+        FriendsTimelineRequest request = api.friendsTimeline().build();
+        try {
+            request.get();
+            fail(request + ".get");
+        } catch (SecurityException expected) {
+        }
+    }
+
+    /** Use no access token to build a request. */
+    public void testNoCredentials() {
+        accessor.accessToken = null;
+        accessor.tokenSecret = null;
+        FriendsTimelineRequest.Builder b = builder.build().friendsTimeline();
+        try {
+            b.build();
+            fail(b + ".build");
+        } catch (IllegalStateException expected) {
+        }
+    }
+
+    private OAuthAccessor accessor;
+    private OAuthBuilder builder;
 
     @Override
     public void setUp() throws Exception {
@@ -49,11 +75,11 @@ public class OAuthBuilderTest extends TestCase {
                 , "7y0Wxw7B9kLIVNdPAEv47g" // consumer key
                 , "F34HyfNIvLTXJNgUpLSyRRdQBYYllWIMXyim6NzPQ" // consumer secret
                 , OAuthBuilder.TWITTER_SERVICE_PROVIDER);
-        OAuthAccessor accessor = new OAuthAccessor(consumer);
+        accessor = new OAuthAccessor(consumer);
         // The user is OAuthExample:
         accessor.accessToken = "30021501-QPuaISTokIheJnGJdzyOAlYn8IuLOjchiXw03GgBt";
         accessor.tokenSecret = "lEnV6RYdraCJXZLdMJVAzXuSRDeLhuuFzzk6F2gKLg";
-        twitter = new OAuthBuilder().accessor(accessor).client(new OAuthClient(new URLConnectionClient())).build();
+        builder = new OAuthBuilder().accessor(accessor);
     }
 
 }
