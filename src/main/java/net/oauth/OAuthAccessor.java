@@ -17,6 +17,7 @@
 package net.oauth;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -66,9 +67,10 @@ public class OAuthAccessor implements Serializable {
      *            consumer.getProperty("httpMethod") or (if that's null)
      *            OAuthMessage.GET.
      */
-    public OAuthMessage newRequestMessage(String method, String url,
-            Collection<? extends Map.Entry> parameters)
-    throws OAuthException, IOException, URISyntaxException {
+    public OAuthMessage newRequestMessage(String method, String url, Collection<? extends Map.Entry> parameters,
+            InputStream body)
+        throws OAuthException, IOException, URISyntaxException
+    {
         if (method == null) {
             method = (String) this.getProperty("httpMethod");
             if (method == null) {
@@ -78,9 +80,15 @@ public class OAuthAccessor implements Serializable {
                 }
             }
         }
-        OAuthMessage message = new OAuthMessage(method, url, parameters);
+        OAuthMessage message = new OAuthMessage(method, url, parameters, body);
         message.addRequiredParameters(this);
         return message;
+    }
+
+    public OAuthMessage newRequestMessage(String method, String url, Collection<? extends Map.Entry> parameters)
+        throws OAuthException, IOException, URISyntaxException
+    {
+        return newRequestMessage(method, url, parameters, null);
     }
 
 }
