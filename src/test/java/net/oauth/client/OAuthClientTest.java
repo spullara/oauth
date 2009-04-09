@@ -136,6 +136,25 @@ public class OAuthClientTest extends TestCase {
         }
     }
 
+    public void testAccess() throws Exception {
+        final String echo = "http://localhost:" + port + "/Echo";
+        final List<OAuth.Parameter> parameters = OAuth.newList("n", "v");
+        final String contentType = "text/fred; charset=" + OAuth.ENCODING;
+        final byte[] content = "1234".getBytes(OAuth.ENCODING);
+        for (OAuthClient client : clients) {
+            String id = client.getHttpClient().toString();
+            OAuthMessage request = new OAuthMessage(OAuthMessage.POST, echo, parameters, new ByteArrayInputStream(content));
+            request.getHeaders().add(new OAuth.Parameter("Content-Type", contentType));
+            OAuthMessage response = client.access(request, ParameterStyle.QUERY_STRING);
+            String expectedBody = (client.getHttpClient() instanceof HttpClient4) //
+                    ? "POST\nn=v\nnull\n1234" // no Content-Length
+                    : "POST\nn=v\n4\n1234";
+            String body = response.readBodyAsString();
+            assertEquals(id, contentType, response.getHeader(HttpMessage.CONTENT_TYPE));
+            assertEquals(id, expectedBody, body);
+        }
+    }
+
     public void testGzip() throws Exception
     {
         final OAuthConsumer consumer = new OAuthConsumer(null, null, null, null);
