@@ -41,12 +41,12 @@ import net.oauth.server.OAuthServlet;
  * 
  * @author John Kristian
  */
-class ProtectedResource extends HttpServlet {
+public class ProtectedResource extends HttpServlet {
 
-    static final String REALM = "Narnia";
+    public static final String REALM = "Narnia";
 
     private static final OAuthConsumer consumer = new OAuthConsumer(null, "consumer key", "consumer secret", null);
-    static final OAuthAccessor ACCESSOR = new OAuthAccessor(consumer);
+    public static final OAuthAccessor ACCESSOR = new OAuthAccessor(consumer);
     static {
         ProtectedResource.ACCESSOR.accessToken = "access token";
         ProtectedResource.ACCESSOR.tokenSecret = "token secret";

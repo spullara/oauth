@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package net.oauth.client;
+package net.oauth.client.httpclient4;
+
+import net.oauth.client.ProtectedResource;
 
 import java.io.IOException;
 import java.net.Socket;
