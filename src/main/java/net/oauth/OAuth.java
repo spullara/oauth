@@ -16,6 +16,9 @@
 
 package net.oauth;
 
+import java.util.Collections;
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -82,6 +85,44 @@ public class OAuth {
         public static final String OAUTH_PARAMETERS_ABSENT = "oauth_parameters_absent";
         public static final String OAUTH_PARAMETERS_REJECTED = "oauth_parameters_rejected";
         public static final String OAUTH_PROBLEM_ADVICE = "oauth_problem_advice";
+
+        /**
+         * A map from an <a
+         * href="http://wiki.oauth.net/ProblemReporting">oauth_problem</a> value to
+         * the appropriate HTTP response code.
+         */
+        public static final Map<String, Integer> TO_HTTP_CODE = mapToHttpCode();
+
+        private static Map<String, Integer> mapToHttpCode() {
+            Integer badRequest = new Integer(HttpServletResponse.SC_BAD_REQUEST);
+            Integer unauthorized = new Integer(HttpServletResponse.SC_UNAUTHORIZED);
+            Integer serviceUnavailable = new Integer(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            Map<String, Integer> map = new HashMap<String, Integer>();
+
+            map.put(Problems.VERSION_REJECTED, badRequest);
+            map.put(Problems.PARAMETER_ABSENT, badRequest);
+            map.put(Problems.PARAMETER_REJECTED, badRequest);
+            map.put(Problems.TIMESTAMP_REFUSED, badRequest);
+            map.put(Problems.SIGNATURE_METHOD_REJECTED, badRequest);
+
+            map.put(Problems.NONCE_USED, unauthorized);
+            map.put(Problems.TOKEN_USED, unauthorized);
+            map.put(Problems.TOKEN_EXPIRED, unauthorized);
+            map.put(Problems.TOKEN_REVOKED, unauthorized);
+            map.put(Problems.TOKEN_REJECTED, unauthorized);
+            map.put("token_not_authorized", unauthorized);
+            map.put(Problems.SIGNATURE_INVALID, unauthorized);
+            map.put(Problems.CONSUMER_KEY_UNKNOWN, unauthorized);
+            map.put(Problems.CONSUMER_KEY_REJECTED, unauthorized);
+            map.put(Problems.ADDITIONAL_AUTHORIZATION_REQUIRED, unauthorized);
+            map.put(Problems.PERMISSION_UNKNOWN, unauthorized);
+            map.put(Problems.PERMISSION_DENIED, unauthorized);
+
+            map.put(Problems.USER_REFUSED, serviceUnavailable);
+            map.put(Problems.CONSUMER_KEY_REFUSED, serviceUnavailable);
+            return Collections.unmodifiableMap(map);
+        }
+
     }
     
     /** Return true if the given Content-Type header means FORM_ENCODED. */
