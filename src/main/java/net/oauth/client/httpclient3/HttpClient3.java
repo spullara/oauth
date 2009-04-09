@@ -32,6 +32,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 
 /**
  * Utility methods for an OAuth client based on the Jakarta Commons HTTP client.
@@ -52,7 +53,7 @@ public class HttpClient3 implements net.oauth.http.HttpClient {
 
     private final HttpClientPool clientPool;
 
-    public HttpResponseMessage execute(HttpMessage request) throws IOException {
+    public HttpResponseMessage execute(HttpMessage request, Map<String, Object> parameters) throws IOException {
         final String method = request.method;
         final String url = request.url.toExternalForm();
         final InputStream body = request.getBody();
@@ -78,7 +79,15 @@ public class HttpClient3 implements net.oauth.http.HttpClient {
         } else {
             httpMethod = new GetMethod(url);
         }
-        httpMethod.setFollowRedirects(false);
+        for (Map.Entry<String, Object> p : parameters.entrySet()) {
+            String name = p.getKey();
+            String value = p.getValue().toString();
+            if (FOLLOW_REDIRECTS.equals(name)) {
+                httpMethod.setFollowRedirects(Boolean.parseBoolean(value));
+            } else if (READ_TIMEOUT.equals(name)) {
+                httpMethod.getParams().setIntParameter(HttpMethodParams.SO_TIMEOUT, Integer.parseInt(value));
+            }
+        }
         for (Map.Entry<String, String> header : request.headers) {
             httpMethod.addRequestHeader(header.getKey(), header.getValue());
         }

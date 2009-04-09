@@ -17,17 +17,34 @@
 package net.oauth.http;
 
 import java.io.IOException;
+import java.util.Map;
 import net.oauth.OAuthMessage;
 
-public interface HttpClient
-{
+public interface HttpClient {
+
     /**
      * Send an HTTP request and return the response.
-     * <p>
-     * Don't follow redirects. If a redirect response is received, simply return
-     * it (with a statusCode and LOCATION header).
+     * 
+     * @param httpParameters
+     *            HTTP client parameters, as a map from parameter name to value.
+     *            Parameter names are defined as constants below.
      */
-    HttpResponseMessage execute(HttpMessage request) throws IOException;
+    HttpResponseMessage execute(HttpMessage request, Map<String, Object> httpParameters) throws IOException;
+
+    /**
+     * The name of the parameter that is the maximum time to wait to connect to
+     * the server. (Integer msec)
+     */
+    static final String CONNECT_TIMEOUT = "connectTimeout";
+
+    /**
+     * The name of the parameter that is the maximum time to wait for response
+     * data. (Integer msec)
+     */
+    static final String READ_TIMEOUT = "readTimeout";
+
+    /** The name of the parameter to automatically follow redirects. (Boolean) */
+    static final String FOLLOW_REDIRECTS = "followRedirects";
 
     static final String GET = OAuthMessage.GET;
     static final String POST = OAuthMessage.POST;

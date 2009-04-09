@@ -42,7 +42,7 @@ import net.oauth.http.HttpResponseMessage;
 public class URLConnectionClient implements HttpClient {
 
     /** Send a message to the service provider and get the response. */
-    public HttpResponseMessage execute(HttpMessage request) throws IOException {
+    public HttpResponseMessage execute(HttpMessage request, Map<String, Object> parameters) throws IOException {
         final String httpMethod = request.method;
         final Collection<Map.Entry<String, String>> addHeaders = request.headers;
         final URL url = request.url;
@@ -51,7 +51,17 @@ public class URLConnectionClient implements HttpClient {
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) connection;
             http.setRequestMethod(httpMethod);
-            http.setInstanceFollowRedirects(false);
+            for (Map.Entry<String, Object> p : parameters.entrySet()) {
+                String name = p.getKey();
+                String value = p.getValue().toString();
+                if (FOLLOW_REDIRECTS.equals(name)) {
+                    http.setInstanceFollowRedirects(Boolean.parseBoolean(value));
+                } else if (CONNECT_TIMEOUT.equals(name)) {
+                    http.setConnectTimeout(Integer.parseInt(value));
+                } else if (READ_TIMEOUT.equals(name)) {
+                    http.setReadTimeout(Integer.parseInt(value));
+                }
+            }
         }
         StringBuilder headers = new StringBuilder(httpMethod);
         {

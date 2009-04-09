@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.oauth.OAuth;
@@ -63,9 +64,11 @@ public class OAuthClient {
     public OAuthClient(HttpClient http)
     {
         this.http = http;
+        httpParameters.put(HttpClient.FOLLOW_REDIRECTS, Boolean.FALSE);
     }
 
     private HttpClient http;
+    protected final Map<String, Object> httpParameters = new HashMap<String, Object>();
 
     public void setHttpClient(HttpClient http) {
         this.http = http;
@@ -73,6 +76,15 @@ public class OAuthClient {
 
     public HttpClient getHttpClient() {
         return http;
+    }
+
+    /**
+     * HTTP client parameters, as a map from parameter name to value.
+     * 
+     * @see HttpClient for parameter names.
+     */
+    public Map<String, Object> getHttpParameters() {
+        return httpParameters;
     }
 
     /**
@@ -274,7 +286,7 @@ public class OAuthClient {
      */
     public OAuthResponseMessage access(OAuthMessage request, ParameterStyle style) throws IOException {
         HttpMessage httpRequest = request.toHttpRequest(style);
-        HttpResponseMessage httpResponse = http.execute(httpRequest);
+        HttpResponseMessage httpResponse = http.execute(httpRequest, httpParameters);
         httpResponse = HttpMessageDecoder.decode(httpResponse);
         return new OAuthResponseMessage(httpResponse);
     }
