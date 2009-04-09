@@ -274,7 +274,7 @@ public class OAuthClient {
     public OAuthMessage invoke(OAuthMessage request, ParameterStyle style)
             throws IOException, OAuthException {
         OAuthResponseMessage response = access(request, style);
-        if (response.getHttpResponse().getStatusCode() != HttpResponseMessage.STATUS_OK) {
+        if ((response.getHttpResponse().getStatusCode() / 100) != 2) {
             throw response.toOAuthProblemException();
         }
         return response;
