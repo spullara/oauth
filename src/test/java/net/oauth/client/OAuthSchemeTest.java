@@ -16,18 +16,14 @@
 
 package net.oauth.client;
 
-import net.oauth.client.httpclient4.PreemptiveAuthorizer;
-
-import net.oauth.client.httpclient4.OAuthCredentials;
-import net.oauth.client.httpclient4.OAuthSchemeFactory;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Socket;
 import java.util.Arrays;
 import javax.servlet.http.HttpServletResponse;
 import junit.framework.TestCase;
+import net.oauth.client.httpclient4.OAuthCredentials;
+import net.oauth.client.httpclient4.OAuthSchemeFactory;
+import net.oauth.client.httpclient4.PreemptiveAuthorizer;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
