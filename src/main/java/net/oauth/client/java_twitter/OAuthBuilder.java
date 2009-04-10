@@ -36,7 +36,7 @@ import net.unto.twitter.UtilProtos.Url.Parameter;
 /**
  * An Api builder for OAuth. Use this in place of java-twitter's Api.Builder;
  * for example
- * <code>Api twitter = new OAuthBuilder().accessor(accessor).build()</code> .
+ * <code>Api twitter = new OAuthBuilder().accessor(accessor).build()</code>.
  * The username and password are unused if the accessor is set.
  */
 public class OAuthBuilder extends Api.Builder {
@@ -58,16 +58,36 @@ public class OAuthBuilder extends Api.Builder {
      * mutators have been called.
      */
 
+    /** Set the OAuthAccessor for Twitter API calls. */
     public OAuthBuilder accessor(OAuthAccessor accessor) {
         this.accessor = accessor;
         mutated();
         return this;
     }
 
+    /** Set the OAuthClient for Twitter API calls. */
     public OAuthBuilder client(OAuthClient client) {
         this.client = client;
         mutated();
         return this;
+    }
+
+    /** Set the HttpManager for Twitter API calls. */
+    @Override
+    public OAuthBuilder httpManager(HttpManager httpManager) {
+        super.httpManager(httpManager);
+        httpManagerIsStale = false;
+        return this;
+    }
+
+    /** Construct an immutable Api. */
+    @Override
+    public Api build() {
+        if (httpManagerIsStale) {
+            httpManager(new OAuthHttpManager(accessor.clone(), client));
+            // The clone is necessary to make the Api immutable.
+        }
+        return super.build();
     }
 
     private void mutated() {
@@ -76,21 +96,6 @@ public class OAuthBuilder extends Api.Builder {
         } else {
             httpManagerIsStale = true;
         }
-    }
-
-    @Override
-    public Api build() {
-        if (httpManagerIsStale) {
-            httpManager(new OAuthHttpManager(accessor.clone(), client));
-        }
-        return super.build();
-    }
-
-    @Override
-    public OAuthBuilder httpManager(HttpManager httpManager) {
-        httpManagerIsStale = false;
-        super.httpManager(httpManager);
-        return this;
     }
 
     private static class OAuthHttpManager implements HttpManager {
