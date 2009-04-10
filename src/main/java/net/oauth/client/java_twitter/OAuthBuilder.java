@@ -45,20 +45,37 @@ public class OAuthBuilder extends Api.Builder {
             "http://twitter.com/oauth/request_token", "http://twitter.com/oauth/authorize",
             "http://twitter.com/oauth/access_token");
 
+    private static final OAuthClient DEFAULT_CLIENT = new OAuthClient(new URLConnectionClient());
+
+    private OAuthClient client = DEFAULT_CLIENT;
     private OAuthAccessor accessor;
-    private OAuthClient client = new OAuthClient(new URLConnectionClient());
-    private boolean httpManagerIsStale = true;
+    private boolean httpManagerIsStale = false;
+
+    /*
+     * This is a little tricky. One OAuthHttpManager is constructed for each
+     * sequence of mutators resulting in a non-null accessor and client,
+     * followed by a call to build(). httpManagerIsStale keeps track of whether
+     * mutators have been called.
+     */
 
     public OAuthBuilder accessor(OAuthAccessor accessor) {
         this.accessor = accessor;
-        httpManagerIsStale = true;
+        mutated();
         return this;
     }
 
     public OAuthBuilder client(OAuthClient client) {
         this.client = client;
-        httpManagerIsStale = true;
+        mutated();
         return this;
+    }
+
+    private void mutated() {
+        if (accessor == null || client == null) {
+            httpManager(null);
+        } else {
+            httpManagerIsStale = true;
+        }
     }
 
     @Override
