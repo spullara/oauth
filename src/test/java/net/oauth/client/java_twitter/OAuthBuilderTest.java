@@ -77,8 +77,8 @@ public class OAuthBuilderTest extends TestCase {
                 , OAuthBuilder.TWITTER_SERVICE_PROVIDER);
         accessor = new OAuthAccessor(consumer);
         // The user is OAuthExample:
-        accessor.accessToken = "30021501-QPuaISTokIheJnGJdzyOAlYn8IuLOjchiXw03GgBt";
-        accessor.tokenSecret = "lEnV6RYdraCJXZLdMJVAzXuSRDeLhuuFzzk6F2gKLg";
+        accessor.accessToken = "30021501-ZxbRk1MlGZbfVi4FCLgQGTAZSFzgoIlgohC6kg7E";
+        accessor.tokenSecret = "G6PaFWdZtbuBu9ywfmKCgj0PrLxGLkOgUU2zMvJzk";
         builder = new OAuthBuilder().accessor(accessor);
     }
 
