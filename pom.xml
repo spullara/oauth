@@ -40,22 +40,12 @@
       <version>6.1.11</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>net.unto.twitter</groupId>
-      <artifactId>java-twitter</artifactId>
-      <version>0.9-SNAPSHOT</version>
-    </dependency>
   </dependencies>
   <repositories>
     <repository>
       <id>codehaus-release-repo</id>
       <name>Codehaus Release Repo</name>
       <url>http://repository.codehaus.org</url>
-    </repository>
-    <repository>
-      <id>java-twitter-repository</id>
-      <url>http://java-twitter.googlecode.com/svn/repository/</url>
-      <name>java-twitter maven repository</name>
     </repository>
   </repositories>
 </project>
