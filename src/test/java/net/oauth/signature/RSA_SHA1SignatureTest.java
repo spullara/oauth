@@ -215,6 +215,13 @@ public class RSA_SHA1SignatureTest extends TestCase {
 
     }
 
+    static void signAndVerify(OAuthConsumer client, OAuthConsumer server) throws Exception {
+        String urlStr = "http://www.google.com/foo?param1=value1&param2=value2";
+        URL url = new URL(urlStr);
+        OAuthMessage message = prepareRequestMessage(client, "GET", url, OAuth.RSA_SHA1);
+        doTests(message, new OAuthAccessor(client), new OAuthAccessor(server));
+    }
+
     public void testSignVerifyJce() throws Exception {
         String urlStr = "http://www.google.com/foo?param1=value1&param2=value2";
         URL url = new URL(urlStr);

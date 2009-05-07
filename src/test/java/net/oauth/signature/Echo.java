@@ -127,7 +127,7 @@ public class Echo extends HttpServlet {
         // System.out.println("... done");
     }
 
-    private static byte[] readAll(InputStream from) throws IOException {
+    static byte[] readAll(InputStream from) throws IOException {
         ByteArrayOutputStream into = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];
         for (int n; 0 < (n = from.read(buf));) {
