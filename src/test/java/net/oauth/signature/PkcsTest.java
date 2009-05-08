@@ -28,6 +28,7 @@ import net.oauth.OAuthServiceProvider;
 public class PkcsTest extends TestCase {
 
     protected static final String PEM_FILE_DIR = "net/oauth/signature/pem/";
+    protected static final String[] PRIVATE_KEY_FILES = { "private_pkcs1.pem", "private_pkcs8.pem" };
 
     protected OAuthConsumer client;
     protected OAuthConsumer server;
@@ -44,30 +45,29 @@ public class PkcsTest extends TestCase {
             classLoader = PkcsTest.class.getClassLoader();
     }
 
-    private String readResource(String name) throws IOException {
+    private String readFile(String name) throws IOException {
         return new String(Echo.readAll(classLoader.getResourceAsStream(PEM_FILE_DIR + name)), "UTF-8");
     }
 
     /**
-     * Sign with Private Key PKCS1 PEM file Verify with Certificate X509 PEM
-     * file
-     * 
-     * @throws Exception
+     * Verify with a certificate from an X.509 PEM file.
      */
-    public void testPkcs1() throws Exception {
-        client.setProperty(RSA_SHA1.PRIVATE_KEY, readResource("private_pkcs1.pem"));
-        server.setProperty(RSA_SHA1.X509_CERTIFICATE, readResource("certificate_x509.pem"));
-        RSA_SHA1SignatureTest.signAndVerify(client, server);
+    public void testCertificate() throws Exception {
+        server.setProperty(RSA_SHA1.X509_CERTIFICATE, readFile("certificate_x509.pem"));
+        for (String privateKeyFile : PRIVATE_KEY_FILES) {
+            client.setProperty(RSA_SHA1.PRIVATE_KEY, readFile(privateKeyFile));
+            RSA_SHA1SignatureTest.signAndVerify(client, server);
+        }
     }
 
     /**
-     * Sign with Private Key PKCS8 PEM file Verify with Public Key X509 PEM file
-     * 
-     * @throws Exception
+     * Verify with a public key from an X.509 PEM file.
      */
-    public void testPkcs8() throws Exception {
-        client.setProperty(RSA_SHA1.PRIVATE_KEY, readResource("private_pkcs8.pem"));
-        server.setProperty(RSA_SHA1.PUBLIC_KEY, readResource("public_x509.pem"));
-        RSA_SHA1SignatureTest.signAndVerify(client, server);
+    public void testPublicKey() throws Exception {
+        server.setProperty(RSA_SHA1.PUBLIC_KEY, readFile("public_x509.pem"));
+        for (String privateKeyFile : PRIVATE_KEY_FILES) {
+            client.setProperty(RSA_SHA1.PRIVATE_KEY, readFile(privateKeyFile));
+            RSA_SHA1SignatureTest.signAndVerify(client, server);
+        }
     }
 }
