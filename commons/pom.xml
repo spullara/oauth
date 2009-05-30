@@ -6,10 +6,10 @@
     <artifactId>parent</artifactId>
     <version>20090525</version>
   </parent>
-  <artifactId>oauth-core-commons</artifactId>
+  <artifactId>oauth</artifactId>
   <version>20090525</version>
   <packaging>jar</packaging>
-  <name>OAuth Core: Commons</name>
+  <name>OAuth Core</name>
   <dependencies>
   </dependencies>
 </project>

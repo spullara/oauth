@@ -6,26 +6,26 @@
     <artifactId>parent</artifactId>
     <version>20090525</version>
   </parent>
-  <artifactId>oauth-core-test</artifactId>
+  <artifactId>oauth-test</artifactId>
   <version>20090525</version>
   <packaging>jar</packaging>
   <name>OAuth Core: Test</name>
   <dependencies>
     <dependency>
       <groupId>net.oauth.core</groupId>
-      <artifactId>oauth-core-httpclient3</artifactId>
+      <artifactId>oauth-httpclient3</artifactId>
       <version>20090525</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>net.oauth.core</groupId>
-      <artifactId>oauth-core-httpclient4</artifactId>
+      <artifactId>oauth-httpclient4</artifactId>
       <version>20090525</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>net.oauth.core</groupId>
-      <artifactId>oauth-core-provider</artifactId>
+      <artifactId>oauth-provider</artifactId>
       <version>20090525</version>
       <scope>test</scope>
     </dependency>

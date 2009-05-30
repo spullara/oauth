@@ -6,14 +6,14 @@
     <artifactId>parent</artifactId>
     <version>20090525</version>
   </parent>
-  <artifactId>oauth-core-httpclient3</artifactId>
+  <artifactId>oauth-httpclient3</artifactId>
   <version>20090525</version>
   <packaging>jar</packaging>
   <name>OAuth Core: HttpClient3</name>
   <dependencies>
     <dependency>
       <groupId>net.oauth.core</groupId>
-      <artifactId>oauth-core-consumer</artifactId>
+      <artifactId>oauth-consumer</artifactId>
       <version>20090525</version>
     </dependency>
     <dependency>
