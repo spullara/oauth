@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import net.oauth.client.OAuthClient;
 import net.oauth.http.HttpMessage;
 import net.oauth.signature.OAuthSignatureMethod;
 
@@ -300,10 +302,10 @@ public class OAuthMessage {
      * 
      * @param style
      *            where to put the OAuth parameters, within the HTTP request
-     * @deprecated use HttpMessage.toHttpRequest
+     * @deprecated use HttpMessage.newRequest
      */
-    public HttpMessage toHttpRequest(ParameterStyle style) throws IOException {
-        return HttpMessage.toHttpRequest(this, style);
+    public HttpMessage toHttpRequest(OAuthClient.ParameterStyle style) throws IOException {
+        return HttpMessage.newRequest(this, style.getReplacement());
     }
 
     /**

@@ -129,7 +129,7 @@ public class HttpMessage
      * @param style
      *            where to put the OAuth parameters, within the HTTP request
      */
-    public static HttpMessage toHttpRequest(OAuthMessage from, ParameterStyle style) throws IOException {
+    public static HttpMessage newRequest(OAuthMessage from, ParameterStyle style) throws IOException {
         final boolean isPost = OAuthMessage.POST.equalsIgnoreCase(from.method);
         InputStream body = from.getBodyAsStream();
         if (style == ParameterStyle.BODY && !(isPost && body == null)) {
