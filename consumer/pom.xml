@@ -4,17 +4,17 @@
   <parent>
     <groupId>net.oauth.core</groupId>
     <artifactId>parent</artifactId>
-    <version>20090525</version>
+    <version>20090530</version>
   </parent>
   <artifactId>oauth-consumer</artifactId>
-  <version>20090525</version>
+  <version>20090530</version>
   <packaging>jar</packaging>
   <name>OAuth Core: Consumer</name>
   <dependencies>
     <dependency>
       <groupId>net.oauth.core</groupId>
       <artifactId>oauth</artifactId>
-      <version>20090525</version>
+      <version>20090530</version>
     </dependency>
   </dependencies>
 </project>
