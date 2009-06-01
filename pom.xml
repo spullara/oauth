@@ -7,7 +7,7 @@
     <version>20090530</version>
   </parent> 
   <groupId>net.oauth.core</groupId>
-  <artifactId>parent</artifactId>
+  <artifactId>oauth-core-parent</artifactId>
   <version>20090530</version>
   <packaging>pom</packaging>
   <name>OAuth Core: Parent POM</name>
