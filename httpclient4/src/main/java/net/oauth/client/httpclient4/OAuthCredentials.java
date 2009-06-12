@@ -16,6 +16,8 @@
 
 package net.oauth.client.httpclient4;
 
+import net.oauth.OAuthConsumer;
+
 import net.oauth.OAuthAccessor;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
@@ -33,6 +35,15 @@ public class OAuthCredentials extends UsernamePasswordCredentials {
     public OAuthCredentials(OAuthAccessor accessor) {
         super(accessor.consumer.consumerKey, accessor.consumer.consumerSecret);
         this.accessor = accessor;
+    }
+
+    /**
+     * Constructs a simple accessor, containing only a consumer key and secret.
+     * This is useful for two-legged OAuth; that is interaction between a
+     * Consumer and Service Provider with no User involvement.
+     */
+    public OAuthCredentials(String consumerKey, String consumerSecret) {
+        this(new OAuthAccessor(new OAuthConsumer(null, consumerKey, consumerSecret, null)));
     }
 
     public OAuthAccessor getAccessor() {
