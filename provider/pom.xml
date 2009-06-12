@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>net.oauth.core</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>oauth-core-parent</artifactId>
     <version>20090530</version>
   </parent>
   <artifactId>oauth-provider</artifactId>
