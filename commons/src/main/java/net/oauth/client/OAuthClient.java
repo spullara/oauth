@@ -142,8 +142,34 @@ public class OAuthClient {
      *             the HTTP response status code was not 200 (OK)
      */
     public void getRequestToken(OAuthAccessor accessor, String httpMethod,
-            Collection<? extends Map.Entry> parameters) throws IOException,
-            OAuthException, URISyntaxException {
+            Collection<? extends Map.Entry> parameters)
+        throws IOException, OAuthException, URISyntaxException
+    {
+        getRequestTokenResponse(accessor, httpMethod, parameters);
+    }
+
+    /** Get a fresh request token from the service provider.
+     * 
+     * @param accessor
+     *            should contain a consumer that contains a non-null consumerKey
+     *            and consumerSecret. Also,
+     *            accessor.consumer.serviceProvider.requestTokenURL should be
+     *            the URL (determined by the service provider) for getting a
+     *            request token.
+     * @param httpMethod
+     *            typically OAuthMessage.POST or OAuthMessage.GET, or null to
+     *            use the default method.
+     * @param parameters
+     *            additional parameters for this request, or null to indicate
+     *            that there are no additional parameters.
+     * @return the response from the service provider
+     * @throws OAuthProblemException
+     *             the HTTP response status code was not 200 (OK)
+     */
+    public OAuthMessage getRequestTokenResponse(OAuthAccessor accessor, String httpMethod,
+            Collection<? extends Map.Entry> parameters)
+        throws IOException, OAuthException, URISyntaxException
+    {
         accessor.accessToken = null;
         accessor.tokenSecret = null;
         {
@@ -166,6 +192,7 @@ public class OAuthClient {
         accessor.requestToken = response.getParameter(OAuth.OAUTH_TOKEN);
         accessor.tokenSecret = response.getParameter(OAuth.OAUTH_TOKEN_SECRET);
         response.requireParameters(OAuth.OAUTH_TOKEN, OAuth.OAUTH_TOKEN_SECRET);
+        return response;
     }
 
     /**
@@ -184,6 +211,7 @@ public class OAuthClient {
      * @param parameters
      *            additional parameters for this request, or null to indicate
      *            that there are no additional parameters.
+     * @return the response from the service provider
      * @throws OAuthProblemException
      *             the HTTP response status code was not 200 (OK)
      */
