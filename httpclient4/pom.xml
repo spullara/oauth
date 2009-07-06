@@ -7,14 +7,14 @@
     <version>20090530</version>
   </parent>
   <artifactId>oauth-httpclient4</artifactId>
-  <version>20090531</version>
+  <version>20090617</version>
   <packaging>jar</packaging>
   <name>OAuth Core: HttpClient4</name>
   <dependencies>
     <dependency>
       <groupId>net.oauth.core</groupId>
       <artifactId>oauth-consumer</artifactId>
-      <version>20090531</version>
+      <version>20090617</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
