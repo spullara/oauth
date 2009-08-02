@@ -20,7 +20,7 @@ import net.oauth.OAuth;
 import net.oauth.OAuthException;
 
 /**
- * Implements the PLAINTEXT signature method.
+ * The PLAINTEXT signature method.
  * 
  * @author John Kristian
  */
