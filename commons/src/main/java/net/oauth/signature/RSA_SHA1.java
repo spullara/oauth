@@ -39,7 +39,7 @@ import net.oauth.signature.pem.PEMReader;
 import net.oauth.signature.pem.PKCS1EncodedKeySpec;
 
 /**
- * Class to handle RSA-SHA1 signatures on OAuth requests. A consumer
+ * The RSA-SHA1 signature method. A consumer
  * that wishes to use public-key signatures on messages does not need
  * a shared secret with the service provider, but it needs a private
  * RSA signing key. You create it like this:

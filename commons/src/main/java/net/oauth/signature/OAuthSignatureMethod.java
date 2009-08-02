@@ -34,7 +34,11 @@ import net.oauth.OAuthProblemException;
 
 /**
  * A pair of algorithms for computing and verifying an OAuth digital signature.
- *
+ * <p>
+ * Static methods of this class implement a registry of signature methods. It's
+ * pre-populated with the standard OAuth algorithms. Appliations can replace
+ * them or add new ones.
+ * 
  * @author John Kristian
  */
 public abstract class OAuthSignatureMethod {

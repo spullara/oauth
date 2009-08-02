@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Miscellaneous constants, methods and types.
+ * 
  * @author John Kristian
  */
 public class OAuth {

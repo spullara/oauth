@@ -28,6 +28,8 @@ import net.oauth.OAuth;
 import net.oauth.OAuthException;
 
 /**
+ * The HMAC-SHA1 signature method.
+ * 
  * @author John Kristian
  */
 class HMAC_SHA1 extends OAuthSignatureMethod {

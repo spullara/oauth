@@ -21,7 +21,7 @@ import java.util.Map;
 import net.oauth.http.HttpMessage;
 
 /**
- * Describes an OAuth-related problem, using a set of named parameters. One
+ * An OAuth-related problem, described using a set of named parameters. One
  * parameter identifies the basic problem, and the others provide supplementary
  * diagnostic information. This can be used to capture information from a
  * response that conforms to the OAuth <a

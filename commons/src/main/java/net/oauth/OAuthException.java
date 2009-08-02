@@ -16,7 +16,7 @@
 package net.oauth;
 
 /**
- * Superclass for extensions thrown by the OAuth library.
+ * An exception thrown by the OAuth library.
  */
 public class OAuthException extends Exception {
 
