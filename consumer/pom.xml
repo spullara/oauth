@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.oauth.core</groupId>
     <artifactId>oauth-core-parent</artifactId>
-    <version>20090530</version>
+    <version>20090531</version>
   </parent>
   <artifactId>oauth-consumer</artifactId>
   <version>20090617</version>
