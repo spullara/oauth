@@ -277,7 +277,17 @@ public abstract class OAuthSignatureMethod {
      * class, with no constructor parameters.
      */
     public static void registerMethodClass(String name, Class clazz) {
-        NAME_TO_CLASS.put(name, clazz);
+        if (clazz == null)
+            unregisterMethod(name);
+        else
+            NAME_TO_CLASS.put(name, clazz);
+    }
+
+    /**
+     * Subsequently, newMethod(name) will fail.
+     */
+    public static void unregisterMethod(String name) {
+        NAME_TO_CLASS.remove(name);
     }
 
     private static final Map<String, Class> NAME_TO_CLASS = new ConcurrentHashMap<String, Class>();
