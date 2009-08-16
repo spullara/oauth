@@ -34,7 +34,7 @@ class PLAINTEXT extends OAuthSignatureMethod {
     @Override
     protected boolean isValid(String signature, String baseString)
             throws OAuthException {
-        return signature.equals(getSignature());
+        return equals(getSignature(), signature);
     }
 
     private synchronized String getSignature() {

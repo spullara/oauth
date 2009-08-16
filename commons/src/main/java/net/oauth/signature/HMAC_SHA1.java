@@ -52,7 +52,7 @@ class HMAC_SHA1 extends OAuthSignatureMethod {
         try {
             byte[] expected = computeSignature(baseString);
             byte[] actual = decodeBase64(signature);
-            return Arrays.equals(expected, actual);
+            return equals(expected, actual);
         } catch (GeneralSecurityException e) {
             throw new OAuthException(e);
         } catch (UnsupportedEncodingException e) {

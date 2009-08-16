@@ -192,6 +192,42 @@ public abstract class OAuthSignatureMethod {
         return OAuth.formEncode(getParameters(p));
     }
 
+    /**
+     * Determine whether the given strings contain the same sequence of
+     * characters. The implementation discourages a <a
+     * href="http://codahale.com/a-lesson-in-timing-attacks/">timing attack</a>.
+     */
+    public static boolean equals(String x, String y) {
+        if (x == null)
+            return y == null;
+        char[] a = x.toCharArray();
+        char[] b = y.toCharArray();
+        char diff = (char) ((a.length == b.length) ? 0 : 1);
+        int j = 0;
+        for (int i = 0; i < a.length; ++i) {
+            diff |= a[i] ^ b[j];
+            j = (j + 1) % b.length;
+        }
+        return diff == 0;
+    }
+
+    /**
+     * Determine whether the given arrays contain the same sequence of bytes.
+     * The implementation discourages a <a
+     * href="http://codahale.com/a-lesson-in-timing-attacks/">timing attack</a>.
+     */
+    public static boolean equals(byte[] a, byte[] b) {
+        if (a == null)
+            return b == null;
+        byte diff = (byte) ((a.length == b.length) ? 0 : 1);
+        int j = 0;
+        for (int i = 0; i < a.length; ++i) {
+            diff |= a[i] ^ b[j];
+            j = (j + 1) % b.length;
+        }
+        return diff == 0;
+    }
+
     public static byte[] decodeBase64(String s) {
         return BASE64.decode(s.getBytes());
     }
