@@ -33,8 +33,15 @@ import net.oauth.signature.OAuthSignatureMethod;
  * close to now, the nonce hasn't been used before and the signature is valid.
  * Each check may be overridden.
  * <p>
- * Calling releaseGarbage periodically is recommended, to free up space used to
- * remember old requests.
+ * This implementation is less than industrial strength. The range of acceptable
+ * timestamps can't be changed, and there's no system for increasing the range
+ * smoothly. Duplicate nonces won't be reliably detected by a service provider
+ * running in multiple processes, unless their validator objects are mirrored or
+ * requests are consistently routed to the same process based on their
+ * timestamp, nonce or consumer key. The collection of used nonces is a
+ * synchronized choke point, and may occupy lots of memory. You can mitigate the
+ * memory consumption by calling releaseGarbage periodically. For a big service
+ * provider, it might be better to store used nonces in a database.
  * 
  * @author Dirk Balfanz
  * @author John Kristian
