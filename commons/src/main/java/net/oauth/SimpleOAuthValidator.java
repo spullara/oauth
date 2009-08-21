@@ -15,6 +15,8 @@
  */
 package net.oauth;
 
+import java.util.List;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -94,14 +96,17 @@ public class SimpleOAuthValidator implements OAuthValidator {
         releaseUsedNonces(currentTimeMsec() - timestampWindow);
     }
 
+    /** Removed usedNonces older than the given time. */
     private void releaseUsedNonces(long minimumTime) {
         TimestampAndNonce limit = new TimestampAndNonce(minimumTime);
         synchronized (usedNonces) {
+            // Because usedNonces is a TreeSet, the iterator produces
+            // elements in their natural order, from oldest to newest.
             for (Iterator<TimestampAndNonce> iter = usedNonces.iterator(); iter.hasNext();) {
                 TimestampAndNonce t = iter.next();
                 if (limit.compareTo(t) <= 0)
                     break;
-                iter.remove();
+                iter.remove(); // too old
             }
         }
     }
@@ -182,8 +187,12 @@ public class SimpleOAuthValidator implements OAuthValidator {
         }
         TimestampAndNonce nonce = new TimestampAndNonce(timestamp,
                 message.getParameter(OAuth.OAUTH_NONCE), message.getConsumerKey(), message.getToken());
+        // One might argue that the token should be omitted from the stored nonce.
+        // But I imagine a Consumer might be unable to coordinate the coining of
+        // nonces by clients on many computers, each with its own token.
         synchronized (usedNonces) {
             if (!usedNonces.add(nonce)) {
+                // It was already in the set.
                 throw new OAuthProblemException(OAuth.Problems.NONCE_USED);
             }
         }
@@ -201,4 +210,64 @@ public class SimpleOAuthValidator implements OAuthValidator {
         return System.currentTimeMillis();
     }
 
+    /**
+     * Selected parameters from an OAuth request, in a form suitable for
+     * detecting duplicate requests. The timestamp, nonce, consumer key and
+     * request or access token are contained. Two objects are equal only if all
+     * of their components are equal. The timestamp is most significant for
+     * comparison.
+     * 
+     * @author John Kristian
+     */
+    private static class TimestampAndNonce implements Comparable<TimestampAndNonce> {
+        /*
+         * The implementation is optimized for the comparison operations
+         * (compareTo, equals and hashCode).
+         */
+        private final String sortKey;
+
+        TimestampAndNonce(long timestamp, String nonce, String consumerKey, String token) {
+            List<String> etc = new ArrayList<String>(3);
+            etc.add(nonce);
+            etc.add(consumerKey);
+            etc.add(token);
+            sortKey = String.format("%20d&%s", Long.valueOf(timestamp), OAuth.percentEncode(etc));
+        }
+
+        /**
+         * Construct an object that's greater than other objects whose timestamp
+         * is less than the given timestamp, and less than or equal to all other
+         * objects. (It's less than objects with the same timestamp and a nonce
+         * etc.) This is useful for identifying stale objects, by comparing them
+         * to an object with the oldest acceptable timestamp.
+         */
+        TimestampAndNonce(long timestamp) {
+            sortKey = String.format("%20d", Long.valueOf(timestamp));
+        }
+
+        public int compareTo(TimestampAndNonce that) {
+            return (that == null) ? 1 : sortKey.compareTo(that.sortKey);
+        }
+
+        @Override
+        public int hashCode() {
+            return sortKey.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object that) {
+            if (that == null)
+                return false;
+            if (that == this)
+                return true;
+            if (that.getClass() != getClass())
+                return false;
+            return sortKey.equals(((TimestampAndNonce) that).sortKey);
+        }
+
+        @Override
+        public String toString() {
+            return sortKey;
+        }
+    }
 }
