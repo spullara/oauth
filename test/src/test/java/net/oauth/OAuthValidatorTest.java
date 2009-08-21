@@ -50,7 +50,7 @@ public class OAuthValidatorTest extends TestCase {
 
     public void testNonceUsed() throws Exception {
         final long currentTime = currentTimeMsec / 1000;
-        final String[] values = { null, currentTime + "", (currentTime - 1) + "" };
+        final String[] values = { null, "",  currentTime + "", (currentTime - 1) + "" };
         // Using the same set of values for all parameters tests that
         // the validator keeps the parameters separate.
         for (String timestamp : values)
@@ -64,7 +64,7 @@ public class OAuthValidatorTest extends TestCase {
                             } catch (OAuthProblemException e) {
                                 assertEquals(OAuth.Problems.PARAMETER_ABSENT, e.getProblem());
                             }
-                        else
+                        else if (timestamp.length() > 0)
                             // The consumerKey or token may be absent (null).
                             tryNonce(timestamp, nonce, consumerKey, token);
 
@@ -79,7 +79,7 @@ public class OAuthValidatorTest extends TestCase {
                             } catch (OAuthProblemException e) {
                                 assertEquals(OAuth.Problems.PARAMETER_ABSENT, e.getProblem());
                             }
-                        else
+                        else if (timestamp.length() > 0)
                             try {
                                 tryNonce(timestamp, nonce, consumerKey, token);
                                 fail("repeated timestamp " + timestamp + ", nonce " + nonce);

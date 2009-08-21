@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -88,7 +87,7 @@ public class SimpleOAuthValidator implements OAuthValidator {
     protected final double minVersion = 1.0;
     protected final double maxVersion;
     protected final long timestampWindowMsec;
-    protected final Set<TimestampAndNonce> usedNonces = new TreeSet<TimestampAndNonce>();
+    protected final Set<UsedNonce> usedNonces = new TreeSet<UsedNonce>();
 
     /** Allow objects that are no longer useful to become garbage. */
     public void releaseGarbage() {
@@ -97,12 +96,12 @@ public class SimpleOAuthValidator implements OAuthValidator {
 
     /** Remove usedNonces older than the given time. */
     private void releaseUsedNonces(long minimumTime) {
-        TimestampAndNonce limit = new TimestampAndNonce(minimumTime);
+        UsedNonce limit = new UsedNonce(minimumTime);
         synchronized (usedNonces) {
             // Because usedNonces is a TreeSet, its iterator produces
             // elements from oldest to newest (their natural order).
-            for (Iterator<TimestampAndNonce> iter = usedNonces.iterator(); iter.hasNext();) {
-                TimestampAndNonce t = iter.next();
+            for (Iterator<UsedNonce> iter = usedNonces.iterator(); iter.hasNext();) {
+                UsedNonce t = iter.next();
                 if (limit.compareTo(t) <= 0)
                     break; // all the rest are new enough
                 iter.remove(); // too old
@@ -202,7 +201,7 @@ public class SimpleOAuthValidator implements OAuthValidator {
      */
     protected void validateNonce(OAuthMessage message, long timestamp, long min)
     throws IOException, OAuthProblemException {
-        TimestampAndNonce nonce = new TimestampAndNonce(timestamp,
+        UsedNonce nonce = new UsedNonce(timestamp,
                 message.getParameter(OAuth.OAUTH_NONCE), message.getConsumerKey(), message.getToken());
         // The OAuth standard requires the token to be omitted from the stored nonce.
         // But I imagine a Consumer might be unable to coordinate the coining of
@@ -229,40 +228,37 @@ public class SimpleOAuthValidator implements OAuthValidator {
 
     /**
      * Selected parameters from an OAuth request, in a form suitable for
-     * detecting duplicate requests. The timestamp, nonce, consumer key and
-     * request or access token are contained. Two objects are equal only if all
-     * of their components are equal. The timestamp is most significant for
-     * comparison.
+     * detecting duplicate requests. The implementation is optimized for the
+     * comparison operations (compareTo, equals and hashCode).
      * 
      * @author John Kristian
      */
-    private static class TimestampAndNonce implements Comparable<TimestampAndNonce> {
-        /*
-         * The implementation is optimized for the comparison operations
-         * (compareTo, equals and hashCode).
+    private static class UsedNonce implements Comparable<UsedNonce> {
+        /**
+         * Construct an object containing the given timestamp, nonce and other
+         * parameters. The order of parameters is significant.
          */
+        UsedNonce(long timestamp, String... nonceEtc) {
+            StringBuilder key = new StringBuilder(String.format("%20d", Long.valueOf(timestamp)));
+            // The blank padding ensures that timestamps are compared as numbers.
+            for (String etc : nonceEtc) {
+                key.append("&").append(etc == null ? "~" : OAuth.percentEncode(etc));
+                // A null value is different from "" or any other String.
+            }
+            sortKey = key.toString();
+        }
+
         private final String sortKey;
 
-        TimestampAndNonce(long timestamp, String nonce, String consumerKey, String token) {
-            List<String> etc = new ArrayList<String>(3);
-            etc.add(nonce);
-            etc.add(consumerKey);
-            etc.add(token);
-            sortKey = String.format("%20d&%s", Long.valueOf(timestamp), OAuth.percentEncode(etc));
-        }
-
         /**
-         * Construct an object that's greater than other objects whose timestamp
-         * is less than the given timestamp, and less than or equal to all other
-         * objects. (It's less than objects with the same timestamp and a nonce
-         * etc.) This is useful for identifying stale objects, by comparing them
-         * to an object with the oldest acceptable timestamp.
+         * Determine the relative order of <code>this</code> and
+         * <code>that</code>, as specified by Comparable. The timestamp is most
+         * significant; that is, if the timestamps are different, return 1 or
+         * -1. If <code>this</code> contains only a timestamp (with no nonce
+         * etc.), return -1 or 0. The treatment of the nonce etc. is murky,
+         * although 0 is returned only if they're all equal.
          */
-        TimestampAndNonce(long timestamp) {
-            sortKey = String.format("%20d", Long.valueOf(timestamp));
-        }
-
-        public int compareTo(TimestampAndNonce that) {
+        public int compareTo(UsedNonce that) {
             return (that == null) ? 1 : sortKey.compareTo(that.sortKey);
         }
 
@@ -271,6 +267,10 @@ public class SimpleOAuthValidator implements OAuthValidator {
             return sortKey.hashCode();
         }
 
+        /**
+         * Return true iff <code>this</code> and <code>that</code> contain equal
+         * timestamps, nonce etc., in the same order.
+         */
         @Override
         public boolean equals(Object that) {
             if (that == null)
@@ -279,7 +279,7 @@ public class SimpleOAuthValidator implements OAuthValidator {
                 return true;
             if (that.getClass() != getClass())
                 return false;
-            return sortKey.equals(((TimestampAndNonce) that).sortKey);
+            return sortKey.equals(((UsedNonce) that).sortKey);
         }
 
         @Override
