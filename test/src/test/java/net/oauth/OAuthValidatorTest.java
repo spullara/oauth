@@ -23,15 +23,15 @@ import junit.framework.TestCase;
  */
 public class OAuthValidatorTest extends TestCase {
 
-    private long currentTime;
+    private long currentTimeMsec;
     private SimpleOAuthValidator validator;
 
     @Override
     protected void setUp() throws Exception {
-        currentTime = (System.currentTimeMillis() / 1000) * 1000;
+        currentTimeMsec = (System.currentTimeMillis() / 1000) * 1000;
         validator = new SimpleOAuthValidator() {
             @Override
-            protected long currentTimeMsec() {return currentTime;}
+            protected long currentTimeMsec() {return currentTimeMsec;}
         };
     }
 
@@ -48,21 +48,84 @@ public class OAuthValidatorTest extends TestCase {
         }
     }
 
-    public void testSimpleOAuthValidator() throws Exception {
-        final long window = SimpleOAuthValidator.DEFAULT_TIMESTAMP_WINDOW;
-        tryTimestamp(currentTime - window - 500); // round up
-        tryTimestamp(currentTime + window + 499); // round down
-        try {
-            tryTimestamp(currentTime - window - 501);
-            fail("validator should have rejected timestamp, but didn't");
-        } catch (OAuthProblemException expected) {
-        }
-        try {
-            tryTimestamp(currentTime + window + 500);
-            fail("validator should have rejected timestamp, but didn't");
-        } catch (OAuthProblemException expected) {
-        }
+    public void testNonceUsed() throws Exception {
+        final long currentTime = currentTimeMsec / 1000;
+        final String[] values = { null, currentTime + "", (currentTime - 1) + "" };
+        // Using the same set of values for all parameters tests that
+        // the validator keeps the parameters separate.
+        for (String timestamp : values)
+            for (String nonce : values)
+                for (String consumerKey : values)
+                    for (String token : values)
+                        if (timestamp == null || nonce == null)
+                            try {
+                                tryNonce(timestamp, nonce, consumerKey, token);
+                                fail("timestamp " + timestamp + ", nonce " + nonce);
+                            } catch (OAuthProblemException e) {
+                                assertEquals(OAuth.Problems.PARAMETER_ABSENT, e.getProblem());
+                            }
+                        else
+                            // The consumerKey or token may be absent (null).
+                            tryNonce(timestamp, nonce, consumerKey, token);
 
+        for (String timestamp : values)
+            for (String nonce : values)
+                for (String consumerKey : values)
+                    for (String token : values)
+                        if (timestamp == null || nonce == null)
+                            try {
+                                tryNonce(timestamp, nonce, consumerKey, token);
+                                fail("timestamp " + timestamp + ", nonce " + nonce);
+                            } catch (OAuthProblemException e) {
+                                assertEquals(OAuth.Problems.PARAMETER_ABSENT, e.getProblem());
+                            }
+                        else
+                            try {
+                                tryNonce(timestamp, nonce, consumerKey, token);
+                                fail("repeated timestamp " + timestamp + ", nonce " + nonce);
+                            } catch (OAuthProblemException e) {
+                                assertEquals(OAuth.Problems.NONCE_USED, e.getProblem());
+                            }
+    }
+
+    private void tryNonce(String timestamp, String nonce, String consumerKey, String token) throws Exception {
+        OAuthMessage message = new OAuthMessage("", "", null);
+        addParameter(message, OAuth.OAUTH_TIMESTAMP, timestamp);
+        addParameter(message, OAuth.OAUTH_NONCE, nonce);
+        addParameter(message, OAuth.OAUTH_CONSUMER_KEY, consumerKey);
+        addParameter(message, OAuth.OAUTH_TOKEN, token);
+        validator.validateTimestampAndNonce(message);
+    }
+
+    private void addParameter(OAuthMessage message, String name, String value) {
+        if (value != null)
+            message.addParameter(name, value);
+    }
+
+    public void testTimeRange() throws Exception {
+        final long window = SimpleOAuthValidator.DEFAULT_TIMESTAMP_WINDOW;
+        tryTime(currentTimeMsec - window - 500); // round up
+        tryTime(currentTimeMsec + window + 499); // round down
+        try {
+            tryTime(currentTimeMsec - window - 501);
+            fail("validator should have rejected timestamp, but didn't");
+        } catch (OAuthProblemException expected) {
+        }
+        try {
+            tryTime(currentTimeMsec + window + 500);
+            fail("validator should have rejected timestamp, but didn't");
+        } catch (OAuthProblemException expected) {
+        }
+    }
+
+    private void tryTime(long timestamp) throws Exception {
+        OAuthMessage msg = new OAuthMessage("", "", OAuth.newList(
+                "oauth_timestamp", ((timestamp + 500) / 1000) + "",
+                "oauth_nonce", "lsfksdklfjfg"));
+        validator.validateTimestampAndNonce(msg);
+    }
+
+    public void testVersionRange() throws Exception {
         tryVersion(1.0);
         try {
             tryVersion(0.9);
@@ -79,13 +142,6 @@ public class OAuthValidatorTest extends TestCase {
             fail("validator should have rejected version, but didn't");
         } catch (OAuthProblemException expected) {
         }
-    }
-
-    private void tryTimestamp(long timestamp) throws Exception {
-        OAuthMessage msg = new OAuthMessage("", "", OAuth.newList(
-                "oauth_timestamp", ((timestamp + 500) / 1000) + "",
-                "oauth_nonce", "lsfksdklfjfg"));
-        validator.validateTimestampAndNonce(msg);
     }
 
     private void tryVersion(double version) throws Exception {

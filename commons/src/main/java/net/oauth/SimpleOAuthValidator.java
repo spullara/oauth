@@ -15,24 +15,27 @@
  */
 package net.oauth;
 
-import java.util.HashSet;
-
-import java.util.Collections;
-
-import java.util.Set;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import net.oauth.signature.OAuthSignatureMethod;
 
 /**
- * A simple OAuthValidator, which checks the version, whether the timestamp
- * is close to now and the signature is valid. Each check may be overridden.
- *
+ * A simple OAuthValidator, which checks the version, whether the timestamp is
+ * close to now, the nonce haven't been used before and the signature is valid.
+ * Each check may be overridden.
+ * <p>
+ * Calling releaseGarbage periodically is recommended, to free up space used to
+ * remember old requests.
+ * 
  * @author Dirk Balfanz
  * @author John Kristian
  */
@@ -84,6 +87,24 @@ public class SimpleOAuthValidator implements OAuthValidator {
     protected final double minVersion = 1.0;
     protected final double maxVersion;
     protected final long timestampWindow;
+    protected final Set<TimestampAndNonce> usedNonces = new TreeSet<TimestampAndNonce>();
+
+    /** Allow objects that are no longer useful to become garbage. */
+    public void releaseGarbage() {
+        releaseUsedNonces(currentTimeMsec() - timestampWindow);
+    }
+
+    private void releaseUsedNonces(long minimumTime) {
+        TimestampAndNonce limit = new TimestampAndNonce(minimumTime);
+        synchronized (usedNonces) {
+            for (Iterator<TimestampAndNonce> iter = usedNonces.iterator(); iter.hasNext();) {
+                TimestampAndNonce t = iter.next();
+                if (limit.compareTo(t) <= 0)
+                    break;
+                iter.remove();
+            }
+        }
+    }
 
     /** {@inherit} 
      * @throws URISyntaxException */
@@ -156,6 +177,14 @@ public class SimpleOAuthValidator implements OAuthValidator {
             problem.setParameter(OAuth.Problems.OAUTH_ACCEPTABLE_TIMESTAMPS, min + "-" + max);
             throw problem;
         }
+        TimestampAndNonce nonce = new TimestampAndNonce(timestamp,
+                message.getParameter(OAuth.OAUTH_NONCE), message.getConsumerKey(), message.getToken());
+        synchronized (usedNonces) {
+            if (!usedNonces.add(nonce)) {
+                throw new OAuthProblemException(OAuth.Problems.NONCE_USED);
+            }
+        }
+        releaseUsedNonces(min);
     }
 
     protected void validateSignature(OAuthMessage message, OAuthAccessor accessor)
