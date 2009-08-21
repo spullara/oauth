@@ -15,8 +15,6 @@
  */
 package net.oauth;
 
-import java.util.List;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -25,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -82,30 +81,30 @@ public class SimpleOAuthValidator implements OAuthValidator {
      *            the maximum acceptable oauth_version
      */
     public SimpleOAuthValidator(long timestampWindowMsec, double maxVersion) {
-        this.timestampWindow = timestampWindowMsec;
+        this.timestampWindowMsec = timestampWindowMsec;
         this.maxVersion = maxVersion;
     }
 
     protected final double minVersion = 1.0;
     protected final double maxVersion;
-    protected final long timestampWindow;
+    protected final long timestampWindowMsec;
     protected final Set<TimestampAndNonce> usedNonces = new TreeSet<TimestampAndNonce>();
 
     /** Allow objects that are no longer useful to become garbage. */
     public void releaseGarbage() {
-        releaseUsedNonces(currentTimeMsec() - timestampWindow);
+        releaseUsedNonces((currentTimeMsec() - timestampWindowMsec) / 1000L);
     }
 
-    /** Removed usedNonces older than the given time. */
+    /** Remove usedNonces older than the given time. */
     private void releaseUsedNonces(long minimumTime) {
         TimestampAndNonce limit = new TimestampAndNonce(minimumTime);
         synchronized (usedNonces) {
-            // Because usedNonces is a TreeSet, the iterator produces
-            // elements in their natural order, from oldest to newest.
+            // Because usedNonces is a TreeSet, its iterator produces
+            // elements from oldest to newest (their natural order).
             for (Iterator<TimestampAndNonce> iter = usedNonces.iterator(); iter.hasNext();) {
                 TimestampAndNonce t = iter.next();
                 if (limit.compareTo(t) <= 0)
-                    break;
+                    break; // all the rest are new enough
                 iter.remove(); // too old
             }
         }
@@ -176,18 +175,36 @@ public class SimpleOAuthValidator implements OAuthValidator {
     protected void validateTimestampAndNonce(OAuthMessage message)
     throws IOException, OAuthProblemException {
         message.requireParameters(OAuth.OAUTH_TIMESTAMP, OAuth.OAUTH_NONCE);
-        long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP)) * 1000L;
+        long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP));
+        long min = validateTimestamp(message, timestamp);
+        validateNonce(message, timestamp, min);
+    }
+
+    /**
+     * Throw an exception if the timestamp [sec] is out of range.
+     * @return the minimum acceptable timestamp [sec]
+     */
+    protected long validateTimestamp(OAuthMessage message, long timestamp)
+    throws IOException, OAuthProblemException {
         long now = currentTimeMsec();
-        long min = now - timestampWindow;
-        long max = now + timestampWindow;
+        long min = (now - timestampWindowMsec + 500) / 1000L;
+        long max = (now + timestampWindowMsec + 500) / 1000L;
         if (timestamp < min || max < timestamp) {
             OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.TIMESTAMP_REFUSED);
             problem.setParameter(OAuth.Problems.OAUTH_ACCEPTABLE_TIMESTAMPS, min + "-" + max);
             throw problem;
         }
+        return min;
+    }
+
+    /**
+     * Throw an exception if the nonce has been validated previously.
+     */
+    protected void validateNonce(OAuthMessage message, long timestamp, long min)
+    throws IOException, OAuthProblemException {
         TimestampAndNonce nonce = new TimestampAndNonce(timestamp,
                 message.getParameter(OAuth.OAUTH_NONCE), message.getConsumerKey(), message.getToken());
-        // One might argue that the token should be omitted from the stored nonce.
+        // The OAuth standard requires the token to be omitted from the stored nonce.
         // But I imagine a Consumer might be unable to coordinate the coining of
         // nonces by clients on many computers, each with its own token.
         synchronized (usedNonces) {
