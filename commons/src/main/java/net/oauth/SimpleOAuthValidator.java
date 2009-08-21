@@ -242,7 +242,7 @@ public class SimpleOAuthValidator implements OAuthValidator {
             StringBuilder key = new StringBuilder(String.format("%20d", Long.valueOf(timestamp)));
             // The blank padding ensures that timestamps are compared as numbers.
             for (String etc : nonceEtc) {
-                key.append("&").append(etc == null ? "~" : OAuth.percentEncode(etc));
+                key.append("&").append(etc == null ? " " : OAuth.percentEncode(etc));
                 // A null value is different from "" or any other String.
             }
             sortKey = key.toString();
