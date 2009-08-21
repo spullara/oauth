@@ -30,7 +30,7 @@ import net.oauth.signature.OAuthSignatureMethod;
 
 /**
  * A simple OAuthValidator, which checks the version, whether the timestamp is
- * close to now, the nonce haven't been used before and the signature is valid.
+ * close to now, the nonce hasn't been used before and the signature is valid.
  * Each check may be overridden.
  * <p>
  * Calling releaseGarbage periodically is recommended, to free up space used to
@@ -164,7 +164,10 @@ public class SimpleOAuthValidator implements OAuthValidator {
         }
     }
 
-    /** This implementation doesn't check the nonce value. */
+    /**
+     * Throw an exception if the timestamp is out of range or the nonce has been
+     * validated previously.
+     */
     protected void validateTimestampAndNonce(OAuthMessage message)
     throws IOException, OAuthProblemException {
         message.requireParameters(OAuth.OAUTH_TIMESTAMP, OAuth.OAUTH_NONCE);
