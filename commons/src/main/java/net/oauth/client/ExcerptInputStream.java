@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+// TODO: move this class into oauth-consumer
 /** A decorator that retains a copy of the first few bytes of data. */
 public class ExcerptInputStream extends BufferedInputStream
 {
