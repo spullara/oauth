@@ -311,9 +311,9 @@ public class OAuthMessage {
     /**
      * Check that the message is valid.
      * 
+     * @deprecated use validator.validateMessage(this, accessor) instead.
      * @throws IOException
      * @throws URISyntaxException
-     * 
      * @throws OAuthProblemException
      *                 the message is invalid
      */
