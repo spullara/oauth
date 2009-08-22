@@ -28,20 +28,25 @@ import java.util.Set;
 import java.util.TreeSet;
 import net.oauth.signature.OAuthSignatureMethod;
 
+//TODO: move this class into oauth-provider
 /**
  * A simple OAuthValidator, which checks the version, whether the timestamp is
  * close to now, the nonce hasn't been used before and the signature is valid.
  * Each check may be overridden.
  * <p>
- * This implementation is less than industrial strength. The range of acceptable
- * timestamps can't be changed, and there's no system for increasing the range
- * smoothly. Duplicate nonces won't be reliably detected by a service provider
- * running in multiple processes, unless their validator objects are mirrored or
- * requests are consistently routed to the same process based on their
- * timestamp, nonce or consumer key. The collection of used nonces is a
- * synchronized choke point, and may occupy lots of memory. You can mitigate the
- * memory consumption by calling releaseGarbage periodically. For a big service
- * provider, it might be better to store used nonces in a database.
+ * This implementation is less than industrial strength:
+ * <ul>
+ * <li>Duplicate nonces won't be reliably detected by a service provider running
+ * in multiple processes, since the nonces are stored in a data structure in
+ * memory.</li>
+ * <li>The collection of used nonces is a synchronized choke point, and may
+ * occupy lots of memory. You can minimize the memory usage by calling
+ * releaseGarbage periodically.</li>
+ * <li>The range of acceptable timestamps can't be changed, and there's no
+ * system for increasing the range smoothly.</li>
+ * </ul>
+ * For a big service provider, it might be better to store used nonces in a
+ * database.
  * 
  * @author Dirk Balfanz
  * @author John Kristian
