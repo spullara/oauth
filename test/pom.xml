@@ -7,10 +7,16 @@
     <version>20090531</version>
   </parent>
   <artifactId>oauth-test</artifactId>
-  <version>20090617</version>
+  <version>20090823</version>
   <packaging>jar</packaging>
   <name>OAuth Core: Test</name>
   <dependencies>
+    <dependency>
+      <groupId>net.oauth.core</groupId>
+      <artifactId>oauth</artifactId>
+      <version>20090823</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>net.oauth.core</groupId>
       <artifactId>oauth-httpclient3</artifactId>
