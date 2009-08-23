@@ -23,6 +23,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import net.oauth.OAuth;
 import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpResponseMessage;
@@ -71,12 +72,22 @@ public class URLConnectionResponse extends HttpResponseMessage {
         return null;
     }
 
+    protected String getHeaderFieldKey(URLConnection connection, int index) {
+        try {
+            return connection.getHeaderFieldKey(index);
+        } catch (NoSuchElementException e) {
+            // This violates the interface contract, but it happens.
+            // http://code.google.com/p/oauth/issues/detail?id=115
+            return null;
+        }
+    }
+
     private List<Map.Entry<String, String>> getHeaders() {
         List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
         boolean foundContentType = false;
         String value;
         for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
-            String name = connection.getHeaderFieldKey(i);
+            String name = getHeaderFieldKey(connection, i);
             if (name != null) {
                 headers.add(new OAuth.Parameter(name, value));
                 if (CONTENT_TYPE.equalsIgnoreCase(name)) {
@@ -108,7 +119,7 @@ public class URLConnectionResponse extends HttpResponseMessage {
             StringBuilder response = new StringBuilder();
             String value;
             for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
-                String name = connection.getHeaderFieldKey(i);
+                String name = getHeaderFieldKey(connection, i);
                 if (i == 0 && name != null && http != null) {
                     String firstLine = "HTTP " + getStatusCode();
                     String message = http.getResponseMessage();
