@@ -72,12 +72,22 @@ public class URLConnectionResponse extends HttpResponseMessage {
         return null;
     }
 
+    protected String getHeaderField(URLConnection connection, int index) {
+        try {
+            return connection.getHeaderField(index);
+        } catch (NoSuchElementException e) {
+            // This violates the interface contract, but it happens.
+            // http://code.google.com/p/googleappengine/issues/detail?id=1945
+            return null;
+        }
+    }
+
     protected String getHeaderFieldKey(URLConnection connection, int index) {
         try {
             return connection.getHeaderFieldKey(index);
         } catch (NoSuchElementException e) {
             // This violates the interface contract, but it happens.
-            // http://code.google.com/p/oauth/issues/detail?id=115
+            // http://code.google.com/p/googleappengine/issues/detail?id=1945
             return null;
         }
     }
@@ -86,7 +96,7 @@ public class URLConnectionResponse extends HttpResponseMessage {
         List<Map.Entry<String, String>> headers = new ArrayList<Map.Entry<String, String>>();
         boolean foundContentType = false;
         String value;
-        for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
+        for (int i = 0; (value = getHeaderField(connection, i)) != null; ++i) {
             String name = getHeaderFieldKey(connection, i);
             if (name != null) {
                 headers.add(new OAuth.Parameter(name, value));
@@ -118,7 +128,7 @@ public class URLConnectionResponse extends HttpResponseMessage {
                     : null;
             StringBuilder response = new StringBuilder();
             String value;
-            for (int i = 0; (value = connection.getHeaderField(i)) != null; ++i) {
+            for (int i = 0; (value = getHeaderField(connection, i)) != null; ++i) {
                 String name = getHeaderFieldKey(connection, i);
                 if (i == 0 && name != null && http != null) {
                     String firstLine = "HTTP " + getStatusCode();
