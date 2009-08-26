@@ -84,6 +84,7 @@ public class OAuthResponseMessage extends OAuthMessage
         try {
             getParameters(); // decode the response body
         } catch (IOException ignored) {
+        } catch (IllegalArgumentException ignored) {
         }
         problem.getParameters().putAll(getDump());
         try {
