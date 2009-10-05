@@ -14,7 +14,7 @@
     <dependency>
       <groupId>net.oauth.core</groupId>
       <artifactId>oauth-consumer</artifactId>
-      <version>20090617</version>
+      <version>20090823</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
