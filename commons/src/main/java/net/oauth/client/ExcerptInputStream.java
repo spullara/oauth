@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import net.oauth.OAuth;
+
 // TODO: move this class into oauth-consumer
 /** A decorator that retains a copy of the first few bytes of data. */
 public class ExcerptInputStream extends BufferedInputStream
@@ -12,7 +14,7 @@ public class ExcerptInputStream extends BufferedInputStream
      * A marker that's appended to the excerpt if it's less than the complete
      * stream.
      */
-    public static final byte[] ELLIPSIS = " ...".getBytes();
+    public static final byte[] ELLIPSIS = OAuth.encodeCharacters(" ...");
 
     public ExcerptInputStream(InputStream in) throws IOException {
         super(in);

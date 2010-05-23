@@ -126,7 +126,35 @@ public class OAuth {
         }
 
     }
-    
+
+    private static String characterEncoding = ENCODING;
+
+    public static void setCharacterEncoding(String encoding) {
+	OAuth.characterEncoding = encoding;
+    }
+
+    public static String decodeCharacters(byte[] from) {
+	if (characterEncoding != null) {
+	    try {
+		return new String(from, characterEncoding);
+	    } catch (UnsupportedEncodingException e) {
+		System.err.println(e + "");
+	    }
+	}
+	return new String(from);
+    }
+
+    public static byte[] encodeCharacters(String from) {
+	if (characterEncoding != null) {
+	    try {
+		return from.getBytes(characterEncoding);
+	    } catch (UnsupportedEncodingException e) {
+		System.err.println(e + "");
+	    }
+	}
+	return from.getBytes();
+    }
+
     /** Return true if the given Content-Type header means FORM_ENCODED. */
     public static boolean isFormEncoded(String contentType) {
         if (contentType == null) {
@@ -148,7 +176,7 @@ public class OAuth {
             throws IOException {
         ByteArrayOutputStream b = new ByteArrayOutputStream();
         formEncode(parameters, b);
-        return new String(b.toByteArray());
+        return decodeCharacters(b.toByteArray());
     }
 
     /**
@@ -165,11 +193,9 @@ public class OAuth {
                 } else {
                     into.write('&');
                 }
-                into.write(percentEncode(toString(parameter.getKey()))
-                        .getBytes());
+                into.write(encodeCharacters(percentEncode(toString(parameter.getKey()))));
                 into.write('=');
-                into.write(percentEncode(toString(parameter.getValue()))
-                        .getBytes());
+                into.write(encodeCharacters(percentEncode(toString(parameter.getValue()))));
             }
         }
     }

@@ -17,6 +17,7 @@
 package net.oauth.signature;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -237,13 +238,31 @@ public abstract class OAuthSignatureMethod {
     }
 
     public static byte[] decodeBase64(String s) {
-        return BASE64.decode(s.getBytes());
+	byte[] b;
+	try {
+	    b = s.getBytes(BASE64_ENCODING);
+	} catch (UnsupportedEncodingException e) {
+	    System.err.println(e + "");
+	    b = s.getBytes();
+	}
+	return BASE64.decode(b);
     }
 
     public static String base64Encode(byte[] b) {
-        return new String(BASE64.encode(b));
+	byte[] b2 = BASE64.encode(b);
+	try {
+	    return new String(b2, BASE64_ENCODING);
+	} catch (UnsupportedEncodingException e) {
+	    System.err.println(e + "");
+	}
+	return new String(b2);
     }
 
+    /**
+     * The character encoding used for base64. Arguably US-ASCII is more
+     * accurate, but this one decodes all byte values unambiguously.
+     */
+    private static final String BASE64_ENCODING = "ISO-8859-1";
     private static final Base64 BASE64 = new Base64();
 
     public static OAuthSignatureMethod newSigner(OAuthMessage message,
