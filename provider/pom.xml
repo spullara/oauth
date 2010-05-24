@@ -7,14 +7,14 @@
     <version>20090531</version>
   </parent>
   <artifactId>oauth-provider</artifactId>
-  <version>20090531</version>
+  <version>20100523</version>
   <packaging>jar</packaging>
   <name>OAuth Core: Provider</name>
   <dependencies>
     <dependency>
       <groupId>net.oauth.core</groupId>
       <artifactId>oauth</artifactId>
-      <version>20090531</version>
+      <version>20100523</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
