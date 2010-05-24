@@ -18,7 +18,6 @@ package net.oauth;
 
 import java.util.HashMap;
 import java.util.Map;
-import net.oauth.http.HttpMessage;
 
 /**
  * An OAuth-related problem, described using a set of named parameters. One
@@ -33,6 +32,16 @@ import net.oauth.http.HttpMessage;
 public class OAuthProblemException extends OAuthException {
 
     public static final String OAUTH_PROBLEM = "oauth_problem";
+    /** The name of a dump entry whose value is the HTTP request. */
+    public static final String HTTP_REQUEST = "HTTP request";
+    /** The name of a dump entry whose value is the HTTP response. */
+    public static final String HTTP_RESPONSE = "HTTP response";
+    /** The name of a dump entry whose value is the HTTP resopnse status code. */
+    public static final String HTTP_STATUS_CODE = "HTTP status";
+    /** The name of a dump entry whose value is the response Location header. */
+    public static final String HTTP_LOCATION = "Location";
+    /** The name of a dump entry whose value is the request URL. */
+    public static final String URL = "URL";
 
     public OAuthProblemException() {
     }
@@ -54,7 +63,7 @@ public class OAuthProblemException extends OAuthException {
         msg = getProblem();
         if (msg != null)
             return msg;
-        Object response = getParameters().get(HttpMessage.RESPONSE);
+        Object response = getParameters().get(HTTP_RESPONSE);
         if (response != null) {
             msg = response.toString();
             int eol = msg.indexOf("\n");
@@ -71,7 +80,7 @@ public class OAuthProblemException extends OAuthException {
         }
         response = getHttpStatusCode();
         if (response != null) {
-            return HttpMessage.STATUS_CODE + " " + response;
+            return HTTP_STATUS_CODE + " " + response;
         }
         return null;
     }
@@ -89,7 +98,7 @@ public class OAuthProblemException extends OAuthException {
     }
 
     public int getHttpStatusCode() {
-        Object code = getParameters().get(HttpMessage.STATUS_CODE);
+        Object code = getParameters().get(HTTP_STATUS_CODE);
         if (code == null) {
             return 200;
         } else if (code instanceof Number) { // the usual case
@@ -97,6 +106,33 @@ public class OAuthProblemException extends OAuthException {
         } else {
             return Integer.parseInt(code.toString());
         }
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder s = new StringBuilder(super.toString());
+        try {
+            final String eol = System.getProperty("line.separator", "\n");
+            final Map<String, Object> parameters = getParameters();
+            Object msg = parameters.get(HTTP_REQUEST);
+            final boolean hasRequest = msg != null;
+            if (hasRequest)
+                s.append(eol + ">>>>>>>> " + HTTP_REQUEST + ":" + eol + msg + eol + "<<<<<<<<");
+            msg = parameters.get(HTTP_RESPONSE);
+            if (msg != null)
+                s.append(" " + HTTP_RESPONSE + ":" + eol + msg);
+            else
+                for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
+                    final String key = parameter.getKey();
+                    if (HTTP_RESPONSE.equals(key) || HTTP_REQUEST.equals(key))
+                        continue;
+                    if (hasRequest && URL.equals(key))
+                        continue;
+                    s.append(eol + parameter.getKey() + ": " + parameter.getValue());
+                }
+        } catch (Exception ignored) {
+        }
+        return s.toString();
     }
 
     private static final long serialVersionUID = 1L;

@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import net.oauth.client.ExcerptInputStream;
 import net.oauth.OAuth;
 import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
 import net.oauth.ParameterStyle;
 
 // TODO: move this class into oauth-consumer, together with ExcerptInputStream.
@@ -202,13 +203,13 @@ public class HttpMessage
     }
 
     /** The name of a dump entry whose value is the HTTP request. */
-    public static final String REQUEST = "HTTP request";
+    public static final String REQUEST = OAuthProblemException.HTTP_REQUEST;
 
     /** The name of a dump entry whose value is the HTTP response. */
-    public static final String RESPONSE = "HTTP response";
+    public static final String RESPONSE = OAuthProblemException.HTTP_RESPONSE;
 
     /** The name of a dump entry whose value is the HTTP status code. */
-    public static final String STATUS_CODE = "HTTP status";
+    public static final String STATUS_CODE = OAuthProblemException.HTTP_STATUS_CODE;
 
     public static final String ACCEPT_ENCODING = "Accept-Encoding";
     public static final String CONTENT_ENCODING = "Content-Encoding";

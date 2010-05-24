@@ -217,7 +217,7 @@ public class OAuthMessage {
     }
 
     protected void dump(Map<String, Object> into) throws IOException {
-        into.put("URL", URL);
+        into.put(OAuthProblemException.URL, URL);
         if (parametersAreComplete) {
             try {
                 into.putAll(getParameterMap());

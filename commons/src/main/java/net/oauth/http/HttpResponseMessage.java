@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 
+import net.oauth.OAuthProblemException;
+
 // TODO: move this class into oauth-core-consumer, together with HttpMessage.
 // The sticky part is deleting the method OAuthMessage.toHttpRequest.
 /**
@@ -46,10 +48,10 @@ public abstract class HttpResponseMessage extends HttpMessage {
     public abstract int getStatusCode() throws IOException;
 
     /** The name of a dump entry whose value is the response Location header. */
-    public static final String LOCATION = "Location";
+    public static final String LOCATION = OAuthProblemException.HTTP_LOCATION;
 
     /** The name of a dump entry whose value is the HTTP status code. */
-    public static final String STATUS_CODE = "HTTP status";
+    public static final String STATUS_CODE = OAuthProblemException.HTTP_STATUS_CODE;
 
     /** The statusCode that indicates a normal outcome. */
     public static final int STATUS_OK = 200;
