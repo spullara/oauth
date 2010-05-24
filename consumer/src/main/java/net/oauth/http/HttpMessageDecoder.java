@@ -22,8 +22,6 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
-// TODO: move this class into oauth-core-consumer, together with HttpMessage.
-// The sticky part is deleting the method OAuthMessage.toHttpRequest.
 /** A decorator that handles Content-Encoding. */
 public class HttpMessageDecoder extends HttpResponseMessage {
 

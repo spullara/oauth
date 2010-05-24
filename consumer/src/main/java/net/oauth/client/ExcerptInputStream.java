@@ -6,7 +6,6 @@ import java.io.InputStream;
 
 import net.oauth.OAuth;
 
-// TODO: move this class into oauth-consumer
 /** A decorator that retains a copy of the first few bytes of data. */
 public class ExcerptInputStream extends BufferedInputStream
 {

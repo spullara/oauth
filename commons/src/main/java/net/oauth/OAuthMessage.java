@@ -31,8 +31,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.oauth.client.OAuthClient;
-import net.oauth.http.HttpMessage;
 import net.oauth.signature.OAuthSignatureMethod;
 
 /**
@@ -149,7 +147,7 @@ public class OAuthMessage {
      * @return the MIME type, or null to indicate the type is unknown.
      */
     public String getBodyType() {
-        return getHeader(HttpMessage.CONTENT_TYPE);
+        return getHeader("Content-Type");
     }
 
     /**
@@ -159,7 +157,7 @@ public class OAuthMessage {
      *         specified.
      */
     public String getBodyEncoding() {
-        return HttpMessage.DEFAULT_CHARSET;
+        return "ISO-8859-1";
     }
 
     /**
@@ -295,17 +293,6 @@ public class OAuthMessage {
     public void sign(OAuthAccessor accessor) throws IOException,
             OAuthException, URISyntaxException {
         OAuthSignatureMethod.newSigner(this, accessor).sign(this);
-    }
-
-    /**
-     * Construct an HTTP request from this OAuth message.
-     * 
-     * @param style
-     *            where to put the OAuth parameters, within the HTTP request
-     * @deprecated use HttpMessage.newRequest
-     */
-    public HttpMessage toHttpRequest(OAuthClient.ParameterStyle style) throws IOException {
-        return HttpMessage.newRequest(this, style.getReplacement());
     }
 
     /**

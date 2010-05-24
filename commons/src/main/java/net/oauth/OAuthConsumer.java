@@ -19,7 +19,6 @@ package net.oauth;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import net.oauth.http.HttpMessage;
 
 /**
  * Properties of an OAuth Consumer. Properties may be added freely, e.g. to
@@ -58,7 +57,7 @@ public class OAuthConsumer implements Serializable {
      * The name of the property whose value is the Accept-Encoding header in
      * HTTP requests.
      */
-    public static final String ACCEPT_ENCODING = "HTTP.header." + HttpMessage.ACCEPT_ENCODING;
+    public static final String ACCEPT_ENCODING = "HTTP.header.Accept-Encoding";
 
     /**
      * The name of the property whose value is the <a
