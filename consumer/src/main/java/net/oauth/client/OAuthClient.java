@@ -34,6 +34,7 @@ import net.oauth.http.HttpClient;
 import net.oauth.http.HttpMessage;
 import net.oauth.http.HttpMessageDecoder;
 import net.oauth.http.HttpResponseMessage;
+import net.oauth.signature.OAuthSignatureMethod;
 
 /**
  * Methods for an OAuth consumer to request tokens from a service provider.
@@ -304,7 +305,13 @@ public class OAuthClient {
             throws IOException, OAuthException {
         OAuthResponseMessage response = access(request, style);
         if ((response.getHttpResponse().getStatusCode() / 100) != 2) {
-            throw response.toOAuthProblemException();
+            OAuthProblemException problem = response.toOAuthProblemException();
+            try {
+                problem.setParameter(OAuthProblemException.SIGNATURE_BASE_STRING,
+                                     OAuthSignatureMethod.getBaseString(request));
+            } catch (Exception ignored) {
+            }
+            throw problem;
         }
         return response;
     }
