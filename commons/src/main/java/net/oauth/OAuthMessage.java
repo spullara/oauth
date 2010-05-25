@@ -296,20 +296,6 @@ public class OAuthMessage {
     }
 
     /**
-     * Check that the message is valid.
-     * 
-     * @deprecated use validator.validateMessage(this, accessor) instead.
-     * @throws IOException
-     * @throws URISyntaxException
-     * @throws OAuthProblemException
-     *                 the message is invalid
-     */
-    public void validateMessage(OAuthAccessor accessor, OAuthValidator validator)
-            throws OAuthException, IOException, URISyntaxException {
-        validator.validateMessage(this, accessor);
-    }
-
-    /**
      * Construct a WWW-Authenticate or Authentication header value, containing
      * the given realm plus all the parameters whose names begin with "oauth_".
      */

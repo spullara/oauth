@@ -78,7 +78,7 @@ public class ProtectedResource extends HttpServlet {
         }
         final OAuthMessage msg = OAuthServlet.getMessage(request, null);
         try {
-            msg.validateMessage(ACCESSOR, new SimpleOAuthValidator());
+            (new SimpleOAuthValidator()).validateMessage(msg, ACCESSOR);
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (OAuthProblemException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
