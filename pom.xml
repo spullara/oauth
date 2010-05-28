@@ -37,4 +37,13 @@
       <url>http://oauth.googlecode.com/svn/code/maven</url>
     </repository>
   </repositories>
+  <distributionManagement>
+    <repository>
+      <id>oauth-local</id>
+      <name>Local OAuth Repository</name>
+      <url>file:../../maven</url>
+      <uniqueVersion>true</uniqueVersion>
+    </repository>
+    <downloadUrl>http://oauth.googlecode.com/svn/code/maven</downloadUrl>
+  </distributionManagement>
 </project>
