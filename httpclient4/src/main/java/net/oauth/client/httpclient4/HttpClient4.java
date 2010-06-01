@@ -37,6 +37,7 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 
 /**
@@ -96,6 +97,9 @@ public class HttpClient4 implements net.oauth.http.HttpClient {
                 params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, Integer.parseInt(value));
             }
         }
+        
+        params.setBooleanParameter(CoreProtocolPNames.USE_EXPECT_CONTINUE,false); 
+
         HttpClient client = clientPool.getHttpClient(new URL(httpRequest.getURI().toString()));
         HttpResponse httpResponse = client.execute(httpRequest);
         return new HttpMethodResponse(httpRequest, httpResponse, excerpt, request.getContentCharset());
