@@ -4,11 +4,11 @@
   <parent>
     <groupId>net.oauth</groupId>
     <artifactId>oauth-parent</artifactId>
-    <version>20090531</version>
+    <version>20100601</version>
   </parent> 
   <groupId>net.oauth.core</groupId>
   <artifactId>oauth-core-parent</artifactId>
-  <version>20090531</version>
+  <version>20100601</version>
   <packaging>pom</packaging>
   <name>OAuth Core: Parent POM</name>
   <modules>
