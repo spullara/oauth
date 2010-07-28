@@ -105,8 +105,7 @@ public class OAuthServlet {
         }
     }
 
-    private static final Integer SC_FORBIDDEN = new Integer(
-            HttpServletResponse.SC_FORBIDDEN);
+    private static final Integer SC_FORBIDDEN = HttpServletResponse.SC_FORBIDDEN;
 
     private static final Map<String, Integer> PROBLEM_TO_HTTP_CODE = OAuth.Problems.TO_HTTP_CODE;
 

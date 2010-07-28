@@ -1,11 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>net.oauth</groupId>
-    <artifactId>oauth-parent</artifactId>
-    <version>20100601</version>
-  </parent> 
   <groupId>net.oauth.core</groupId>
   <artifactId>oauth-core-parent</artifactId>
   <version>20100601</version>
@@ -19,6 +14,48 @@
     <module>provider</module>
     <module>test</module>
   </modules>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+      <defaultGoal>package</defaultGoal>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <optimize>true</optimize>
+              <source>1.5</source>
+              <target>1.5</target>
+            </configuration>
+            <inherited>true</inherited>
+          </plugin>
+          <plugin>
+            <artifactId>maven-eclipse-plugin</artifactId>
+            <configuration>
+              <outputDirectory>${project.build.directory}/eclipse-bin</outputDirectory>
+            </configuration>
+            <inherited>true</inherited>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+    </build>    
   <reporting>
     <plugins>
       <plugin>
