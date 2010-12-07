@@ -16,6 +16,7 @@
 
 package net.oauth.client.httpclient3;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -65,7 +66,42 @@ public class HttpMethodResponse extends HttpResponseMessage
     @Override
     public InputStream openBody() throws IOException
     {
-        return method.getResponseBodyAsStream();
+      InputStream is = method.getResponseBodyAsStream();
+      is = new FilterInputStream(is) {
+        @Override
+        public int read() throws IOException {
+          int read = super.read();
+          if (read == -1) {
+            method.releaseConnection();
+          }
+          return read;    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public int read(byte[] bytes) throws IOException {
+          int read = super.read(bytes);
+          if (read == -1) {
+            method.releaseConnection();
+          }
+          return read;    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public int read(byte[] bytes, int i, int i1) throws IOException {
+          int read = super.read(bytes, i, i1);
+          if (read == -1) {
+            method.releaseConnection();
+          }
+          return read;    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void close() throws IOException {
+          super.close();
+          method.releaseConnection();
+        }
+      };
+      return is;
     }
 
     private List<Map.Entry<String, String>> getHeaders()
