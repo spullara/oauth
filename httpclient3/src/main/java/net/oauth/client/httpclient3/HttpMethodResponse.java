@@ -16,7 +16,6 @@
 
 package net.oauth.client.httpclient3;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -66,12 +65,7 @@ public class HttpMethodResponse extends HttpResponseMessage
     @Override
     public InputStream openBody() throws IOException
     {
-      try {
-        String body = method.getResponseBodyAsString();
-        return new ByteArrayInputStream(body.getBytes());
-      } finally {
-        method.releaseConnection();
-      }
+        return method.getResponseBodyAsStream();
     }
 
     private List<Map.Entry<String, String>> getHeaders()
